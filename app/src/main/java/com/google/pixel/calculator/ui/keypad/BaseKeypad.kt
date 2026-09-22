@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.pixel.calculator.ui.icons.SquareFoot
 import com.google.pixel.calculator.ui.theme.CalculatorTheme
 
 enum class PixelButtonType {
@@ -50,6 +51,7 @@ fun BaseKeypad(
     onToggleProMode: () -> Unit,
     onToggleShift: () -> Unit,
     onToggleAngleUnit: () -> Unit,
+    onOpenToolbox: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
@@ -259,7 +261,7 @@ fun BaseKeypad(
             }
         }
 
-        // FILA 1 BASE: [AC] [( )] [%] [÷]  (layout esatto come screenshot Pixel)
+        // FILA 1 BASE: [AC] [%] [÷] [⌫]  (disposizione originale dell'utente)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(spacing)
@@ -272,16 +274,6 @@ fun BaseKeypad(
                 onClick = {
                     triggerHaptic()
                     onClear()
-                }
-            )
-            PixelButton(
-                text = "( )",
-                type = PixelButtonType.CONTROL,
-                height = btnHeight,
-                modifier = Modifier.weight(1f),
-                onClick = {
-                    triggerHaptic()
-                    onSmartParenthesis()
                 }
             )
             PixelButton(
@@ -304,6 +296,21 @@ fun BaseKeypad(
                     onOperator("÷")
                 }
             )
+            PixelIconButton(
+                type = PixelButtonType.CONTROL,
+                height = btnHeight,
+                modifier = Modifier.weight(1f),
+                onClick = {
+                    triggerHaptic()
+                    onBackspace()
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Backspace,
+                    contentDescription = "Cancella cifra",
+                    modifier = Modifier.size(if (isProMode) 20.dp else 24.dp)
+                )
+            }
         }
 
         // FILA 2 BASE: [7] [8] [9] [×]
@@ -317,7 +324,7 @@ fun BaseKeypad(
             PixelButton(text = "×", type = PixelButtonType.OPERATOR, height = btnHeight, modifier = Modifier.weight(1f), onClick = { triggerHaptic(); onOperator("×") })
         }
 
-        // FILA 3 BASE: [4] [5] [6] [-]
+        // FILA 3 BASE: [4] [5] [6] [+] (disposizione originale dell'utente con +)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(spacing)
@@ -325,10 +332,10 @@ fun BaseKeypad(
             PixelButton(text = "4", type = PixelButtonType.NUMERIC, height = btnHeight, modifier = Modifier.weight(1f), onClick = { triggerHaptic(); onDigit("4") })
             PixelButton(text = "5", type = PixelButtonType.NUMERIC, height = btnHeight, modifier = Modifier.weight(1f), onClick = { triggerHaptic(); onDigit("5") })
             PixelButton(text = "6", type = PixelButtonType.NUMERIC, height = btnHeight, modifier = Modifier.weight(1f), onClick = { triggerHaptic(); onDigit("6") })
-            PixelButton(text = "-", type = PixelButtonType.OPERATOR, height = btnHeight, modifier = Modifier.weight(1f), onClick = { triggerHaptic(); onOperator("-") })
+            PixelButton(text = "+", type = PixelButtonType.OPERATOR, height = btnHeight, modifier = Modifier.weight(1f), onClick = { triggerHaptic(); onOperator("+") })
         }
 
-        // FILA 4 BASE: [1] [2] [3] [+]
+        // FILA 4 BASE: [1] [2] [3] [-] (disposizione originale dell'utente con -)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(spacing)
@@ -336,14 +343,29 @@ fun BaseKeypad(
             PixelButton(text = "1", type = PixelButtonType.NUMERIC, height = btnHeight, modifier = Modifier.weight(1f), onClick = { triggerHaptic(); onDigit("1") })
             PixelButton(text = "2", type = PixelButtonType.NUMERIC, height = btnHeight, modifier = Modifier.weight(1f), onClick = { triggerHaptic(); onDigit("2") })
             PixelButton(text = "3", type = PixelButtonType.NUMERIC, height = btnHeight, modifier = Modifier.weight(1f), onClick = { triggerHaptic(); onDigit("3") })
-            PixelButton(text = "+", type = PixelButtonType.OPERATOR, height = btnHeight, modifier = Modifier.weight(1f), onClick = { triggerHaptic(); onOperator("+") })
+            PixelButton(text = "-", type = PixelButtonType.OPERATOR, height = btnHeight, modifier = Modifier.weight(1f), onClick = { triggerHaptic(); onOperator("-") })
         }
 
-        // FILA 5 BASE: [0] [,] [⌫] [=]  (layout esatto come screenshot Pixel)
+        // FILA 5 BASE: [📐 Selettore Strumenti] [0] [.] [=] (esattamente come nel disegno utente media_1790072717667.jpg)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(spacing)
         ) {
+            PixelIconButton(
+                type = PixelButtonType.CONTROL,
+                height = btnHeight,
+                modifier = Modifier.weight(1f),
+                onClick = {
+                    triggerHaptic()
+                    onOpenToolbox()
+                }
+            ) {
+                Icon(
+                    imageVector = SquareFoot,
+                    contentDescription = "Selettore strumenti e funzioni",
+                    modifier = Modifier.size(if (isProMode) 22.dp else 26.dp)
+                )
+            }
             PixelButton(
                 text = "0",
                 type = PixelButtonType.NUMERIC,
@@ -352,24 +374,12 @@ fun BaseKeypad(
                 onClick = { triggerHaptic(); onDigit("0") }
             )
             PixelButton(
-                text = ",",
+                text = ".",
                 type = PixelButtonType.NUMERIC,
                 height = btnHeight,
                 modifier = Modifier.weight(1f),
-                onClick = { triggerHaptic(); onDigit(",") }
+                onClick = { triggerHaptic(); onDigit(".") }
             )
-            PixelIconButton(
-                type = PixelButtonType.CONTROL,
-                height = btnHeight,
-                modifier = Modifier.weight(1f),
-                onClick = { triggerHaptic(); onBackspace() }
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Backspace,
-                    contentDescription = "Cancella cifra",
-                    modifier = Modifier.size(24.dp)
-                )
-            }
             PixelButton(
                 text = "=",
                 type = PixelButtonType.EQUALS,

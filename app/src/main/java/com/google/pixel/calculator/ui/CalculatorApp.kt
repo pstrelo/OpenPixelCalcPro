@@ -277,7 +277,8 @@ fun CalculatorApp(
                 onEquals = { vm.onEquals() },
                 onToggleProMode = { vm.toggleProMode() },
                 onToggleShift = { vm.toggleShift() },
-                onToggleAngleUnit = { vm.toggleAngleUnit() }
+                onToggleAngleUnit = { vm.toggleAngleUnit() },
+                onOpenToolbox = { vm.navigateTo(ActiveScreen.TOOLBOX_MENU) }
             )
         }
     }

@@ -40,14 +40,14 @@ fun AdvancedCalculatorScreen(
                 },
                 title = {
                     Text(
-                        text = "Calcolatrice Scientifica",
+                        text = "Google Math Solver",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = Color.White
                     )
                 },
                 actions = {
-                    // Pillola DEG / RAD
+                    // 1. Pillola DEG / RAD
                     Box(
                         modifier = Modifier
                             .background(Color(0xFF383C4E), RoundedCornerShape(14.dp))
@@ -61,6 +61,13 @@ fun AdvancedCalculatorScreen(
                             color = Color(0xFF60A5FA)
                         )
                     }
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // 2. Pulsante Grafico scorporato in alto (Requirement R5)
+                    DetachedGraphButton(
+                        screenViewMode = state.screenViewMode,
+                        onClick = { viewModel.toggleGraphView() }
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -76,12 +83,12 @@ fun AdvancedCalculatorScreen(
                 .padding(padding)
         ) {
             when (state.screenViewMode) {
-                // STATO A: SOLO CALCOLATORE SCIENTIFICO
+                // STATO A: SOLO CALCOLATORE RISOLUTORE
                 ScreenViewMode.CALCULATOR_ONLY -> {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(bottom = 6.dp),
+                            .padding(bottom = 4.dp),
                         verticalArrangement = Arrangement.SpaceBetween
                     ) {
                         AdvancedFormulaDisplay(
@@ -94,18 +101,19 @@ fun AdvancedCalculatorScreen(
 
                         AdvancedKeypad(
                             state = state,
-                            onKeyClick = { viewModel.onKeyClick(it) },
-                            onExecute = { viewModel.onExecute() },
-                            onCycleFormat = { viewModel.onCycleFormat() },
-                            onBackspace = { viewModel.onBackspace() },
+                            onTabSelected = { viewModel.selectTab(it) },
+                            onInsertChar = { viewModel.insertCharacter(it) },
+                            onMoveCursorLeft = { viewModel.moveCursorLeft() },
+                            onMoveCursorRight = { viewModel.moveCursorRight() },
+                            onDeleteChar = { viewModel.deleteAtCursor() },
                             onClearAll = { viewModel.onClearAll() },
-                            onOpenCatalog = { viewModel.openCatalog() },
-                            onToggleGraph = { viewModel.toggleGraphView() }
+                            onCycleFormat = { viewModel.onCycleFormat() },
+                            onExecute = { viewModel.onExecute() }
                         )
                     }
                 }
 
-                // STATO B: SPLIT-SCREEN (Metà superiore Grafico, metà inferiore Display + Tastiera)
+                // STATO B: SPLIT-SCREEN (Metà superiore Grafico 2D, metà inferiore Display + Tastiera)
                 ScreenViewMode.SPLIT_SCREEN -> {
                     Column(
                         modifier = Modifier.fillMaxSize()
@@ -115,7 +123,7 @@ fun AdvancedCalculatorScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 4.dp)
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
                             AdvancedGraphCanvas(
                                 state = state,
@@ -126,12 +134,12 @@ fun AdvancedCalculatorScreen(
                             )
                         }
 
-                        // 2. Display + Tastiera
+                        // 2. Display formule + Tastiera compatta
                         Column(
                             modifier = Modifier
                                 .weight(1.4f)
                                 .fillMaxWidth()
-                                .padding(bottom = 4.dp),
+                                .padding(bottom = 2.dp),
                             verticalArrangement = Arrangement.SpaceBetween
                         ) {
                             AdvancedFormulaDisplay(
@@ -144,13 +152,14 @@ fun AdvancedCalculatorScreen(
 
                             AdvancedKeypad(
                                 state = state,
-                                onKeyClick = { viewModel.onKeyClick(it) },
-                                onExecute = { viewModel.onExecute() },
-                                onCycleFormat = { viewModel.onCycleFormat() },
-                                onBackspace = { viewModel.onBackspace() },
+                                onTabSelected = { viewModel.selectTab(it) },
+                                onInsertChar = { viewModel.insertCharacter(it) },
+                                onMoveCursorLeft = { viewModel.moveCursorLeft() },
+                                onMoveCursorRight = { viewModel.moveCursorRight() },
+                                onDeleteChar = { viewModel.deleteAtCursor() },
                                 onClearAll = { viewModel.onClearAll() },
-                                onOpenCatalog = { viewModel.openCatalog() },
-                                onToggleGraph = { viewModel.toggleGraphView() }
+                                onCycleFormat = { viewModel.onCycleFormat() },
+                                onExecute = { viewModel.onExecute() }
                             )
                         }
                     }
@@ -165,14 +174,14 @@ fun AdvancedCalculatorScreen(
                             onReset = { viewModel.onResetGraph() },
                             onPointSelected = { viewModel.selectGraphPoint(it) },
                             onToggleFullscreen = { viewModel.setScreenViewMode(ScreenViewMode.SPLIT_SCREEN) },
-                            modifier = Modifier.padding(8.dp)
+                            modifier = Modifier.padding(6.dp)
                         )
 
-                        // Floating Action Pill per ripristinare il calcolo
+                        // Floating Action Pill per tornare alla tastiera
                         Row(
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
-                                .padding(bottom = 24.dp)
+                                .padding(bottom = 20.dp)
                                 .background(Color(0xFF2563EB), RoundedCornerShape(24.dp))
                                 .clickable { viewModel.setScreenViewMode(ScreenViewMode.SPLIT_SCREEN) }
                                 .padding(horizontal = 20.dp, vertical = 12.dp),
@@ -202,5 +211,36 @@ fun AdvancedCalculatorScreen(
                 onSelectItem = { viewModel.onSelectCatalogItem(it) }
             )
         }
+    }
+}
+
+/**
+ * Pulsante grafico scorporato in alto, posizionato nella TopAppBar accanto alla formula (Requirement R5).
+ */
+@Composable
+fun DetachedGraphButton(
+    screenViewMode: ScreenViewMode,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val (bgColor, contentColor, label) = when (screenViewMode) {
+        ScreenViewMode.CALCULATOR_ONLY -> Triple(Color(0xFF2C3042), Color(0xFF93C5FD), "Grafico 📈")
+        ScreenViewMode.SPLIT_SCREEN -> Triple(Color(0xFF2563EB), Color.White, "Split 2D ✕")
+        ScreenViewMode.FULLSCREEN_GRAPH -> Triple(Color(0xFF1D4ED8), Color.White, "Full 2D")
+    }
+
+    Box(
+        modifier = modifier
+            .background(bgColor, RoundedCornerShape(14.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = contentColor
+        )
     }
 }

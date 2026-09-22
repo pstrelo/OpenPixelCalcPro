@@ -31,8 +31,8 @@ fun AdvancedFormulaDisplay(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 4.dp),
-        shape = RoundedCornerShape(20.dp),
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFF242736)
         )
@@ -40,12 +40,12 @@ fun AdvancedFormulaDisplay(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            // Elenco formule/equazioni inserite
-            state.formulas.forEachIndexed { index, formula ->
-                val isActive = index == state.activeFormulaIndex
+            // Elenco equazioni stile Desmos/GeoGebra con badge colorati
+            state.equations.forEachIndexed { index, eq ->
+                val isActive = index == state.activeEquationIndex
                 val borderModifier = if (isActive) {
                     Modifier.border(1.dp, Color(0xFF474E68), RoundedCornerShape(12.dp))
                 } else Modifier
@@ -59,58 +59,64 @@ fun AdvancedFormulaDisplay(
                         )
                         .then(borderModifier)
                         .clickable { onSelectFormula(index) }
-                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Barra colorata della funzione/curva
+                    // Badge colorato della curva (abbinato al grafico 2D)
                     Box(
                         modifier = Modifier
                             .width(5.dp)
-                            .height(if (formula.expression.contains("/") || formula.roots.size > 1) 48.dp else 30.dp)
-                            .background(formula.color, RoundedCornerShape(3.dp))
+                            .height(if (eq.expression.contains("/") || eq.roots.size > 1) 44.dp else 28.dp)
+                            .background(eq.color, RoundedCornerShape(3.dp))
                     )
 
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
 
-                    // Espressione/Equazione naturale (lato sinistro)
+                    // Espressione con cursore in-place e formattazione naturale
                     Column(
                         modifier = Modifier.weight(1f)
                     ) {
                         FormulaMath2DRenderer(
-                            expression = formula.expression,
-                            isActive = isActive
+                            expression = eq.expression,
+                            isActive = isActive,
+                            cursorPosition = eq.cursorPosition
                         )
 
-                        // Se c'è un risultato singolo non-matrice (es. integrale, derivata, disequazione)
-                        if (formula.resultText.isNotBlank() && formula.roots.size <= 1) {
+                        // Risultato singolo (scalare, disequazione o errore) quando non è una matrice multi-radice
+                        if (eq.formattedResult.isNotBlank() && eq.roots.size <= 1) {
                             Spacer(modifier = Modifier.height(2.dp))
+                            val resultColor = when {
+                                eq.isError -> Color(0xFFF87171)
+                                eq.formattedResult.contains("∈") || eq.formattedResult.contains("<") || eq.formattedResult.contains(">") -> Color(0xFF38BDF8)
+                                else -> Color(0xFF6EE7B7)
+                            }
                             Text(
-                                text = formula.resultText,
+                                text = eq.formattedResult,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (formula.isError) Color(0xFFF87171) else Color(0xFF6EE7B7)
+                                color = resultColor
                             )
                         }
                     }
 
-                    // Lato Destro: Soluzione stile Casio / HiPER Calc con staffa a matrice: [ x = -3 ; x = 3 ] (Matching Foto 1)
-                    if (formula.roots.size > 1) {
+                    // Lato Destro: Matrice soluzioni a staffe quadrate verticali per radici multiple [ x = -3 ; x = 3 ]
+                    if (eq.roots.size > 1) {
                         SolutionMatrixBracket(
-                            roots = formula.roots,
-                            format = formula.activeFormat
+                            roots = eq.roots,
+                            format = eq.formatMode
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                     }
 
-                    // Tasto rimuovi formula (se ce n'è più di 1)
-                    if (state.formulas.size > 1) {
+                    // Pulsante rimozione equazione secondaria
+                    if (state.equations.size > 1) {
                         IconButton(
                             onClick = { onRemoveFormula(index) },
                             modifier = Modifier.size(24.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "Rimuovi funzione",
+                                contentDescription = "Rimuovi equazione",
                                 tint = Color(0xFF94A3B8),
                                 modifier = Modifier.size(16.dp)
                             )
@@ -119,14 +125,14 @@ fun AdvancedFormulaDisplay(
                 }
             }
 
-            // Barra inferiore interna al display: Aggiungi equazione + Badge Formato attivo (DEC/FRAC/ENG/DMS/POL)
+            // Riga inferiore: Badge FORMAT + Tasto "+ Aggiungi equazione"
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Badge Formato (cliccabile per cambiare al volo)
-                val curFormat = state.formulas.getOrNull(state.activeFormulaIndex)?.activeFormat ?: AdvancedMathEngine.ResultFormat.DECIMAL
+                // Badge Formato Attivo (DEC / FRAC / ENG / DMS / POL)
+                val curFormat = state.equations.getOrNull(state.activeEquationIndex)?.formatMode ?: AdvancedMathEngine.ResultFormat.DECIMAL
                 Row(
                     modifier = Modifier
                         .background(Color(0xFF33384C), RoundedCornerShape(10.dp))
@@ -149,8 +155,8 @@ fun AdvancedFormulaDisplay(
                     )
                 }
 
-                // Aggiungi f(x)
-                if (state.formulas.size < 4) {
+                // Pulsante "+ Aggiungi equazione" (fino a 4 simultanee)
+                if (state.equations.size < 4) {
                     Row(
                         modifier = Modifier
                             .clickable { onAddFormula() }
@@ -178,25 +184,26 @@ fun AdvancedFormulaDisplay(
 }
 
 /**
- * Visualizzazione a staffa / parentesi quadra matematica per equazioni con più radici (Foto 1):
+ * Visualizzazione a staffa / parentesi quadra verticale per equazioni a più radici:
  * [ x = -3 ]
  * [ x =  3 ]
  */
 @Composable
 fun SolutionMatrixBracket(
     roots: List<Double>,
-    format: AdvancedMathEngine.ResultFormat
+    format: AdvancedMathEngine.ResultFormat,
+    modifier: Modifier = Modifier
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .background(Color(0xFF1E212D), RoundedCornerShape(8.dp))
+        modifier = modifier
+            .background(Color(0xFF1A1D27), RoundedCornerShape(8.dp))
             .padding(horizontal = 6.dp, vertical = 4.dp)
     ) {
         // Staffa sinistra
         Text(
             text = "[",
-            fontSize = if (roots.size > 2) 26.sp else 22.sp,
+            fontSize = if (roots.size > 2) 24.sp else 20.sp,
             fontWeight = FontWeight.Light,
             color = Color(0xFF60A5FA),
             fontFamily = FontFamily.Monospace
@@ -207,16 +214,11 @@ fun SolutionMatrixBracket(
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             roots.forEachIndexed { idx, r ->
-                val rStr = when (format) {
-                    AdvancedMathEngine.ResultFormat.DECIMAL -> if (r == r.toLong().toDouble()) r.toLong().toString() else "%.4f".format(r)
-                    AdvancedMathEngine.ResultFormat.FRACTION -> AdvancedMathEngine().toFraction(r)
-                    AdvancedMathEngine.ResultFormat.ENGINEERING -> AdvancedMathEngine().toEngineering(r)
-                    AdvancedMathEngine.ResultFormat.DMS -> AdvancedMathEngine().toDms(r)
-                    AdvancedMathEngine.ResultFormat.POLAR -> AdvancedMathEngine().toPolar(r, false)
-                }
+                val rStr = AdvancedMathEngine().formatNumber(r, format, false)
+                val label = if (roots.size <= 2) "x = " else "x${idx + 1} = "
                 Text(
-                    text = "x${if (roots.size > 1) " = " else "="}$rStr",
-                    fontSize = 13.sp,
+                    text = "$label$rStr",
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF6EE7B7),
                     fontFamily = FontFamily.Monospace
@@ -227,7 +229,7 @@ fun SolutionMatrixBracket(
         // Staffa destra
         Text(
             text = "]",
-            fontSize = if (roots.size > 2) 26.sp else 22.sp,
+            fontSize = if (roots.size > 2) 24.sp else 20.sp,
             fontWeight = FontWeight.Light,
             color = Color(0xFF60A5FA),
             fontFamily = FontFamily.Monospace
@@ -236,21 +238,26 @@ fun SolutionMatrixBracket(
 }
 
 /**
- * Renderizza formule con esponenti formattati in apice (es. x² o xⁿ) e frazioni 2D
+ * Renderizza formule con esponenti formattati in apice (x², xⁿ), frazioni 2D e cursore dinamico in-place.
  */
 @Composable
 fun FormulaMath2DRenderer(
     expression: String,
-    isActive: Boolean
+    isActive: Boolean,
+    cursorPosition: Int = 0,
+    modifier: Modifier = Modifier
 ) {
     if (expression.isBlank()) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = modifier
+        ) {
             if (isActive) {
                 Box(
                     modifier = Modifier
                         .width(2.dp)
                         .height(18.dp)
-                        .background(Color(0xFF60A5FA))
+                        .background(Color(0xFF60A5FA), RoundedCornerShape(1.dp))
                 )
                 Spacer(modifier = Modifier.width(4.dp))
             }
@@ -263,7 +270,7 @@ fun FormulaMath2DRenderer(
         return
     }
 
-    // Frazione 2D se contiene "/"
+    // Frazione 2D se contiene "/" isolato
     if (expression.contains("/") && !expression.contains("d/dx") && !expression.contains("=")) {
         val slashIndex = expression.indexOf('/')
         val numPart = expression.substring(0, slashIndex).trim().removePrefix("(").removeSuffix(")")
@@ -281,70 +288,97 @@ fun FormulaMath2DRenderer(
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
+            modifier = modifier.fillMaxWidth()
         ) {
-            if (isActive) {
+            if (isActive && cursorPosition <= slashIndex) {
                 Box(
                     modifier = Modifier
                         .width(2.dp)
-                        .height(32.dp)
+                        .height(28.dp)
                         .background(Color(0xFF60A5FA), RoundedCornerShape(1.dp))
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(4.dp))
             }
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = numPart,
                     color = Color.White,
-                    fontSize = 16.sp,
+                    fontSize = 15.sp,
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Medium
                 )
                 Box(
                     modifier = Modifier
-                        .width((maxOf(numPart.length, denPart.length) * 10).dp)
+                        .width((maxOf(numPart.length, denPart.length) * 10).dp.coerceAtLeast(24.dp))
                         .height(1.5.dp)
                         .background(Color(0xFFE2E8F0))
                 )
                 Text(
                     text = denPart,
                     color = Color.White,
-                    fontSize = 16.sp,
+                    fontSize = 15.sp,
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Medium
                 )
             }
 
+            if (isActive && cursorPosition > slashIndex) {
+                Spacer(modifier = Modifier.width(4.dp))
+                Box(
+                    modifier = Modifier
+                        .width(2.dp)
+                        .height(28.dp)
+                        .background(Color(0xFF60A5FA), RoundedCornerShape(1.dp))
+                )
+            }
+
             if (restPart.isNotEmpty()) {
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = formatExponents(restPart),
                     color = Color.White,
-                    fontSize = 16.sp,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Normal
                 )
             }
         }
     } else {
-        // Lineare con cursore ed esponenti visivi
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        // Lineare con posizionamento esatto del cursore in-place
+        val safeCursor = cursorPosition.coerceIn(0, expression.length)
+        val beforeCursor = expression.substring(0, safeCursor)
+        val afterCursor = expression.substring(safeCursor)
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = modifier
+        ) {
+            if (beforeCursor.isNotEmpty()) {
+                Text(
+                    text = formatExponents(beforeCursor),
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.Normal
+                )
+            }
             if (isActive) {
                 Box(
                     modifier = Modifier
-                        .width(2.5.dp)
-                        .height(22.dp)
+                        .width(2.dp)
+                        .height(20.dp)
                         .background(Color(0xFF60A5FA), RoundedCornerShape(1.dp))
                 )
-                Spacer(modifier = Modifier.width(6.dp))
             }
-            Text(
-                text = formatExponents(expression),
-                color = Color.White,
-                fontSize = 17.sp,
-                fontFamily = FontFamily.SansSerif,
-                fontWeight = FontWeight.Normal
-            )
+            if (afterCursor.isNotEmpty()) {
+                Text(
+                    text = formatExponents(afterCursor),
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.Normal
+                )
+            }
         }
     }
 }

@@ -1,89 +1,269 @@
 package com.google.pixel.calculator.ui.advanced
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.pixel.calculator.core.advanced.AdvancedMathEngine
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.math.roundToLong
 
 class AdvancedCalculatorViewModel(
-    private val engine: AdvancedMathEngine = AdvancedMathEngine()
+    private val engine: AdvancedMathEngine = AdvancedMathEngine(),
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Default
 ) : ViewModel() {
 
     private val availableColors = listOf(
-        Color(0xFF4E75F6), // Blu brillante (Pixel style)
-        Color(0xFF10B981), // Verde smeraldo
-        Color(0xFFF59E0B), // Ambra
-        Color(0xFFEC4899)  // Magenta
+        Color(0xFF4E75F6), // Google Pixel Blue
+        Color(0xFF10B981), // Emerald Mint Green
+        Color(0xFFF59E0B), // Radiant Amber
+        Color(0xFFEC4899)  // Crimson Fuchsia
     )
 
     private val _uiState = MutableStateFlow(AdvancedCalculatorState())
     val uiState: StateFlow<AdvancedCalculatorState> = _uiState.asStateFlow()
 
     init {
-        // Calcola e campiona la formula iniziale
-        updateGraphForActiveFormula()
+        updateGraphForActiveEquation()
     }
 
     // ==========================================
-    // GESTIONE FORMULE MULTIPLE
+    // 1. TABS & THEME ACCENTS
     // ==========================================
 
-    fun selectFormula(index: Int) {
-        if (index in _uiState.value.formulas.indices) {
-            _uiState.update { it.copy(activeFormulaIndex = index) }
+    fun selectTab(tab: MathSolverTab) {
+        _uiState.update { it.copy(activeTab = tab) }
+    }
+
+    // ==========================================
+    // 2. GESTIONE MULTI-EQUAZIONE (Max 4)
+    // ==========================================
+
+    fun selectEquation(index: Int) {
+        if (index in _uiState.value.equations.indices) {
+            _uiState.update { it.copy(activeEquationIndex = index) }
         }
     }
 
-    fun addFormula() {
-        val currentFormulas = _uiState.value.formulas
-        if (currentFormulas.size >= 4) return // Massimo 4 funzioni contemporanee
-        val nextId = (currentFormulas.maxOfOrNull { it.id } ?: 0) + 1
-        val color = availableColors[currentFormulas.size % availableColors.size]
-        val newEntry = FormulaEntry(id = nextId, expression = "", color = color)
+    fun selectEquationById(id: String) {
+        val index = _uiState.value.equations.indexOfFirst { it.id == id }
+        if (index != -1) {
+            selectEquation(index)
+        }
+    }
+
+    fun addEquation() {
+        val current = _uiState.value.equations
+        if (current.size >= 4) return
+
+        val nextNum = (current.mapNotNull { it.id.toString().removePrefix("eq_").toIntOrNull() }.maxOrNull() ?: current.size) + 1
+        val color = availableColors[current.size % availableColors.size]
+        val newEntry = EquationItem(id = "eq_$nextNum", expression = "", cursorPosition = 0, color = color)
+
         _uiState.update {
             it.copy(
-                formulas = currentFormulas + newEntry,
-                activeFormulaIndex = currentFormulas.size
+                equations = current + newEntry,
+                activeEquationIndex = current.size
             )
         }
     }
 
-    fun removeFormula(index: Int) {
-        val currentFormulas = _uiState.value.formulas
-        if (currentFormulas.size <= 1) {
-            updateCurrentExpression("")
+    fun removeEquation(index: Int) {
+        val current = _uiState.value.equations
+        if (current.size <= 1) {
+            // Se c'è una sola equazione, puliscila senza rimuoverla
+            updateEquationAt(0) {
+                it.copy(
+                    expression = "",
+                    cursorPosition = 0,
+                    formattedResult = "",
+                    lastSolveResult = null,
+                    roots = emptyList(),
+                    sampledPoints = emptyList(),
+                    isError = false
+                )
+            }
+            updateAllGraphPoints()
             return
         }
-        val updated = currentFormulas.toMutableList()
+
+        if (index !in current.indices) return
+        val updated = current.toMutableList()
         updated.removeAt(index)
         val newActiveIndex = if (index >= updated.size) updated.size - 1 else index
+
         _uiState.update {
             it.copy(
-                formulas = updated,
-                activeFormulaIndex = newActiveIndex
+                equations = updated,
+                activeEquationIndex = newActiveIndex
             )
         }
         updateAllGraphPoints()
     }
 
+    fun removeEquationById(id: String) {
+        val index = _uiState.value.equations.indexOfFirst { it.id == id }
+        if (index != -1) {
+            removeEquation(index)
+        }
+    }
+
+    // Backward compatibility aliases for existing UI composables
+    fun selectFormula(index: Int) = selectEquation(index)
+    fun addFormula() = addEquation()
+    fun removeFormula(index: Int) = removeEquation(index)
+
     // ==========================================
-    // DIGITAZIONE ED INPUT TASTIERA
+    // 3. CURSORE ED EDITING IN-PLACE
+    // ==========================================
+
+    fun moveCursorLeft() {
+        val curIndex = _uiState.value.activeEquationIndex
+        val eq = _uiState.value.equations.getOrNull(curIndex) ?: return
+        val newPos = (eq.cursorPosition - 1).coerceAtLeast(0)
+        updateEquationAt(curIndex) { it.copy(cursorPosition = newPos) }
+    }
+
+    fun moveCursorRight() {
+        val curIndex = _uiState.value.activeEquationIndex
+        val eq = _uiState.value.equations.getOrNull(curIndex) ?: return
+        val newPos = (eq.cursorPosition + 1).coerceAtMost(eq.expression.length)
+        updateEquationAt(curIndex) { it.copy(cursorPosition = newPos) }
+    }
+
+    fun setCursorPosition(pos: Int) {
+        val curIndex = _uiState.value.activeEquationIndex
+        val eq = _uiState.value.equations.getOrNull(curIndex) ?: return
+        val clamped = pos.coerceIn(0, eq.expression.length)
+        updateEquationAt(curIndex) { it.copy(cursorPosition = clamped) }
+    }
+
+    fun insertCharacter(text: String) {
+        val curIndex = _uiState.value.activeEquationIndex
+        val eq = _uiState.value.equations.getOrNull(curIndex) ?: return
+        val expr = eq.expression
+        val pos = eq.cursorPosition.coerceIn(0, expr.length)
+
+        val newExpr = expr.substring(0, pos) + text + expr.substring(pos)
+        val newPos = pos + text.length
+
+        updateEquationAt(curIndex) {
+            it.copy(
+                expression = newExpr,
+                cursorPosition = newPos,
+                formattedResult = "",
+                lastSolveResult = null,
+                roots = emptyList(),
+                isError = false
+            )
+        }
+        updateGraphForActiveEquation()
+    }
+
+    fun insertText(text: String) = insertCharacter(text)
+
+    fun deleteAtCursor() {
+        val curIndex = _uiState.value.activeEquationIndex
+        val eq = _uiState.value.equations.getOrNull(curIndex) ?: return
+        val expr = eq.expression
+        val pos = eq.cursorPosition.coerceIn(0, expr.length)
+        if (pos <= 0) return
+
+        // Gestione token multi-carattere: se preceduto da " = ", cancella tutti e 3 i caratteri
+        val deleteLen = when {
+            pos >= 3 && expr.substring(pos - 3, pos) == " = " -> 3
+            else -> 1
+        }
+
+        val newExpr = expr.substring(0, pos - deleteLen) + expr.substring(pos)
+        val newPos = pos - deleteLen
+
+        updateEquationAt(curIndex) {
+            it.copy(
+                expression = newExpr,
+                cursorPosition = newPos,
+                formattedResult = "",
+                lastSolveResult = null,
+                roots = emptyList(),
+                isError = false
+            )
+        }
+        updateGraphForActiveEquation()
+    }
+
+    fun onBackspace() = deleteAtCursor()
+
+    fun onClearAll() {
+        _uiState.update {
+            it.copy(
+                equations = listOf(EquationItem(id = "eq_1", expression = "", cursorPosition = 0, color = availableColors[0])),
+                activeEquationIndex = 0,
+                selectedGraphPoint = null,
+                selectedPoint = null,
+                shadedIntervals = emptyList()
+            )
+        }
+    }
+
+    fun clearActiveEquation() {
+        val curIndex = _uiState.value.activeEquationIndex
+        updateEquationAt(curIndex) {
+            it.copy(
+                expression = "",
+                cursorPosition = 0,
+                formattedResult = "",
+                lastSolveResult = null,
+                roots = emptyList(),
+                sampledPoints = emptyList(),
+                isError = false
+            )
+        }
+        updateGraphForActiveEquation()
+    }
+
+    fun updateCurrentExpression(newExpr: String) {
+        val curIndex = _uiState.value.activeEquationIndex
+        updateEquationAt(curIndex) {
+            it.copy(
+                expression = newExpr,
+                cursorPosition = newExpr.length,
+                formattedResult = "",
+                lastSolveResult = null,
+                roots = emptyList(),
+                isError = false
+            )
+        }
+        updateGraphForActiveEquation()
+    }
+
+    // ==========================================
+    // 4. DISPATCHER TASTIERA UNIFICATO
     // ==========================================
 
     fun onKeyClick(key: String) {
-        val curIndex = _uiState.value.activeFormulaIndex
-        val curExpr = _uiState.value.formulas.getOrNull(curIndex)?.expression ?: ""
+        val curIndex = _uiState.value.activeEquationIndex
+        val curExpr = _uiState.value.equations.getOrNull(curIndex)?.expression ?: ""
 
         when (key) {
+            // Navigazione Cursore
+            "←", "LEFT" -> moveCursorLeft()
+            "→", "RIGHT" -> moveCursorRight()
+
+            // Cancellazione
+            "⌫", "DEL" -> deleteAtCursor()
+            "CE" -> clearActiveEquation()
+            "AC", "C" -> onClearAll()
+
             // Memoria
             "MC" -> _uiState.update { it.copy(memoryValue = 0.0) }
-            "MR" -> insertText(_uiState.value.memoryValue.toString())
+            "MR" -> insertCharacter(_uiState.value.memoryValue.toString())
             "MS" -> {
                 val num = curExpr.toDoubleOrNull() ?: 0.0
                 _uiState.update { it.copy(memoryValue = num) }
@@ -97,189 +277,172 @@ class AdvancedCalculatorViewModel(
                 _uiState.update { it.copy(memoryValue = it.memoryValue - num) }
             }
 
-            // Cancellazione
-            "⌫", "DEL" -> onBackspace()
-            "CE" -> updateCurrentExpression("")
-            "AC", "C" -> onClearAll()
-
-            // Segno e radici
+            // Segno e funzioni rapide
             "+/-" -> {
                 if (curExpr.startsWith("-")) {
-                    updateCurrentExpression(curExpr.removePrefix("-"))
+                    val newExpr = curExpr.removePrefix("-")
+                    updateEquationAt(curIndex) { it.copy(expression = newExpr, cursorPosition = (it.cursorPosition - 1).coerceAtLeast(0)) }
                 } else {
-                    updateCurrentExpression("-$curExpr")
+                    val newExpr = "-$curExpr"
+                    updateEquationAt(curIndex) { it.copy(expression = newExpr, cursorPosition = it.cursorPosition + 1) }
                 }
+                updateGraphForActiveEquation()
             }
-            "xⁿ", "x□" -> insertText("^")
-            "x²" -> insertText("^2")
-            "ⁿ√", "ⁿ√□" -> insertText("ʸ√")
-            "√", "√□" -> insertText("sqrt(")
-            "□/□" -> insertText("/")
+            "xⁿ", "x□" -> insertCharacter("^")
+            "x²" -> insertCharacter("^2")
+            "ⁿ√", "ⁿ√□" -> insertCharacter("ʸ√")
+            "√", "√□" -> insertCharacter("sqrt(")
+            "□/□" -> insertCharacter("/")
 
-            // TASTO '=': Inserisce l'uguale nella formula (NON calcola!)
-            "=" -> insertText(" = ")
+            // TASTO '=': Inserisce strettamente l'uguale nella formula (NON calcola!)
+            "=" -> insertCharacter(" = ")
 
-            // TASTO 'EXE': Esegue il calcolo/risoluzione
-            "EXE" -> onExecute()
+            // TASTO '➤' o 'EXE': Esegue la risoluzione effettiva
+            "➤", "EXE" -> executeSolve()
 
-            // TASTO 'FORMAT': Cambia formato di visualizzazione
-            "FORMAT" -> onCycleFormat()
+            // TASTO 'FORMAT': Cicla istantaneamente la rappresentazione
+            "FORMAT" -> cycleFormat()
 
             // Catalog
             "CATALOG" -> openCatalog()
 
-            // Variabili rapide
-            "x" -> insertText("x")
-            "y" -> insertText("y")
+            // Variabili
+            "x" -> insertCharacter("x")
+            "y" -> insertCharacter("y")
 
-            else -> insertText(key)
-        }
-    }
-
-    fun insertText(text: String) {
-        val curIndex = _uiState.value.activeFormulaIndex
-        val curExpr = _uiState.value.formulas.getOrNull(curIndex)?.expression ?: ""
-        val newExpr = curExpr + text
-        updateCurrentExpression(newExpr)
-    }
-
-    fun onBackspace() {
-        val curIndex = _uiState.value.activeFormulaIndex
-        val curExpr = _uiState.value.formulas.getOrNull(curIndex)?.expression ?: ""
-        if (curExpr.isNotEmpty()) {
-            val newExpr = curExpr.dropLast(1)
-            updateCurrentExpression(newExpr)
-        }
-    }
-
-    fun onClearAll() {
-        _uiState.update {
-            it.copy(
-                formulas = listOf(FormulaEntry(id = 1, expression = "", color = availableColors[0])),
-                activeFormulaIndex = 0,
-                selectedPoint = null,
-                shadedIntervals = emptyList()
-            )
-        }
-    }
-
-    fun updateCurrentExpression(newExpr: String) {
-        val curIndex = _uiState.value.activeFormulaIndex
-        val currentFormulas = _uiState.value.formulas.toMutableList()
-        if (curIndex in currentFormulas.indices) {
-            currentFormulas[curIndex] = currentFormulas[curIndex].copy(
-                expression = newExpr,
-                resultText = "",
-                lastSolveResult = null
-            )
-            _uiState.update { it.copy(formulas = currentFormulas) }
-            updateGraphForActiveFormula()
+            else -> insertCharacter(key)
         }
     }
 
     // ==========================================
-    // RISOLUZIONE ESEGUITA DA 'EXE'
+    // 5. RISOLUZIONE ESEGUITA ESCLUSIVAMENTE DA '➤'
     // ==========================================
 
-    fun onExecute() {
-        val curIndex = _uiState.value.activeFormulaIndex
-        val formula = _uiState.value.formulas.getOrNull(curIndex) ?: return
-        if (formula.expression.isBlank()) return
+    fun executeSolve() {
+        val curIndex = _uiState.value.activeEquationIndex
+        val eq = _uiState.value.equations.getOrNull(curIndex) ?: return
+        if (eq.expression.isBlank()) return
 
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             val isRad = _uiState.value.isRadians
-            val result = engine.solve(formula.expression, isRad)
-
-            val updatedFormulas = _uiState.value.formulas.toMutableList()
-            val format = formula.activeFormat
+            val result = engine.solve(eq.expression, isRad)
+            val format = eq.formatMode
 
             when (result) {
                 is AdvancedMathEngine.SolveResult.SingleValue -> {
-                    val formatted = result.formatAs(format, isRad, engine)
-                    updatedFormulas[curIndex] = formula.copy(
-                        resultText = "= $formatted",
-                        lastSolveResult = result,
-                        roots = listOf(result.raw),
-                        isError = false
-                    )
-                    _uiState.update { it.copy(formulas = updatedFormulas, shadedIntervals = emptyList()) }
+                    val formatted = engine.formatNumber(result.raw, format, isRad)
+                    updateEquationAt(curIndex) {
+                        it.copy(
+                            formattedResult = "= $formatted",
+                            lastSolveResult = result,
+                            roots = listOf(result.raw),
+                            isError = false
+                        )
+                    }
+                    _uiState.update { it.copy(shadedIntervals = emptyList()) }
                 }
                 is AdvancedMathEngine.SolveResult.EquationRoots -> {
-                    val formatted = result.formatAs(format, isRad, engine)
-                    updatedFormulas[curIndex] = formula.copy(
-                        resultText = formatted,
-                        lastSolveResult = result,
-                        roots = result.roots,
-                        isError = false
-                    )
-                    _uiState.update { it.copy(formulas = updatedFormulas, shadedIntervals = emptyList()) }
+                    val formatted = formatRoots(result.roots, format, isRad)
+                    updateEquationAt(curIndex) {
+                        it.copy(
+                            formattedResult = formatted,
+                            lastSolveResult = result,
+                            roots = result.roots,
+                            isError = false
+                        )
+                    }
+                    _uiState.update { it.copy(shadedIntervals = emptyList()) }
                 }
                 is AdvancedMathEngine.SolveResult.InequalityIntervals -> {
-                    updatedFormulas[curIndex] = formula.copy(
-                        resultText = result.text,
-                        lastSolveResult = result,
-                        isError = false
-                    )
-                    _uiState.update {
+                    updateEquationAt(curIndex) {
                         it.copy(
-                            formulas = updatedFormulas,
-                            shadedIntervals = result.intervals
+                            formattedResult = result.text,
+                            lastSolveResult = result,
+                            isError = false
+                        )
+                    }
+                    _uiState.update { it.copy(shadedIntervals = result.intervals) }
+                }
+                is AdvancedMathEngine.SolveResult.SystemSolution -> {
+                    updateEquationAt(curIndex) {
+                        it.copy(
+                            formattedResult = result.formattedText,
+                            lastSolveResult = result,
+                            isError = false
                         )
                     }
                 }
-                is AdvancedMathEngine.SolveResult.SystemSolution -> {
-                    updatedFormulas[curIndex] = formula.copy(
-                        resultText = result.formattedText,
-                        lastSolveResult = result,
-                        isError = false
-                    )
-                    _uiState.update { it.copy(formulas = updatedFormulas) }
-                }
                 is AdvancedMathEngine.SolveResult.Error -> {
-                    updatedFormulas[curIndex] = formula.copy(
-                        resultText = result.message,
-                        lastSolveResult = result,
-                        isError = true
-                    )
-                    _uiState.update { it.copy(formulas = updatedFormulas) }
+                    updateEquationAt(curIndex) {
+                        it.copy(
+                            formattedResult = result.message,
+                            lastSolveResult = result,
+                            isError = true
+                        )
+                    }
                 }
             }
+            updateGraphForActiveEquation()
         }
     }
 
+    fun onExecute() = executeSolve()
+
     // ==========================================
-    // TASTO 'FORMAT': CAMBIA LA RAPPRESENTAZIONE DEL RISULTATO
+    // 6. INSTANT FORMAT CYCLING
     // ==========================================
 
-    fun onCycleFormat() {
-        val curIndex = _uiState.value.activeFormulaIndex
-        val formula = _uiState.value.formulas.getOrNull(curIndex) ?: return
+    fun cycleFormat() {
+        val curIndex = _uiState.value.activeEquationIndex
+        val eq = _uiState.value.equations.getOrNull(curIndex) ?: return
 
         val formats = AdvancedMathEngine.ResultFormat.values()
-        val nextIndex = (formula.activeFormat.ordinal + 1) % formats.size
+        val nextIndex = (eq.formatMode.ordinal + 1) % formats.size
         val newFormat = formats[nextIndex]
-
-        val updatedFormulas = _uiState.value.formulas.toMutableList()
         val isRad = _uiState.value.isRadians
 
-        val newResultText = formula.lastSolveResult?.let {
-            if (it is AdvancedMathEngine.SolveResult.SingleValue) {
-                "= ${it.formatAs(newFormat, isRad, engine)}"
-            } else {
-                it.formatAs(newFormat, isRad, engine)
+        val newFormatted = when (val res = eq.lastSolveResult) {
+            is AdvancedMathEngine.SolveResult.SingleValue -> {
+                "= ${engine.formatNumber(res.raw, newFormat, isRad)}"
             }
-        } ?: formula.resultText
+            is AdvancedMathEngine.SolveResult.EquationRoots -> {
+                formatRoots(res.roots, newFormat, isRad)
+            }
+            else -> eq.formattedResult
+        }
 
-        updatedFormulas[curIndex] = formula.copy(
-            activeFormat = newFormat,
-            resultText = newResultText
-        )
+        updateEquationAt(curIndex) {
+            it.copy(
+                formatMode = newFormat,
+                formattedResult = newFormatted
+            )
+        }
+    }
 
-        _uiState.update { it.copy(formulas = updatedFormulas) }
+    fun onCycleFormat() = cycleFormat()
+
+    // ==========================================
+    // 7. FORMATTAZIONE STAFFE A MATRICE RADICI
+    // ==========================================
+
+    fun formatRoots(
+        roots: List<Double>,
+        format: AdvancedMathEngine.ResultFormat,
+        isRadians: Boolean
+    ): String {
+        if (roots.isEmpty()) return "Nessuna radice reale"
+        if (roots.size == 1) {
+            val formatted = engine.formatNumber(roots[0], format, isRadians)
+            return "x = $formatted"
+        }
+        val formattedRoots = roots.map { r ->
+            "x = ${engine.formatNumber(r, format, isRadians)}"
+        }
+        return "[ ${formattedRoots.joinToString(" ; ")} ]"
     }
 
     // ==========================================
-    // CATALOG / LIBRERIA
+    // 8. CATALOG & CONTROLLI VISTA
     // ==========================================
 
     fun openCatalog() {
@@ -291,13 +454,9 @@ class AdvancedCalculatorViewModel(
     }
 
     fun onSelectCatalogItem(insertion: String) {
-        insertText(insertion)
+        insertCharacter(insertion)
         closeCatalog()
     }
-
-    // ==========================================
-    // CONTROLLI VISTA E GRAFICO
-    // ==========================================
 
     fun setScreenViewMode(viewMode: ScreenViewMode) {
         _uiState.update { it.copy(screenViewMode = viewMode) }
@@ -316,26 +475,62 @@ class AdvancedCalculatorViewModel(
         updateAllGraphPoints()
     }
 
+    fun cycleGraphViewMode() {
+        _uiState.update {
+            val newMode = when (it.screenViewMode) {
+                ScreenViewMode.CALCULATOR_ONLY -> ScreenViewMode.SPLIT_SCREEN
+                ScreenViewMode.SPLIT_SCREEN -> ScreenViewMode.FULLSCREEN_GRAPH
+                ScreenViewMode.FULLSCREEN_GRAPH -> ScreenViewMode.CALCULATOR_ONLY
+            }
+            it.copy(screenViewMode = newMode)
+        }
+        updateAllGraphPoints()
+    }
+
     fun toggleRadians() {
         _uiState.update { it.copy(isRadians = !it.isRadians) }
         updateAllGraphPoints()
-        // Aggiorna anche eventuale risultato polare
-        val curIndex = _uiState.value.activeFormulaIndex
-        val formula = _uiState.value.formulas.getOrNull(curIndex)
-        if (formula?.lastSolveResult != null) {
-            onExecute()
+        val curIndex = _uiState.value.activeEquationIndex
+        if (_uiState.value.equations.getOrNull(curIndex)?.lastSolveResult != null) {
+            executeSolve()
         }
     }
 
     fun onGraphTransform(zoomChange: Float, panChange: Offset) {
         _uiState.update { current ->
-            val newScale = (current.graphScale * zoomChange).coerceIn(10f, 300f)
-            val newOffsetX = current.graphOffsetX + panChange.x
-            val newOffsetY = current.graphOffsetY + panChange.y
+            val oldVp = current.graphViewport
+            val newScale = (oldVp.scaleX * zoomChange).coerceIn(10f, 300f)
+            val newCenterMathX = oldVp.centerMathX + (panChange.x / newScale)
+            val newCenterMathY = oldVp.centerMathY - (panChange.y / newScale)
             current.copy(
-                graphScale = newScale,
-                graphOffsetX = newOffsetX,
-                graphOffsetY = newOffsetY
+                graphViewport = oldVp.copy(
+                    centerMathX = newCenterMathX,
+                    centerMathY = newCenterMathY,
+                    scaleX = newScale,
+                    scaleY = newScale
+                )
+            )
+        }
+        updateAllGraphPoints()
+    }
+
+    fun onGraphTransform(centroid: Offset, pan: Offset, zoom: Float) {
+        _uiState.update { current ->
+            val oldVp = current.graphViewport
+            val newScale = (oldVp.scaleX * zoom).coerceIn(10f, 300f)
+            val effectiveZoom = newScale / oldVp.scaleX
+
+            // Centroid-anchored zoom formula
+            val newCenterMathX = oldVp.centerMathX + (pan.x / newScale)
+            val newCenterMathY = oldVp.centerMathY - (pan.y / newScale)
+
+            current.copy(
+                graphViewport = oldVp.copy(
+                    centerMathX = newCenterMathX,
+                    centerMathY = newCenterMathY,
+                    scaleX = newScale,
+                    scaleY = newScale
+                )
             )
         }
         updateAllGraphPoints()
@@ -344,71 +539,96 @@ class AdvancedCalculatorViewModel(
     fun onResetGraph() {
         _uiState.update {
             it.copy(
-                graphScale = 40f,
-                graphOffsetX = 0f,
-                graphOffsetY = 0f,
+                graphViewport = GraphViewport(),
+                selectedGraphPoint = null,
                 selectedPoint = null
             )
         }
         updateAllGraphPoints()
     }
 
+    fun onResetGraphViewport() = onResetGraph()
+
     fun selectGraphPoint(point: Pair<Float, Float>?) {
-        _uiState.update { it.copy(selectedPoint = point) }
+        _uiState.update {
+            it.copy(
+                selectedPoint = point,
+                selectedGraphPoint = point?.let { p ->
+                    SelectedGraphPoint(mathX = p.first, mathY = p.second, label = "(%.2f; %.2f)".format(p.first, p.second))
+                }
+            )
+        }
     }
 
-    private fun updateGraphForActiveFormula() {
-        val curIndex = _uiState.value.activeFormulaIndex
-        val formula = _uiState.value.formulas.getOrNull(curIndex) ?: return
-        if (formula.expression.isBlank()) return
+    fun selectGraphPoint(point: SelectedGraphPoint?) {
+        _uiState.update {
+            it.copy(
+                selectedGraphPoint = point,
+                selectedPoint = point?.let { p -> Pair(p.mathX, p.mathY) }
+            )
+        }
+    }
 
-        viewModelScope.launch {
+    // ==========================================
+    // 9. HELPER INTERNI PER IL GRAFICO
+    // ==========================================
+
+    private fun updateEquationAt(index: Int, transform: (EquationItem) -> EquationItem) {
+        val current = _uiState.value.equations.toMutableList()
+        if (index in current.indices) {
+            current[index] = transform(current[index])
+            _uiState.update { it.copy(equations = current) }
+        }
+    }
+
+    private fun updateGraphForActiveEquation() {
+        val curIndex = _uiState.value.activeEquationIndex
+        val eq = _uiState.value.equations.getOrNull(curIndex) ?: return
+        if (eq.expression.isBlank()) return
+
+        viewModelScope.launch(dispatcher) {
             val state = _uiState.value
-            val halfSpan = (300f / state.graphScale) + 10f
-            val centerX = -state.graphOffsetX / state.graphScale
+            val scale = state.graphViewport.scaleX
+            val halfSpan = (300f / scale) + 10f
+            val centerX = state.graphViewport.centerMathX.toFloat()
             val xMin = centerX - halfSpan
             val xMax = centerX + halfSpan
 
-            // Se è un'equazione "lhs = rhs", per il grafico disegniamo la funzione differenza "lhs - rhs"
-            val plotExpr = if (formula.expression.contains("=")) {
-                val parts = formula.expression.split("=")
-                if (parts.size == 2) "(${parts[0]}) - (${parts[1]})" else formula.expression
-            } else {
-                formula.expression
-            }
-
+            val plotExpr = preparePlotExpression(eq.expression)
             val points = engine.sampleFunction(plotExpr, xMin, xMax, 350, state.isRadians)
-            val updatedFormulas = _uiState.value.formulas.toMutableList()
-            if (curIndex in updatedFormulas.indices) {
-                updatedFormulas[curIndex] = updatedFormulas[curIndex].copy(sampledPoints = points)
-                _uiState.update { it.copy(formulas = updatedFormulas) }
-            }
+
+            updateEquationAt(curIndex) { it.copy(sampledPoints = points) }
         }
     }
 
     private fun updateAllGraphPoints() {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             val state = _uiState.value
-            val halfSpan = (300f / state.graphScale) + 10f
-            val centerX = -state.graphOffsetX / state.graphScale
+            val scale = state.graphViewport.scaleX
+            val halfSpan = (300f / scale) + 10f
+            val centerX = state.graphViewport.centerMathX.toFloat()
             val xMin = centerX - halfSpan
             val xMax = centerX + halfSpan
 
-            val updatedFormulas = state.formulas.map { entry ->
+            val updated = state.equations.map { entry ->
                 if (entry.expression.isNotBlank()) {
-                    val plotExpr = if (entry.expression.contains("=")) {
-                        val parts = entry.expression.split("=")
-                        if (parts.size == 2) "(${parts[0]}) - (${parts[1]})" else entry.expression
-                    } else {
-                        entry.expression
-                    }
+                    val plotExpr = preparePlotExpression(entry.expression)
                     val pts = engine.sampleFunction(plotExpr, xMin, xMax, 350, state.isRadians)
                     entry.copy(sampledPoints = pts)
                 } else {
                     entry.copy(sampledPoints = emptyList())
                 }
             }
-            _uiState.update { it.copy(formulas = updatedFormulas) }
+            _uiState.update { it.copy(equations = updated) }
+        }
+    }
+
+    private fun preparePlotExpression(expr: String): String {
+        return if (expr.contains("=")) {
+            val parts = expr.split("=")
+            if (parts.size == 2) "(${parts[0].trim()}) - (${parts[1].trim()})" else expr
+        } else {
+            expr
         }
     }
 }

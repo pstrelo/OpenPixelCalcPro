@@ -2,6 +2,7 @@ package com.google.pixel.calculator.ui.advanced
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
@@ -18,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -37,6 +39,8 @@ fun AdvancedGraphCanvas(
     onToggleFullscreen: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val viewport = state.graphViewport
+
     Box(
         modifier = modifier
             .background(Color(0xFF222533), RoundedCornerShape(16.dp))
@@ -50,23 +54,31 @@ fun AdvancedGraphCanvas(
                         onTransform(zoom, pan)
                     }
                 }
-                .pointerInput(state.formulas, state.graphScale, state.graphOffsetX, state.graphOffsetY) {
+                .pointerInput(state.equations, viewport) {
                     detectTapGestures { tapOffset ->
-                        val centerX = size.width / 2f + state.graphOffsetX
-                        val centerY = size.height / 2f + state.graphOffsetY
-                        val mathX = (tapOffset.x - centerX) / state.graphScale
-                        val mathY = -(tapOffset.y - centerY) / state.graphScale
+                        val canvasSize = size
+                        val (mathX, mathY) = viewport.screenToMath(tapOffset, Size(canvasSize.width.toFloat(), canvasSize.height.toFloat()))
 
-                        // Controlla se abbiamo toccato vicino a una radice o a una curva
+                        // Magnetic snap: cerca radici analitiche o punti campionati vicini (< 40px)
                         var closestPoint: Pair<Float, Float>? = null
-                        var minDistance = 40f // raggio di aggancio in pixel
+                        var minDistance = 40f
 
-                        for (f in state.formulas) {
-                            for (p in f.sampledPoints) {
+                        for (eq in state.equations) {
+                            // 1. Priorità: radici analitiche dell'equazione
+                            for (root in eq.roots) {
+                                val rootScreen = viewport.mathToScreen(root, 0.0, Size(canvasSize.width.toFloat(), canvasSize.height.toFloat()))
+                                val dist = (tapOffset - rootScreen).getDistance()
+                                if (dist < minDistance) {
+                                    minDistance = dist
+                                    closestPoint = Pair(root.toFloat(), 0f)
+                                }
+                            }
+
+                            // 2. Punti campionati sulla curva
+                            for (p in eq.sampledPoints) {
                                 if (p != null) {
-                                    val screenX = centerX + p.x * state.graphScale
-                                    val screenY = centerY - p.y * state.graphScale
-                                    val dist = (tapOffset - Offset(screenX, screenY)).getDistance()
+                                    val screenPoint = viewport.mathToScreen(p.x.toDouble(), p.y.toDouble(), Size(canvasSize.width.toFloat(), canvasSize.height.toFloat()))
+                                    val dist = (tapOffset - screenPoint).getDistance()
                                     if (dist < minDistance) {
                                         minDistance = dist
                                         closestPoint = Pair(p.x, p.y)
@@ -78,7 +90,6 @@ fun AdvancedGraphCanvas(
                         if (closestPoint != null) {
                             onPointSelected(closestPoint)
                         } else {
-                            // Seleziona il punto geometrico toccato
                             val roundedX = ((mathX * 100).roundToInt() / 100f)
                             val roundedY = ((mathY * 100).roundToInt() / 100f)
                             onPointSelected(Pair(roundedX, roundedY))
@@ -88,11 +99,13 @@ fun AdvancedGraphCanvas(
         ) {
             val width = size.width
             val height = size.height
-            val centerX = width / 2f + state.graphOffsetX
-            val centerY = height / 2f + state.graphOffsetY
-            val scale = state.graphScale
+            val canvasSize = Size(width, height)
+            val origin = viewport.mathToScreen(0.0, 0.0, canvasSize)
+            val centerX = origin.x
+            val centerY = origin.y
+            val scale = viewport.scaleX
 
-            // 1. Disegna la griglia di fondo
+            // 1. Griglia cartesiana
             val gridStepMath = when {
                 scale > 120 -> 0.5f
                 scale > 50 -> 1f
@@ -125,23 +138,58 @@ fun AdvancedGraphCanvas(
                 curY += gridStepPx
             }
 
-            // 2. Disegna gli assi cartesiani principali (X e Y)
-            // Asse X
-            drawLine(
-                color = Color(0xFFE2E8F0),
-                start = Offset(0f, centerY),
-                end = Offset(width, centerY),
-                strokeWidth = 2.dp.toPx()
-            )
-            // Asse Y
-            drawLine(
-                color = Color(0xFFE2E8F0),
-                start = Offset(centerX, 0f),
-                end = Offset(centerX, height),
-                strokeWidth = 2.dp.toPx()
-            )
+            // 2. Aree di disequazione ombreggiate (Shaded Intervals)
+            for (interval in state.shadedIntervals) {
+                val xLeft = viewport.mathToScreen(interval.from.toDouble(), 0.0, canvasSize).x
+                val xRight = viewport.mathToScreen(interval.to.toDouble(), 0.0, canvasSize).x
+                val leftClamped = xLeft.coerceIn(0f, width)
+                val rightClamped = xRight.coerceIn(0f, width)
 
-            // 3. Etichette numeriche e tacche
+                // Sfondo traslucido della regione
+                drawRect(
+                    color = Color(0x2810B981),
+                    topLeft = Offset(leftClamped, 0f),
+                    size = Size(rightClamped - leftClamped, height)
+                )
+
+                // Linee di confine verticali
+                if (xLeft in 0f..width) {
+                    drawLine(
+                        color = Color(0xFF10B981),
+                        start = Offset(xLeft, 0f),
+                        end = Offset(xLeft, height),
+                        strokeWidth = 2.dp.toPx()
+                    )
+                }
+                if (xRight in 0f..width) {
+                    drawLine(
+                        color = Color(0xFF10B981),
+                        start = Offset(xRight, 0f),
+                        end = Offset(xRight, height),
+                        strokeWidth = 2.dp.toPx()
+                    )
+                }
+            }
+
+            // 3. Assi cartesiani principali (X e Y)
+            if (centerY in 0f..height) {
+                drawLine(
+                    color = Color(0xFFE2E8F0),
+                    start = Offset(0f, centerY),
+                    end = Offset(width, centerY),
+                    strokeWidth = 2.dp.toPx()
+                )
+            }
+            if (centerX in 0f..width) {
+                drawLine(
+                    color = Color(0xFFE2E8F0),
+                    start = Offset(centerX, 0f),
+                    end = Offset(centerX, height),
+                    strokeWidth = 2.dp.toPx()
+                )
+            }
+
+            // 4. Etichette numeriche e tacche
             val paint = android.graphics.Paint().apply {
                 color = android.graphics.Color.parseColor("#94A3B8")
                 textSize = 11.sp.toPx()
@@ -149,210 +197,200 @@ fun AdvancedGraphCanvas(
                 isAntiAlias = true
             }
 
-            // Numeri asse X
-            val xMin = -centerX / scale
-            val xMax = (width - centerX) / scale
-            val firstTickX = (kotlin.math.floor(xMin / gridStepMath) * gridStepMath).toFloat()
+            val domain = viewport.getVisibleDomainX(width)
+            val firstTickX = (kotlin.math.floor(domain.first / gridStepMath) * gridStepMath).toFloat()
             var tX = firstTickX
-            while (tX <= xMax) {
+            while (tX <= domain.second) {
                 if (abs(tX) > 1e-4) {
-                    val px = centerX + tX * scale
+                    val px = viewport.mathToScreen(tX.toDouble(), 0.0, canvasSize).x
+                    val pyClamped = centerY.coerceIn(15f, height - 25f)
                     drawLine(
-                        color = Color(0xFFCBD5E1),
-                        start = Offset(px, centerY - 4.dp.toPx()),
-                        end = Offset(px, centerY + 4.dp.toPx()),
-                        strokeWidth = 1.5.dp.toPx()
+                        color = Color(0xFFE2E8F0),
+                        start = Offset(px, pyClamped - 4f),
+                        end = Offset(px, pyClamped + 4f),
+                        strokeWidth = 1.5f
                     )
-                    val label = if (tX == tX.toLong().toFloat()) tX.toLong().toString() else "%.1f".format(tX)
                     drawContext.canvas.nativeCanvas.drawText(
-                        label,
+                        if (tX == tX.toInt().toFloat()) tX.toInt().toString() else "%.1f".format(tX),
                         px,
-                        centerY + 16.dp.toPx(),
+                        pyClamped + 18f,
                         paint
                     )
                 }
                 tX += gridStepMath
             }
 
-            // Numeri asse Y
-            val yMin = -(height - centerY) / scale
-            val yMax = centerY / scale
+            val yPaint = android.graphics.Paint().apply {
+                color = android.graphics.Color.parseColor("#94A3B8")
+                textSize = 11.sp.toPx()
+                textAlign = android.graphics.Paint.Align.RIGHT
+                isAntiAlias = true
+            }
+            val halfSpanY = (height / (2f * scale)).toDouble()
+            val yMin = viewport.centerMathY - halfSpanY
+            val yMax = viewport.centerMathY + halfSpanY
             val firstTickY = (kotlin.math.floor(yMin / gridStepMath) * gridStepMath).toFloat()
             var tY = firstTickY
             while (tY <= yMax) {
                 if (abs(tY) > 1e-4) {
-                    val py = centerY - tY * scale
+                    val py = viewport.mathToScreen(0.0, tY.toDouble(), canvasSize).y
+                    val pxClamped = centerX.coerceIn(25f, width - 15f)
                     drawLine(
-                        color = Color(0xFFCBD5E1),
-                        start = Offset(centerX - 4.dp.toPx(), py),
-                        end = Offset(centerX + 4.dp.toPx(), py),
-                        strokeWidth = 1.5.dp.toPx()
+                        color = Color(0xFFE2E8F0),
+                        start = Offset(pxClamped - 4f, py),
+                        end = Offset(pxClamped + 4f, py),
+                        strokeWidth = 1.5f
                     )
-                    val label = if (tY == tY.toLong().toFloat()) tY.toLong().toString() else "%.1f".format(tY)
-                    val alignLeftPaint = android.graphics.Paint(paint).apply {
-                        textAlign = android.graphics.Paint.Align.RIGHT
-                    }
                     drawContext.canvas.nativeCanvas.drawText(
-                        label,
-                        centerX - 8.dp.toPx(),
-                        py + 4.dp.toPx(),
-                        alignLeftPaint
+                        if (tY == tY.toInt().toFloat()) tY.toInt().toString() else "%.1f".format(tY),
+                        pxClamped - 8f,
+                        py + 4f,
+                        yPaint
                     )
                 }
                 tY += gridStepMath
             }
 
-            // Etichette "X" e "Y"
-            drawContext.canvas.nativeCanvas.drawText("X", width - 16.dp.toPx(), centerY - 8.dp.toPx(), paint)
-            drawContext.canvas.nativeCanvas.drawText("Y", centerX + 12.dp.toPx(), 20.dp.toPx(), paint)
-            drawContext.canvas.nativeCanvas.drawText("0", centerX - 10.dp.toPx(), centerY + 14.dp.toPx(), paint)
-
-            // 4. Aree ombreggiate per disequazioni
-            for (interval in state.shadedIntervals) {
-                val leftPx = centerX + interval.from * scale
-                val rightPx = centerX + interval.to * scale
-                drawRect(
-                    color = Color(0x3310B981), // Verde traslucido
-                    topLeft = Offset(leftPx, 0f),
-                    size = androidx.compose.ui.geometry.Size(rightPx - leftPx, height)
-                )
-            }
-
-            // 5. Curve delle funzioni
-            for (formula in state.formulas) {
-                val points = formula.sampledPoints
-                if (points.isNotEmpty()) {
+            // 5. Rendering delle curve matematiche multi-equazione
+            for (eq in state.equations) {
+                if (eq.sampledPoints.isNotEmpty()) {
                     val path = Path()
                     var isDrawing = false
 
-                    for (p in points) {
-                        if (p == null) {
-                            isDrawing = false
-                        } else {
-                            val px = centerX + p.x * scale
-                            val py = centerY - p.y * scale
+                    for (p in eq.sampledPoints) {
+                        if (p != null) {
+                            val screenPoint = viewport.mathToScreen(p.x.toDouble(), p.y.toDouble(), canvasSize)
                             if (!isDrawing) {
-                                path.moveTo(px, py)
+                                path.moveTo(screenPoint.x, screenPoint.y)
                                 isDrawing = true
                             } else {
-                                path.lineTo(px, py)
+                                path.lineTo(screenPoint.x, screenPoint.y)
                             }
+                        } else {
+                            isDrawing = false
                         }
                     }
 
                     drawPath(
                         path = path,
-                        color = formula.color,
-                        style = Stroke(width = 3.dp.toPx())
+                        color = eq.color,
+                        style = Stroke(width = 2.5.dp.toPx())
                     )
                 }
             }
 
-            // 6. Disegna il punto selezionato o lo zero con tooltip (matching Foto 1)
-            state.selectedPoint?.let { (selX, selY) ->
-                val px = centerX + selX * scale
-                val py = centerY - selY * scale
+            // 6. Tracciamento punti radici analitiche (Zero Marker)
+            for (eq in state.equations) {
+                for (root in eq.roots) {
+                    val rootScreen = viewport.mathToScreen(root, 0.0, canvasSize)
+                    if (rootScreen.x in 0f..width && rootScreen.y in 0f..height) {
+                        drawCircle(
+                            color = eq.color.copy(alpha = 0.35f),
+                            radius = 9.dp.toPx(),
+                            center = rootScreen
+                        )
+                        drawCircle(
+                            color = eq.color,
+                            radius = 4.dp.toPx(),
+                            center = rootScreen
+                        )
+                    }
+                }
+            }
 
-                // Anello esterno illuminato
+            // 7. Punto selezionato con coordinate callout (x; y)
+            val selPoint = state.selectedPoint
+            if (selPoint != null) {
+                val screenPt = viewport.mathToScreen(selPoint.first.toDouble(), selPoint.second.toDouble(), canvasSize)
+                // Alone di evidenziazione
                 drawCircle(
-                    color = Color(0x804E75F6),
-                    radius = 9.dp.toPx(),
-                    center = Offset(px, py)
+                    color = Color(0x6660A5FA),
+                    radius = 12.dp.toPx(),
+                    center = screenPt
                 )
-                // Pallino pieno centrale
                 drawCircle(
-                    color = Color(0xFF93C5FD),
+                    color = Color(0xFF60A5FA),
                     radius = 5.dp.toPx(),
-                    center = Offset(px, py)
+                    center = screenPt
                 )
 
-                // Fumetto con le coordinate: es. (3.187; 0)
-                val coordText = "(%.3f; %.3f)".format(selX, selY)
-                val bgPaint = android.graphics.Paint().apply {
-                    color = android.graphics.Color.parseColor("#1E212D")
-                    style = android.graphics.Paint.Style.FILL
-                    isAntiAlias = true
-                }
-                val borderPaint = android.graphics.Paint().apply {
-                    color = android.graphics.Color.parseColor("#3B4252")
-                    style = android.graphics.Paint.Style.STROKE
-                    strokeWidth = 1.dp.toPx()
-                    isAntiAlias = true
-                }
-                val textPaint = android.graphics.Paint().apply {
+                // Callout delle coordinate (x; y)
+                val coordText = "(%.2f; %.2f)".format(selPoint.first, selPoint.second)
+                val calloutPaint = android.graphics.Paint().apply {
                     color = android.graphics.Color.WHITE
                     textSize = 12.sp.toPx()
                     textAlign = android.graphics.Paint.Align.CENTER
+                    isFakeBoldText = true
+                    isAntiAlias = true
+                }
+                val calloutBgPaint = android.graphics.Paint().apply {
+                    color = android.graphics.Color.parseColor("#DD1E212D")
+                    style = android.graphics.Paint.Style.FILL
                     isAntiAlias = true
                 }
 
-                val textBounds = android.graphics.Rect()
-                textPaint.getTextBounds(coordText, 0, coordText.length, textBounds)
-                val bubbleW = textBounds.width() + 24.dp.toPx()
-                val bubbleH = textBounds.height() + 16.dp.toPx()
-                val bubbleX = px + 12.dp.toPx()
-                val bubbleY = py - 20.dp.toPx()
+                val textW = calloutPaint.measureText(coordText)
+                val bubbleLeft = (screenPt.x - textW / 2f - 12f).coerceIn(10f, width - textW - 24f)
+                val bubbleTop = (screenPt.y - 42.dp.toPx()).coerceAtLeast(10f)
 
-                val rectF = android.graphics.RectF(bubbleX, bubbleY - bubbleH, bubbleX + bubbleW, bubbleY)
-                drawContext.canvas.nativeCanvas.drawRoundRect(rectF, 12.dp.toPx(), 12.dp.toPx(), bgPaint)
-                drawContext.canvas.nativeCanvas.drawRoundRect(rectF, 12.dp.toPx(), 12.dp.toPx(), borderPaint)
+                drawContext.canvas.nativeCanvas.drawRoundRect(
+                    bubbleLeft,
+                    bubbleTop,
+                    bubbleLeft + textW + 24f,
+                    bubbleTop + 24.dp.toPx(),
+                    12f,
+                    12f,
+                    calloutBgPaint
+                )
                 drawContext.canvas.nativeCanvas.drawText(
                     coordText,
-                    bubbleX + bubbleW / 2f,
-                    bubbleY - bubbleH / 2f + textBounds.height() / 2f,
-                    textPaint
+                    bubbleLeft + (textW + 24f) / 2f,
+                    bubbleTop + 16.dp.toPx(),
+                    calloutPaint
                 )
             }
         }
 
-        // Overlay con pulsanti di controllo grafici
+        // Overlay dei controlli rapidi (Zoom +, Zoom -, Reset, Fullscreen)
         Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(10.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            // Zoom In
-            IconButton(
-                onClick = { onTransform(1.25f, Offset.Zero) },
-                modifier = Modifier
-                    .size(34.dp)
-                    .background(Color(0x801E212D), CircleShape)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Zoom In", tint = Color.White)
+            CanvasOverlayButton(onClick = { onTransform(1.25f, Offset.Zero) }) {
+                Icon(Icons.Default.Add, contentDescription = "Zoom In", tint = Color.White, modifier = Modifier.size(16.dp))
             }
-            // Zoom Out
-            IconButton(
-                onClick = { onTransform(0.8f, Offset.Zero) },
-                modifier = Modifier
-                    .size(34.dp)
-                    .background(Color(0x801E212D), CircleShape)
-            ) {
-                Icon(Icons.Default.Remove, contentDescription = "Zoom Out", tint = Color.White)
+            CanvasOverlayButton(onClick = { onTransform(0.8f, Offset.Zero) }) {
+                Icon(Icons.Default.Remove, contentDescription = "Zoom Out", tint = Color.White, modifier = Modifier.size(16.dp))
             }
-            // Reset Vista
-            IconButton(
-                onClick = onReset,
-                modifier = Modifier
-                    .size(34.dp)
-                    .background(Color(0x801E212D), CircleShape)
-            ) {
-                Icon(Icons.Default.Refresh, contentDescription = "Reset Vista", tint = Color.White)
+            CanvasOverlayButton(onClick = onReset) {
+                Icon(Icons.Default.Refresh, contentDescription = "Ripristina Vista", tint = Color.White, modifier = Modifier.size(16.dp))
             }
-            // Ingrandisci / Riduci schermo intero
-            IconButton(
-                onClick = onToggleFullscreen,
-                modifier = Modifier
-                    .size(34.dp)
-                    .background(Color(0x801E212D), CircleShape)
-            ) {
+            CanvasOverlayButton(onClick = onToggleFullscreen) {
                 Icon(
-                    imageVector = if (state.screenViewMode == ScreenViewMode.FULLSCREEN_GRAPH)
-                        Icons.Default.CloseFullscreen else Icons.Default.Fullscreen,
+                    imageVector = if (state.screenViewMode == ScreenViewMode.FULLSCREEN_GRAPH) Icons.Default.CloseFullscreen else Icons.Default.Fullscreen,
                     contentDescription = "Schermo Intero",
-                    tint = Color.White
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun CanvasOverlayButton(
+    onClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(32.dp)
+            .background(Color(0x99242736), CircleShape)
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        content()
     }
 }
