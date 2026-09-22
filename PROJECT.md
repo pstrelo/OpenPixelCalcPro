@@ -40,10 +40,10 @@ The application redesign refactors the Advanced/Scientific Calculator screen in 
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
 |---|------|-------|-------------|--------|
-| M1 | Domain & State Engine Integration | `AdvancedCalculatorState.kt`, `AdvancedCalculatorViewModel.kt`, cursor handling, `=` vs `➤`, FORMAT cycling, multi-equation state | none | PLANNED |
-| M2 | Keypad & M3 Tab Redesign | `AdvancedKeypad.kt`, 4 thematic tabs, dynamic `[ ➤ ]` accent, 6-button bottom edit bar | M1 | PLANNED |
-| M3 | Display & 2D Cartesian Graph Integration | `AdvancedFormulaDisplay.kt`, `AdvancedGraphCanvas.kt`, `AdvancedCalculatorScreen.kt`, top Graph button, multi-equation card, math viewport, gestures, roots/intercepts, inequality shading | M1, M2 | PLANNED |
-| M4 | Final Milestone: 100% E2E Test Pass & Coverage Hardening | Full screen integration, run all E2E & unit tests, build verification (`./gradlew assembleDebug`), adversarial hardening, and Git auto-push | M1, M2, M3 | PLANNED |
+| M1 | Domain & State Engine Integration | `AdvancedCalculatorState.kt`, `AdvancedCalculatorViewModel.kt`, cursor handling, `=` vs `➤`, FORMAT cycling, multi-equation state | none | DONE |
+| M2 | Keypad & M3 Tab Redesign | `AdvancedKeypad.kt`, 4 thematic tabs, dynamic `[ ➤ ]` accent, 6-button bottom edit bar | M1 | DONE |
+| M3 | Display & 2D Cartesian Graph Integration | `AdvancedFormulaDisplay.kt`, `AdvancedGraphCanvas.kt`, `AdvancedCalculatorScreen.kt`, top Graph button, multi-equation card, math viewport, gestures, roots/intercepts, inequality shading | M1, M2 | DONE |
+| M4 | Final Milestone: 100% E2E Test Pass & Coverage Hardening | Full screen integration, run all E2E & unit tests, build verification (`./gradlew assembleDebug`), adversarial hardening, and Git auto-push | M1, M2, M3 | DONE |
 
 ## Interface Contracts
 
