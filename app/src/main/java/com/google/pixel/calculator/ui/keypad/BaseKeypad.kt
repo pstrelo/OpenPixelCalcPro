@@ -24,6 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.pixel.calculator.ui.icons.SquareFoot
 import com.google.pixel.calculator.ui.theme.CalculatorTheme
+import com.google.pixel.calculator.ui.theme.QuicksandFontFamily
+import com.google.pixel.calculator.ui.theme.SystemFontFamily
 
 enum class PixelButtonType {
     NUMERIC,
@@ -436,10 +438,12 @@ fun PixelButton(
             type == PixelButtonType.OPERATOR || type == PixelButtonType.EQUALS -> if (height < 55.dp) 26.sp else 30.sp
             else -> if (text.length > 2) 18.sp else 22.sp
         }
+        val isNumeric = type == PixelButtonType.NUMERIC || text.all { it.isDigit() || it == '.' || it == ',' }
         Text(
             text = text,
             fontSize = fontSize,
-            fontWeight = if (type == PixelButtonType.NUMERIC) FontWeight.Normal else FontWeight.Medium
+            fontFamily = if (isNumeric) QuicksandFontFamily else SystemFontFamily,
+            fontWeight = if (isNumeric) FontWeight.SemiBold else FontWeight.Medium
         )
     }
 }

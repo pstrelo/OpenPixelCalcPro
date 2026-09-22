@@ -42,6 +42,19 @@ object MathSolverTheme {
     val functionContainer = Color(0xFF252A3D)
     val functionContent = Color(0xFF93C5FD)
 
+    // Tab-specific tinted containers (Material 3 Expressive)
+    val algebraFunctionContainer = Color(0xFF2D253B)
+    val algebraFunctionContent = Color(0xFFE9D5FF)
+
+    val trigFunctionContainer = Color(0xFF1E322A)
+    val trigFunctionContent = Color(0xFFA7F3D0)
+
+    val calculusFunctionContainer = Color(0xFF382332)
+    val calculusFunctionContent = Color(0xFFFBCFE8)
+
+    val alphabetFunctionContainer = Color(0xFF34261F)
+    val alphabetFunctionContent = Color(0xFFFED7AA)
+
     val operatorContainer = Color(0xFF2A2E40)
     val operatorContent = Color(0xFFCBD5E1)
 

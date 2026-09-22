@@ -48,7 +48,7 @@ object CalculatorTheme {
         get() = LocalCalculatorColors.current
 }
 
-// 1. TEMA CHIARO CLASSICO PIXEL
+// 1. TEMA CHIARO STANDARD CLASSICO
 private val PixelLightCalculatorColors = CalculatorColors(
     background = Color(0xFFFFFFFF),
     surface = Color(0xFFFFFFFF),
@@ -69,7 +69,7 @@ private val PixelLightCalculatorColors = CalculatorColors(
     isDark = false
 )
 
-// 2. TEMA SCURO CLASSICO PIXEL
+// 2. TEMA SCURO STANDARD CLASSICO
 private val PixelDarkCalculatorColors = CalculatorColors(
     background = Color(0xFF131418),
     surface = Color(0xFF131418),
@@ -134,24 +134,30 @@ private val RetroCyberCalculatorColors = CalculatorColors(
 
 @Composable
 fun PixelCalculatorTheme(
-    themeMode: AppThemeMode = AppThemeMode.SYSTEM,
+    themeMode: AppThemeMode = AppThemeMode.SYSTEM_AUTO,
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
     val systemInDark = isSystemInDarkTheme()
 
     val isDark = when (themeMode) {
-        AppThemeMode.SYSTEM -> systemInDark
-        AppThemeMode.LIGHT -> false
-        AppThemeMode.DARK -> true
+        AppThemeMode.SYSTEM_AUTO -> systemInDark
+        AppThemeMode.SYSTEM_LIGHT -> false
+        AppThemeMode.SYSTEM_DARK -> true
+        AppThemeMode.STANDARD_LIGHT -> false
+        AppThemeMode.STANDARD_DARK -> true
         AppThemeMode.CANDY_POP -> false
         AppThemeMode.RETRO_CYBER -> true
     }
 
-    val (m3ColorScheme, calcColors) = when (themeMode) {
-        AppThemeMode.SYSTEM -> {
+    val isSystemDynamic = themeMode == AppThemeMode.SYSTEM_AUTO ||
+            themeMode == AppThemeMode.SYSTEM_LIGHT ||
+            themeMode == AppThemeMode.SYSTEM_DARK
+
+    val (m3ColorScheme, calcColors) = when {
+        isSystemDynamic -> {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                // Dynamic Color Monet reale di sistema
+                // Dynamic Color Monet reale di sistema con accenti coerenti (es. blu dei controlli)
                 val dynamicScheme = if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
                 val colors = if (isDark) {
                     CalculatorColors(
@@ -203,7 +209,7 @@ fun PixelCalculatorTheme(
                 }
             }
         }
-        AppThemeMode.LIGHT -> Pair(
+        themeMode == AppThemeMode.STANDARD_LIGHT -> Pair(
             lightColorScheme(
                 primary = PixelLightCalculatorColors.equalsContainer,
                 onPrimary = PixelLightCalculatorColors.equalsContent,
@@ -212,7 +218,7 @@ fun PixelCalculatorTheme(
             ),
             PixelLightCalculatorColors
         )
-        AppThemeMode.DARK -> Pair(
+        themeMode == AppThemeMode.STANDARD_DARK -> Pair(
             darkColorScheme(
                 primary = PixelDarkCalculatorColors.equalsContainer,
                 onPrimary = PixelDarkCalculatorColors.equalsContent,
@@ -221,7 +227,7 @@ fun PixelCalculatorTheme(
             ),
             PixelDarkCalculatorColors
         )
-        AppThemeMode.CANDY_POP -> Pair(
+        themeMode == AppThemeMode.CANDY_POP -> Pair(
             lightColorScheme(
                 primary = CandyPopCalculatorColors.equalsContainer,
                 onPrimary = CandyPopCalculatorColors.equalsContent,
@@ -230,7 +236,7 @@ fun PixelCalculatorTheme(
             ),
             CandyPopCalculatorColors
         )
-        AppThemeMode.RETRO_CYBER -> Pair(
+        themeMode == AppThemeMode.RETRO_CYBER -> Pair(
             darkColorScheme(
                 primary = RetroCyberCalculatorColors.equalsContainer,
                 onPrimary = RetroCyberCalculatorColors.equalsContent,
@@ -239,6 +245,7 @@ fun PixelCalculatorTheme(
             ),
             RetroCyberCalculatorColors
         )
+        else -> Pair(lightColorScheme(), PixelLightCalculatorColors)
     }
 
     CompositionLocalProvider(LocalCalculatorColors provides calcColors) {

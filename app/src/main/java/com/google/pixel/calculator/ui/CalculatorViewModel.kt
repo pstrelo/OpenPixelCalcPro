@@ -22,7 +22,7 @@ class CalculatorViewModel(
 
     private val _uiState = MutableStateFlow(
         CalculatorState(
-            themeMode = themePreferences?.themeMode?.value ?: AppThemeMode.SYSTEM,
+            themeMode = themePreferences?.themeMode?.value ?: AppThemeMode.SYSTEM_AUTO,
             isHapticEnabled = themePreferences?.isHapticEnabled?.value ?: true
         )
     )

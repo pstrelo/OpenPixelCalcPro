@@ -260,11 +260,12 @@ fun AdvancedGraphCanvas(
                     for (p in eq.sampledPoints) {
                         if (p != null) {
                             val screenPoint = viewport.mathToScreen(p.x.toDouble(), p.y.toDouble(), canvasSize)
+                            val yClamped = screenPoint.y.coerceIn(-height * 2f, height * 3f)
                             if (!isDrawing) {
-                                path.moveTo(screenPoint.x, screenPoint.y)
+                                path.moveTo(screenPoint.x, yClamped)
                                 isDrawing = true
                             } else {
-                                path.lineTo(screenPoint.x, screenPoint.y)
+                                path.lineTo(screenPoint.x, yClamped)
                             }
                         } else {
                             isDrawing = false

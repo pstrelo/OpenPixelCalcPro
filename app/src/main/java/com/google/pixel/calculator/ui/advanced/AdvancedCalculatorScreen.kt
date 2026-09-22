@@ -88,16 +88,23 @@ fun AdvancedCalculatorScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(bottom = 4.dp),
-                        verticalArrangement = Arrangement.SpaceBetween
+                            .padding(bottom = 6.dp)
                     ) {
-                        AdvancedFormulaDisplay(
-                            state = state,
-                            onSelectFormula = { viewModel.selectFormula(it) },
-                            onAddFormula = { viewModel.addFormula() },
-                            onRemoveFormula = { viewModel.removeFormula(it) },
-                            onCycleFormat = { viewModel.onCycleFormat() }
-                        )
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                                .padding(bottom = 4.dp),
+                            contentAlignment = Alignment.BottomCenter
+                        ) {
+                            AdvancedFormulaDisplay(
+                                state = state,
+                                onSelectFormula = { viewModel.selectFormula(it) },
+                                onAddFormula = { viewModel.addFormula() },
+                                onRemoveFormula = { viewModel.removeFormula(it) },
+                                onCycleFormat = { viewModel.onCycleFormat() }
+                            )
+                        }
 
                         AdvancedKeypad(
                             state = state,
@@ -123,7 +130,7 @@ fun AdvancedCalculatorScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxWidth()
-                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
                             AdvancedGraphCanvas(
                                 state = state,
@@ -140,7 +147,7 @@ fun AdvancedCalculatorScreen(
                                 .weight(1.4f)
                                 .fillMaxWidth()
                                 .padding(bottom = 2.dp),
-                            verticalArrangement = Arrangement.SpaceBetween
+                            verticalArrangement = Arrangement.Bottom
                         ) {
                             AdvancedFormulaDisplay(
                                 state = state,
@@ -231,9 +238,9 @@ fun DetachedGraphButton(
 
     Box(
         modifier = modifier
-            .background(bgColor, RoundedCornerShape(14.dp))
+            .background(bgColor, RoundedCornerShape(percent = 50))
             .clickable { onClick() }
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .padding(horizontal = 14.dp, vertical = 7.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(

@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.pixel.calculator.core.math.MathNode
 import com.google.pixel.calculator.ui.theme.CalculatorTheme
+import com.google.pixel.calculator.ui.theme.QuicksandFontFamily
+import com.google.pixel.calculator.ui.theme.SystemFontFamily
 
 /**
  * Display formule ad alta leggibilità in stile Google Pixel Calculator:
@@ -61,8 +63,8 @@ fun FormulaDisplay(
                     Text(
                         text = prevRes,
                         fontSize = 24.sp,
-                        fontWeight = FontWeight.Normal,
-                        fontFamily = FontFamily.SansSerif,
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = QuicksandFontFamily,
                         color = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.6f),
                         textAlign = TextAlign.End,
                         maxLines = 1
@@ -93,8 +95,8 @@ fun FormulaDisplay(
                 Text(
                     text = if (expression.isEmpty()) "0" else expression,
                     fontSize = fontSize,
-                    fontWeight = FontWeight.Light,
-                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = QuicksandFontFamily,
                     color = CalculatorTheme.colors.onSurface,
                     textAlign = TextAlign.End,
                     maxLines = 1
@@ -110,7 +112,7 @@ fun FormulaDisplay(
                 text = errorMessage ?: "",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Normal,
-                fontFamily = FontFamily.SansSerif,
+                fontFamily = SystemFontFamily,
                 color = MaterialTheme.colorScheme.error,
                 textAlign = TextAlign.End
             )
@@ -121,8 +123,8 @@ fun FormulaDisplay(
             Text(
                 text = "= $resultPreview",
                 fontSize = 32.sp,
-                fontWeight = FontWeight.Normal,
-                fontFamily = FontFamily.SansSerif,
+                fontWeight = FontWeight.SemiBold,
+                fontFamily = QuicksandFontFamily,
                 color = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.85f),
                 textAlign = TextAlign.End
             )
@@ -148,8 +150,8 @@ fun FractionRenderView(expression: String) {
                 Text(
                     text = prefix,
                     fontSize = 38.sp,
-                    fontWeight = FontWeight.Normal,
-                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = QuicksandFontFamily,
                     color = CalculatorTheme.colors.onSurface
                 )
                 Spacer(modifier = Modifier.width(4.dp))
@@ -161,8 +163,8 @@ fun FractionRenderView(expression: String) {
                 Text(
                     text = if (num.isEmpty()) "□" else num,
                     fontSize = 26.sp,
-                    fontWeight = FontWeight.Medium,
-                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = QuicksandFontFamily,
                     color = CalculatorTheme.colors.equalsContainer
                 )
                 HorizontalDivider(
@@ -173,8 +175,8 @@ fun FractionRenderView(expression: String) {
                 Text(
                     text = if (den.isEmpty()) "□" else den,
                     fontSize = 26.sp,
-                    fontWeight = FontWeight.Medium,
-                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = QuicksandFontFamily,
                     color = CalculatorTheme.colors.equalsContainer
                 )
             }

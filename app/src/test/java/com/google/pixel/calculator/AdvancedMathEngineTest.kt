@@ -115,4 +115,32 @@ class AdvancedMathEngineTest {
         assertTrue(pts.isNotEmpty())
         assertTrue(pts.any { it != null })
     }
+
+    @Test
+    fun testCosX_doesNotExplodeWith32Roots() {
+        val res = engine.solve("cos(x)")
+        assertTrue("cos(x) should yield roots", res is AdvancedMathEngine.SolveResult.EquationRoots)
+        val roots = (res as AdvancedMathEngine.SolveResult.EquationRoots).roots
+        // Must NOT return 32 roots across space, only at most 2 principal roots near zero (±π/2)
+        assertTrue("Roots count must be <= 2 instead of 32, got ${roots.size}", roots.size <= 2)
+        assertTrue(roots.any { abs(it - 1.570796) < 1e-2 })
+        assertTrue(roots.any { abs(it - (-1.570796)) < 1e-2 })
+    }
+
+    @Test
+    fun testTrigInversesAndDegree() {
+        val asinRes = engine.evaluateExpression("arcsin(1)", isRadians = true)
+        val acosRes = engine.evaluateExpression("arccos(1)", isRadians = true)
+        val atanRes = engine.evaluateExpression("arctan(1)", isRadians = true)
+        assertTrue("arcsin(1) is ~1.5708", asinRes.startsWith("1.57"))
+        assertEquals("0", acosRes)
+        assertTrue("arctan(1) is ~0.785", atanRes.startsWith("0.785"))
+    }
+
+    @Test
+    fun testTanDiscontinuityHandling() {
+        // tan(x) has vertical asymptote at π/2 (~1.5708)
+        val pts = engine.sampleFunction("tan(x)", 1.0f, 2.0f, 60)
+        assertTrue("Sampling tan(x) across π/2 must insert null at asymptote", pts.any { it == null })
+    }
 }

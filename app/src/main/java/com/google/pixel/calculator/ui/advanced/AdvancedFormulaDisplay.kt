@@ -31,10 +31,11 @@ fun AdvancedFormulaDisplay(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 10.dp, vertical = 4.dp),
-        shape = RoundedCornerShape(18.dp),
+            .padding(horizontal = 6.dp, vertical = 2.dp)
+            .border(1.dp, Color(0xFF353C52), RoundedCornerShape(22.dp)),
+        shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF242736)
+            containerColor = Color(0xFF222636)
         )
     ) {
         Column(
@@ -47,15 +48,15 @@ fun AdvancedFormulaDisplay(
             state.equations.forEachIndexed { index, eq ->
                 val isActive = index == state.activeEquationIndex
                 val borderModifier = if (isActive) {
-                    Modifier.border(1.dp, Color(0xFF474E68), RoundedCornerShape(12.dp))
+                    Modifier.border(1.dp, Color(0xFF4C5572), RoundedCornerShape(14.dp))
                 } else Modifier
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(
-                            if (isActive) Color(0xFF2C3042) else Color.Transparent,
-                            RoundedCornerShape(12.dp)
+                            if (isActive) Color(0xFF2A2F42) else Color.Transparent,
+                            RoundedCornerShape(14.dp)
                         )
                         .then(borderModifier)
                         .clickable { onSelectFormula(index) }

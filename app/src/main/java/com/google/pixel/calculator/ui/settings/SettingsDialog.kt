@@ -4,8 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -27,20 +29,32 @@ fun ThemeSelectionDialog(
 ) {
     val themeOptions = listOf(
         ThemeOption(
-            mode = AppThemeMode.SYSTEM,
-            title = "Predefinito del sistema",
-            subtitle = "Segue il tema e i colori dinamici del dispositivo",
+            mode = AppThemeMode.SYSTEM_AUTO,
+            title = "Predefinito di sistema (Auto)",
+            subtitle = "Segue chiaro/scuro e colori dinamici del dispositivo",
             colors = listOf(Color(0xFF4285F4), Color(0xFF34A853), Color(0xFFFBBC05), Color(0xFFEA4335))
         ),
         ThemeOption(
-            mode = AppThemeMode.LIGHT,
-            title = "Chiaro",
+            mode = AppThemeMode.SYSTEM_LIGHT,
+            title = "Colori di sistema (Sempre chiaro)",
+            subtitle = "Accenti dinamici di sistema, forzato su tema chiaro",
+            colors = listOf(Color(0xFF4285F4), Color(0xFFF1F2F6), Color(0xFFE2E3EC), Color(0xFF041E49))
+        ),
+        ThemeOption(
+            mode = AppThemeMode.SYSTEM_DARK,
+            title = "Colori di sistema (Sempre scuro)",
+            subtitle = "Accenti dinamici di sistema, forzato su tema scuro",
+            colors = listOf(Color(0xFF131418), Color(0xFF26282E), Color(0xFF4285F4), Color(0xFFD3E3FD))
+        ),
+        ThemeOption(
+            mode = AppThemeMode.STANDARD_LIGHT,
+            title = "Chiaro Standard",
             subtitle = "Google Pixel Light con tasto uguale ardesia",
             colors = listOf(Color(0xFFFFFFFF), Color(0xFFF1F2F6), Color(0xFFE2E3EC), Color(0xFF354558))
         ),
         ThemeOption(
-            mode = AppThemeMode.DARK,
-            title = "Scuro",
+            mode = AppThemeMode.STANDARD_DARK,
+            title = "Scuro Standard",
             subtitle = "Google Pixel Dark con tasto uguale azzurro",
             colors = listOf(Color(0xFF131418), Color(0xFF26282E), Color(0xFF373942), Color(0xFFD3E3FD))
         ),
@@ -58,20 +72,22 @@ fun ThemeSelectionDialog(
         )
     )
 
+    val scrollState = rememberScrollState()
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
                 text = "Scegli tema",
                 fontSize = 20.sp,
-                fontWeight = FontWeight.Medium,
-                fontFamily = FontFamily.SansSerif
+                fontWeight = FontWeight.Medium
             )
         },
         text = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .verticalScroll(scrollState)
                     .padding(vertical = 4.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -99,24 +115,22 @@ fun ThemeSelectionDialog(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = option.title,
-                                fontSize = 16.sp,
-                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                fontFamily = FontFamily.SansSerif
+                                fontSize = 15.sp,
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
                             )
                             Text(
                                 text = option.subtitle,
                                 fontSize = 12.sp,
-                                fontFamily = FontFamily.SansSerif,
                                 color = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.8f)
                             )
                         }
                         Spacer(modifier = Modifier.width(8.dp))
-                        // Swatch / anteprima circolare con i 4 colori salienti del tema
+                        // Swatches circolari con i colori di anteprima
                         Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                             option.colors.forEach { col ->
                                 Box(
                                     modifier = Modifier
-                                        .size(14.dp)
+                                        .size(13.dp)
                                         .background(col, CircleShape)
                                         .border(0.5.dp, Color.Black.copy(alpha = 0.2f), CircleShape)
                                 )
@@ -128,7 +142,7 @@ fun ThemeSelectionDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Chiudi", fontFamily = FontFamily.SansSerif)
+                Text("Chiudi")
             }
         }
     )
@@ -151,14 +165,12 @@ fun ClearHistoryConfirmDialog(
         title = {
             Text(
                 text = "Cancella cronologia?",
-                fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.Medium
             )
         },
         text = {
             Text(
-                text = "Questa operazione rimuoverà tutti i calcoli salvati nella cronologia.",
-                fontFamily = FontFamily.SansSerif
+                text = "Questa operazione rimuoverà tutti i calcoli salvati nella cronologia."
             )
         },
         confirmButton = {
@@ -169,12 +181,12 @@ fun ClearHistoryConfirmDialog(
                 },
                 colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
             ) {
-                Text("Cancella", fontWeight = FontWeight.Bold, fontFamily = FontFamily.SansSerif)
+                Text("Cancella", fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Annulla", fontFamily = FontFamily.SansSerif)
+                Text("Annulla")
             }
         }
     )

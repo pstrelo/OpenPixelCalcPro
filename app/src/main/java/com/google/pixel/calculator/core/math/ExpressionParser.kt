@@ -37,6 +37,13 @@ class ExpressionParser {
             .replace("sin⁻¹", "asin")
             .replace("cos⁻¹", "acos")
             .replace("tan⁻¹", "atan")
+            .replace("arcsin", "asin")
+            .replace("arccos", "acos")
+            .replace("arctan", "atan")
+            .replace("csc(", "1/sin(")
+            .replace("sec(", "1/cos(")
+            .replace("cot(", "1/tan(")
+            .replace("°", "*(π/180)")
             .replace("∛", "(3)ʸ√")
             .replace("∜", "(4)ʸ√")
 

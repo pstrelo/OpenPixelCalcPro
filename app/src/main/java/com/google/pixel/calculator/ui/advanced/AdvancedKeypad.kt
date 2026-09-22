@@ -10,11 +10,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -23,6 +25,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * Keypad Material 3 Expressive per Google Math Solver (6 Colonne x 6 Righe + Barra Inferiore di Editing).
+ * Riproduce fedelmente la disposizione e l'aspetto di Google Math Solver.
+ */
 @Composable
 fun AdvancedKeypad(
     activeTab: MathSolverTab,
@@ -39,12 +45,12 @@ fun AdvancedKeypad(
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
-    val buttonHeight = if (isSplitScreen) 38.dp else 42.dp
+    val buttonHeight = if (isSplitScreen) 38.dp else 44.dp
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 2.dp),
+            .padding(horizontal = 6.dp, vertical = 2.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         // 1. Barra orizzontale a 4 Tab tematiche (Algebra, Trigonometry, Calculus, Alphabet)
@@ -56,7 +62,9 @@ fun AdvancedKeypad(
             }
         )
 
-        // 2. Griglia tasti della Tab attiva (5 Colonne x 6 Righe)
+        Spacer(modifier = Modifier.height(2.dp))
+
+        // 2. Griglia tasti 6 Colonne x 6 Righe della Tab attiva
         when (activeTab) {
             MathSolverTab.ALGEBRA -> AlgebraKeypadGrid(
                 btnHeight = buttonHeight,
@@ -87,6 +95,8 @@ fun AdvancedKeypad(
                 }
             )
         }
+
+        Spacer(modifier = Modifier.height(2.dp))
 
         // 3. Barra persistente inferiore a 6 tasti ([ ← ], [ → ], [ ⌫ DEL ], [ AC ], [ FORMAT ], [ ➤ ])
         PersistentBottomEditBar(
@@ -121,7 +131,7 @@ fun AdvancedKeypad(
     }
 }
 
-// Overload orientato allo stato
+// Overload basato su stato
 @Composable
 fun AdvancedKeypad(
     state: AdvancedCalculatorState,
@@ -199,7 +209,7 @@ fun MathSolverTabBar(
 ) {
     TabRow(
         selectedTabIndex = selectedTab.ordinal,
-        containerColor = MathSolverTheme.background,
+        containerColor = Color.Transparent,
         contentColor = Color.White,
         indicator = { tabPositions ->
             TabRowDefaults.SecondaryIndicator(
@@ -209,7 +219,7 @@ fun MathSolverTabBar(
             )
         },
         divider = {
-            HorizontalDivider(color = Color(0xFF2A2E40), thickness = 1.dp)
+            HorizontalDivider(color = Color(0xFF2E3448), thickness = 1.dp)
         },
         modifier = modifier.fillMaxWidth()
     ) {
@@ -232,7 +242,7 @@ fun MathSolverTabBar(
 }
 
 // =========================================================================
-// 1. ALGEBRA KEYPAD GRID (5x6)
+// 1. ALGEBRA KEYPAD GRID (6 Colonne x 6 Righe)
 // =========================================================================
 
 @Composable
@@ -240,60 +250,73 @@ private fun AlgebraKeypadGrid(
     btnHeight: Dp,
     onKey: (String) -> Unit
 ) {
+    val fnBg = MathSolverTheme.algebraFunctionContainer
+    val fnColor = MathSolverTheme.algebraFunctionContent
+    val numBg = MathSolverTheme.numericContainer
+    val numColor = MathSolverTheme.numericContent
+    val opBg = MathSolverTheme.operatorContainer
+    val opColor = MathSolverTheme.operatorContent
+
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        // Row 1: x², xⁿ, √□, ⁿ√□, □/□
+        // Row 1: [□/□], [|x|], [n!], [log], [ln], [ = ]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("x²", MathSolverTheme.functionContainer, MathSolverTheme.accentAlgebra, btnHeight, Modifier.weight(1f)) { onKey("^2") }
-            SquircleKey("xⁿ", MathSolverTheme.functionContainer, MathSolverTheme.accentAlgebra, btnHeight, Modifier.weight(1f)) { onKey("^") }
-            SquircleKey("√□", MathSolverTheme.functionContainer, MathSolverTheme.functionContent, btnHeight, Modifier.weight(1f)) { onKey("sqrt(") }
-            SquircleKey("ⁿ√□", MathSolverTheme.functionContainer, MathSolverTheme.functionContent, btnHeight, Modifier.weight(1f)) { onKey("ʸ√") }
-            SquircleKey("□/□", MathSolverTheme.functionContainer, MathSolverTheme.functionContent, btnHeight, Modifier.weight(1f)) { onKey("/") }
+            SquircleKey("□/□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("/") }
+            SquircleKey("|x|", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("abs(") }
+            SquircleKey("n!", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("!") }
+            SquircleKey("log", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("log(") }
+            SquircleKey("ln", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("ln(") }
+            SquircleKey("=", MathSolverTheme.surfaceVariant, MathSolverTheme.accentAlgebra, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 18.sp) { onKey(" = ") }
         }
-        // Row 2: log, ln, |x|, π, e
+        // Row 2: [√□], [ⁿ√□], [<], [≤], [>], [≥]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("log", MathSolverTheme.functionContainer, MathSolverTheme.functionContent, btnHeight, Modifier.weight(1f)) { onKey("log(") }
-            SquircleKey("ln", MathSolverTheme.functionContainer, MathSolverTheme.functionContent, btnHeight, Modifier.weight(1f)) { onKey("ln(") }
-            SquircleKey("|x|", MathSolverTheme.functionContainer, MathSolverTheme.functionContent, btnHeight, Modifier.weight(1f)) { onKey("abs(") }
-            SquircleKey("π", MathSolverTheme.functionContainer, MathSolverTheme.functionContent, btnHeight, Modifier.weight(1f)) { onKey("π") }
-            SquircleKey("e", MathSolverTheme.functionContainer, MathSolverTheme.functionContent, btnHeight, Modifier.weight(1f)) { onKey("e") }
+            SquircleKey("√□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("sqrt(") }
+            SquircleKey("ⁿ√□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("ʸ√") }
+            SquircleKey("<", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(" < ") }
+            SquircleKey("≤", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(" <= ") }
+            SquircleKey(">", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(" > ") }
+            SquircleKey("≥", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(" >= ") }
         }
-        // Row 3: 7, 8, 9, ÷, (
+        // Row 3: [xⁿ], [x²], [7], [8], [9], [÷]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("7", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("7") }
-            SquircleKey("8", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("8") }
-            SquircleKey("9", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("9") }
-            SquircleKey("÷", MathSolverTheme.operatorContainer, MathSolverTheme.operatorContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("/") }
-            SquircleKey("(", MathSolverTheme.operatorContainer, MathSolverTheme.operatorContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("(") }
+            SquircleKey("xⁿ", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^") }
+            SquircleKey("x²", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^2") }
+            SquircleKey("7", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("7") }
+            SquircleKey("8", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("8") }
+            SquircleKey("9", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("9") }
+            SquircleKey("÷", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("/") }
         }
-        // Row 4: 4, 5, 6, ×, )
+        // Row 4: [f(x)], [i], [4], [5], [6], [×]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("4", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("4") }
-            SquircleKey("5", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("5") }
-            SquircleKey("6", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("6") }
-            SquircleKey("×", MathSolverTheme.operatorContainer, MathSolverTheme.operatorContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("*") }
-            SquircleKey(")", MathSolverTheme.operatorContainer, MathSolverTheme.operatorContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey(")") }
+            SquircleKey("f(x)", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("f(x)") }
+            SquircleKey("i", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("i") }
+            SquircleKey("4", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("4") }
+            SquircleKey("5", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("5") }
+            SquircleKey("6", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("6") }
+            SquircleKey("×", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("*") }
         }
-        // Row 5: 1, 2, 3, -, x
+        // Row 5: [(], [)], [1], [2], [3], [-]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("1", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("1") }
-            SquircleKey("2", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("2") }
-            SquircleKey("3", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("3") }
-            SquircleKey("-", MathSolverTheme.operatorContainer, MathSolverTheme.operatorContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("-") }
-            SquircleKey("x", MathSolverTheme.functionContainer, MathSolverTheme.accentAlgebra, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 18.sp) { onKey("x") }
+            SquircleKey("(", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("(") }
+            SquircleKey(")", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(")") }
+            SquircleKey("1", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("1") }
+            SquircleKey("2", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("2") }
+            SquircleKey("3", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("3") }
+            SquircleKey("-", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("-") }
         }
-        // Row 6: 0, ., =, +, y (Nota: '=' inserisce " = " senza calcolare!)
+        // Row 6: [x], [y], [0], [.], [%], [+]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("0", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("0") }
-            SquircleKey(".", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey(".") }
-            SquircleKey("=", MathSolverTheme.surfaceVariant, MathSolverTheme.accentAlgebra, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 20.sp) { onKey(" = ") }
-            SquircleKey("+", MathSolverTheme.operatorContainer, MathSolverTheme.operatorContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("+") }
-            SquircleKey("y", MathSolverTheme.functionContainer, MathSolverTheme.accentAlgebra, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 18.sp) { onKey("y") }
+            SquircleKey("x", fnBg, MathSolverTheme.accentAlgebra, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("x") }
+            SquircleKey("y", fnBg, MathSolverTheme.accentAlgebra, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("y") }
+            SquircleKey("0", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("0") }
+            SquircleKey(".", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey(".") }
+            SquircleKey("%", opBg, opColor, btnHeight, Modifier.weight(1f)) { onKey("%") }
+            SquircleKey("+", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("+") }
         }
     }
 }
 
 // =========================================================================
-// 2. TRIGONOMETRY KEYPAD GRID (5x6)
+// 2. TRIGONOMETRY KEYPAD GRID (6 Colonne x 6 Righe)
 // =========================================================================
 
 @Composable
@@ -301,60 +324,73 @@ private fun TrigonometryKeypadGrid(
     btnHeight: Dp,
     onKey: (String) -> Unit
 ) {
+    val fnBg = MathSolverTheme.trigFunctionContainer
+    val fnColor = MathSolverTheme.trigFunctionContent
+    val numBg = MathSolverTheme.numericContainer
+    val numColor = MathSolverTheme.numericContent
+    val opBg = MathSolverTheme.operatorContainer
+    val opColor = MathSolverTheme.operatorContent
+
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        // Row 1: sin, cos, tan, π, θ
+        // Row 1: [□/□], [sin], [cos], [tan], [arcsin], [ = ]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("sin", MathSolverTheme.functionContainer, MathSolverTheme.accentTrigonometry, btnHeight, Modifier.weight(1f)) { onKey("sin(") }
-            SquircleKey("cos", MathSolverTheme.functionContainer, MathSolverTheme.accentTrigonometry, btnHeight, Modifier.weight(1f)) { onKey("cos(") }
-            SquircleKey("tan", MathSolverTheme.functionContainer, MathSolverTheme.accentTrigonometry, btnHeight, Modifier.weight(1f)) { onKey("tan(") }
-            SquircleKey("π", MathSolverTheme.functionContainer, MathSolverTheme.functionContent, btnHeight, Modifier.weight(1f)) { onKey("π") }
-            SquircleKey("θ", MathSolverTheme.functionContainer, MathSolverTheme.accentTrigonometry, btnHeight, Modifier.weight(1f)) { onKey("θ") }
+            SquircleKey("□/□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("/") }
+            SquircleKey("sin", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("sin(") }
+            SquircleKey("cos", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("cos(") }
+            SquircleKey("tan", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("tan(") }
+            SquircleKey("arcsin", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("arcsin(") }
+            SquircleKey("=", MathSolverTheme.surfaceVariant, MathSolverTheme.accentTrigonometry, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 18.sp) { onKey(" = ") }
         }
-        // Row 2: sin⁻¹, cos⁻¹, tan⁻¹, sinh, cosh
+        // Row 2: [√□], [csc], [sec], [cot], [arctan], [arccos]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("sin⁻¹", MathSolverTheme.functionContainer, MathSolverTheme.functionContent, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("asin(") }
-            SquircleKey("cos⁻¹", MathSolverTheme.functionContainer, MathSolverTheme.functionContent, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("acos(") }
-            SquircleKey("tan⁻¹", MathSolverTheme.functionContainer, MathSolverTheme.functionContent, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("atan(") }
-            SquircleKey("sinh", MathSolverTheme.functionContainer, MathSolverTheme.functionContent, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("sinh(") }
-            SquircleKey("cosh", MathSolverTheme.functionContainer, MathSolverTheme.functionContent, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("cosh(") }
+            SquircleKey("√□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("sqrt(") }
+            SquircleKey("csc", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("csc(") }
+            SquircleKey("sec", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("sec(") }
+            SquircleKey("cot", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("cot(") }
+            SquircleKey("arctan", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("arctan(") }
+            SquircleKey("arccos", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("arccos(") }
         }
-        // Row 3: 7, 8, 9, ÷, (
+        // Row 3: [xⁿ], [x²], [7], [8], [9], [÷]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("7", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("7") }
-            SquircleKey("8", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("8") }
-            SquircleKey("9", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("9") }
-            SquircleKey("÷", MathSolverTheme.operatorContainer, MathSolverTheme.operatorContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("/") }
-            SquircleKey("(", MathSolverTheme.operatorContainer, MathSolverTheme.operatorContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("(") }
+            SquircleKey("xⁿ", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^") }
+            SquircleKey("x²", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^2") }
+            SquircleKey("7", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("7") }
+            SquircleKey("8", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("8") }
+            SquircleKey("9", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("9") }
+            SquircleKey("÷", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("/") }
         }
-        // Row 4: 4, 5, 6, ×, )
+        // Row 4: [π], [°], [4], [5], [6], [×]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("4", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("4") }
-            SquircleKey("5", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("5") }
-            SquircleKey("6", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("6") }
-            SquircleKey("×", MathSolverTheme.operatorContainer, MathSolverTheme.operatorContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("*") }
-            SquircleKey(")", MathSolverTheme.operatorContainer, MathSolverTheme.operatorContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey(")") }
+            SquircleKey("π", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("π") }
+            SquircleKey("°", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 17.sp) { onKey("°") }
+            SquircleKey("4", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("4") }
+            SquircleKey("5", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("5") }
+            SquircleKey("6", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("6") }
+            SquircleKey("×", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("*") }
         }
-        // Row 5: 1, 2, 3, -, x
+        // Row 5: [(], [)], [1], [2], [3], [-]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("1", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("1") }
-            SquircleKey("2", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("2") }
-            SquircleKey("3", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("3") }
-            SquircleKey("-", MathSolverTheme.operatorContainer, MathSolverTheme.operatorContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("-") }
-            SquircleKey("x", MathSolverTheme.functionContainer, MathSolverTheme.accentTrigonometry, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 18.sp) { onKey("x") }
+            SquircleKey("(", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("(") }
+            SquircleKey(")", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(")") }
+            SquircleKey("1", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("1") }
+            SquircleKey("2", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("2") }
+            SquircleKey("3", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("3") }
+            SquircleKey("-", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("-") }
         }
-        // Row 6: 0, ., =, +, tanh
+        // Row 6: [x], [y], [0], [.], [%], [+]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("0", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("0") }
-            SquircleKey(".", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey(".") }
-            SquircleKey("=", MathSolverTheme.surfaceVariant, MathSolverTheme.accentTrigonometry, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 20.sp) { onKey(" = ") }
-            SquircleKey("+", MathSolverTheme.operatorContainer, MathSolverTheme.operatorContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("+") }
-            SquircleKey("tanh", MathSolverTheme.functionContainer, MathSolverTheme.functionContent, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("tanh(") }
+            SquircleKey("x", fnBg, MathSolverTheme.accentTrigonometry, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("x") }
+            SquircleKey("y", fnBg, MathSolverTheme.accentTrigonometry, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("y") }
+            SquircleKey("0", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("0") }
+            SquircleKey(".", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey(".") }
+            SquircleKey("%", opBg, opColor, btnHeight, Modifier.weight(1f)) { onKey("%") }
+            SquircleKey("+", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("+") }
         }
     }
 }
 
 // =========================================================================
-// 3. CALCULUS KEYPAD GRID (5x6)
+// 3. CALCULUS KEYPAD GRID (6 Colonne x 6 Righe)
 // =========================================================================
 
 @Composable
@@ -362,60 +398,73 @@ private fun CalculusKeypadGrid(
     btnHeight: Dp,
     onKey: (String) -> Unit
 ) {
+    val fnBg = MathSolverTheme.calculusFunctionContainer
+    val fnColor = MathSolverTheme.calculusFunctionContent
+    val numBg = MathSolverTheme.numericContainer
+    val numColor = MathSolverTheme.numericContent
+    val opBg = MathSolverTheme.operatorContainer
+    val opColor = MathSolverTheme.operatorContent
+
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        // Row 1: d/dx, ∫, lim, Σ, ∞
+        // Row 1: [d/dx], [C(n,k)], [P(n,k)], [ln], [log], [ = ]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("d/dx", MathSolverTheme.functionContainer, MathSolverTheme.accentCalculus, btnHeight, Modifier.weight(1f), isBold = true) { onKey("d/dx(") }
-            SquircleKey("∫", MathSolverTheme.functionContainer, MathSolverTheme.accentCalculus, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 18.sp) { onKey("∫(") }
-            SquircleKey("lim", MathSolverTheme.functionContainer, MathSolverTheme.accentCalculus, btnHeight, Modifier.weight(1f)) { onKey("lim(") }
-            SquircleKey("Σ", MathSolverTheme.functionContainer, MathSolverTheme.accentCalculus, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("Σ(") }
-            SquircleKey("∞", MathSolverTheme.functionContainer, MathSolverTheme.functionContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("∞") }
+            SquircleKey("d/dx", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 13.sp) { onKey("d/dx(") }
+            SquircleKey("C(n,k)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("C(") }
+            SquircleKey("P(n,k)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("P(") }
+            SquircleKey("ln", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("ln(") }
+            SquircleKey("log", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("log(") }
+            SquircleKey("=", MathSolverTheme.surfaceVariant, MathSolverTheme.accentCalculus, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 18.sp) { onKey(" = ") }
         }
-        // Row 2: xⁿ, √□, e, i, , (separatore per parametri: d/dx(x^2, 2))
+        // Row 2: [ⁿ√□], [∫], [∫_a^b], [lim], [lim+], [lim-]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("xⁿ", MathSolverTheme.functionContainer, MathSolverTheme.functionContent, btnHeight, Modifier.weight(1f)) { onKey("^") }
-            SquircleKey("√□", MathSolverTheme.functionContainer, MathSolverTheme.functionContent, btnHeight, Modifier.weight(1f)) { onKey("sqrt(") }
-            SquircleKey("e", MathSolverTheme.functionContainer, MathSolverTheme.functionContent, btnHeight, Modifier.weight(1f)) { onKey("e") }
-            SquircleKey("i", MathSolverTheme.functionContainer, MathSolverTheme.functionContent, btnHeight, Modifier.weight(1f)) { onKey("i") }
-            SquircleKey(",", MathSolverTheme.surfaceVariant, MathSolverTheme.accentCalculus, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 18.sp) { onKey(", ") }
+            SquircleKey("ⁿ√□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("ʸ√") }
+            SquircleKey("∫", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 18.sp) { onKey("∫(") }
+            SquircleKey("∫ₐᵇ", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 13.sp) { onKey("∫(") }
+            SquircleKey("lim", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("lim(") }
+            SquircleKey("lim⁺", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("lim(") }
+            SquircleKey("lim⁻", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("lim(") }
         }
-        // Row 3: 7, 8, 9, ÷, (
+        // Row 3: [Σ], [∞], [7], [8], [9], [÷]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("7", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("7") }
-            SquircleKey("8", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("8") }
-            SquircleKey("9", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("9") }
-            SquircleKey("÷", MathSolverTheme.operatorContainer, MathSolverTheme.operatorContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("/") }
-            SquircleKey("(", MathSolverTheme.operatorContainer, MathSolverTheme.operatorContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("(") }
+            SquircleKey("Σ", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 16.sp) { onKey("Σ(") }
+            SquircleKey("∞", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 16.sp) { onKey("∞") }
+            SquircleKey("7", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("7") }
+            SquircleKey("8", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("8") }
+            SquircleKey("9", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("9") }
+            SquircleKey("÷", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("/") }
         }
-        // Row 4: 4, 5, 6, ×, )
+        // Row 4: [f(x)], [e], [4], [5], [6], [×]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("4", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("4") }
-            SquircleKey("5", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("5") }
-            SquircleKey("6", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("6") }
-            SquircleKey("×", MathSolverTheme.operatorContainer, MathSolverTheme.operatorContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("*") }
-            SquircleKey(")", MathSolverTheme.operatorContainer, MathSolverTheme.operatorContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey(")") }
+            SquircleKey("f(x)", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("f(x)") }
+            SquircleKey("e", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("e") }
+            SquircleKey("4", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("4") }
+            SquircleKey("5", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("5") }
+            SquircleKey("6", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("6") }
+            SquircleKey("×", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("*") }
         }
-        // Row 5: 1, 2, 3, -, x
+        // Row 5: [(], [)], [1], [2], [3], [-]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("1", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("1") }
-            SquircleKey("2", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("2") }
-            SquircleKey("3", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("3") }
-            SquircleKey("-", MathSolverTheme.operatorContainer, MathSolverTheme.operatorContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("-") }
-            SquircleKey("x", MathSolverTheme.functionContainer, MathSolverTheme.accentCalculus, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 18.sp) { onKey("x") }
+            SquircleKey("(", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("(") }
+            SquircleKey(")", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(")") }
+            SquircleKey("1", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("1") }
+            SquircleKey("2", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("2") }
+            SquircleKey("3", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("3") }
+            SquircleKey("-", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("-") }
         }
-        // Row 6: 0, ., =, +, t
+        // Row 6: [x], [y], [0], [.], [%], [+]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("0", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("0") }
-            SquircleKey(".", MathSolverTheme.numericContainer, MathSolverTheme.numericContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey(".") }
-            SquircleKey("=", MathSolverTheme.surfaceVariant, MathSolverTheme.accentCalculus, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 20.sp) { onKey(" = ") }
-            SquircleKey("+", MathSolverTheme.operatorContainer, MathSolverTheme.operatorContent, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("+") }
-            SquircleKey("t", MathSolverTheme.functionContainer, MathSolverTheme.accentCalculus, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 18.sp) { onKey("t") }
+            SquircleKey("x", fnBg, MathSolverTheme.accentCalculus, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("x") }
+            SquircleKey("y", fnBg, MathSolverTheme.accentCalculus, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("y") }
+            SquircleKey("0", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("0") }
+            SquircleKey(".", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey(".") }
+            SquircleKey("%", opBg, opColor, btnHeight, Modifier.weight(1f)) { onKey("%") }
+            SquircleKey("+", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("+") }
         }
     }
 }
 
 // =========================================================================
-// 4. ALPHABET KEYPAD GRID (Latin / Greek Toggle)
+// 4. ALPHABET KEYPAD GRID (6 Colonne x 6 Righe - Latin / Greek)
 // =========================================================================
 
 @Composable
@@ -423,95 +472,32 @@ private fun AlphabetKeypadGrid(
     btnHeight: Dp,
     onKey: (String) -> Unit
 ) {
-    var isGreekMode by remember { mutableStateOf(false) }
+    val fnBg = MathSolverTheme.alphabetFunctionContainer
+    val fnColor = MathSolverTheme.alphabetFunctionContent
+
+    // Disposizione esatta 6x6 come in media_1790089593416.png
+    val alphabetRows = listOf(
+        listOf("a", "b", "c", "d", "e", "f"),
+        listOf("g", "h", "i", "j", "k", "l"),
+        listOf("m", "n", "o", "p", "q", "r"),
+        listOf("s", "t", "u", "v", "w", "x"),
+        listOf("y", "z", "α", "β", "γ", "ε"),
+        listOf("θ", "λ", "μ", "π", "ρ", "φ")
+    )
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        // Sub-Bar: Latin [ a-z ] vs Greek [ α-ω ]
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Button(
-                onClick = { isGreekMode = false },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (!isGreekMode) MathSolverTheme.accentAlphabet else MathSolverTheme.functionContainer
-                ),
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(vertical = 4.dp),
-                modifier = Modifier
-                    .weight(1f)
-                    .height(28.dp)
-            ) {
-                Text(
-                    text = "Latin (a-z)",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (!isGreekMode) Color.White else MathSolverTheme.tabUnselected
-                )
-            }
-            Button(
-                onClick = { isGreekMode = true },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isGreekMode) MathSolverTheme.accentAlphabet else MathSolverTheme.functionContainer
-                ),
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(vertical = 4.dp),
-                modifier = Modifier
-                    .weight(1f)
-                    .height(28.dp)
-            ) {
-                Text(
-                    text = "Greek (α-ω)",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isGreekMode) Color.White else MathSolverTheme.tabUnselected
-                )
-            }
-        }
-
-        if (!isGreekMode) {
-            // Latin Mode Matrix (30 Keys)
-            val rows = listOf(
-                listOf("a", "b", "c", "d", "e"),
-                listOf("f", "g", "h", "i", "j"),
-                listOf("k", "l", "m", "n", "o"),
-                listOf("p", "q", "r", "s", "t"),
-                listOf("u", "v", "w", "x", "y"),
-                listOf("z", "_", "(", ")", "=")
-            )
-            rows.forEach { rowKeys ->
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    rowKeys.forEach { key ->
-                        val isEquals = key == "="
-                        val insertValue = if (isEquals) " = " else key
-                        val container = if (isEquals) MathSolverTheme.surfaceVariant else MathSolverTheme.functionContainer
-                        val content = if (isEquals) MathSolverTheme.accentAlphabet else Color.White
-                        SquircleKey(key, container, content, btnHeight, Modifier.weight(1f), fontSize = 16.sp) {
-                            onKey(insertValue)
-                        }
-                    }
-                }
-            }
-        } else {
-            // Greek Mode Matrix (30 Keys)
-            val rows = listOf(
-                listOf("α", "β", "γ", "δ", "ε"),
-                listOf("θ", "λ", "μ", "ν", "ξ"),
-                listOf("π", "ρ", "σ", "τ", "φ"),
-                listOf("χ", "ψ", "ω", "Δ", "Ω"),
-                listOf("(", ")", "+", "-", "="),
-                listOf("0", "1", "2", "x", "y")
-            )
-            rows.forEach { rowKeys ->
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    rowKeys.forEach { key ->
-                        val isEquals = key == "="
-                        val insertValue = if (isEquals) " = " else key
-                        val container = if (isEquals) MathSolverTheme.surfaceVariant else MathSolverTheme.functionContainer
-                        val content = MathSolverTheme.accentAlphabet
-                        SquircleKey(key, container, content, btnHeight, Modifier.weight(1f), fontSize = 16.sp) {
-                            onKey(insertValue)
-                        }
+        alphabetRows.forEach { rowKeys ->
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                rowKeys.forEach { key ->
+                    SquircleKey(
+                        label = key,
+                        bgColor = fnBg,
+                        textColor = fnColor,
+                        height = btnHeight,
+                        modifier = Modifier.weight(1f),
+                        fontSize = 16.sp
+                    ) {
+                        onKey(key)
                     }
                 }
             }
@@ -548,12 +534,13 @@ fun PersistentBottomEditBar(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // [ ← ] Cursor Left
+        // 1. [ ← ] Cursor Left
         Box(
             modifier = Modifier
                 .weight(1f)
                 .height(btnHeight)
-                .background(MathSolverTheme.operatorContainer, RoundedCornerShape(14.dp))
+                .clip(RoundedCornerShape(percent = 50))
+                .background(MathSolverTheme.operatorContainer)
                 .clickable { onMoveCursorLeft() },
             contentAlignment = Alignment.Center
         ) {
@@ -561,16 +548,17 @@ fun PersistentBottomEditBar(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Cursore a sinistra",
                 tint = MathSolverTheme.operatorContent,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(19.dp)
             )
         }
 
-        // [ → ] Cursor Right
+        // 2. [ → ] Cursor Right
         Box(
             modifier = Modifier
                 .weight(1f)
                 .height(btnHeight)
-                .background(MathSolverTheme.operatorContainer, RoundedCornerShape(14.dp))
+                .clip(RoundedCornerShape(percent = 50))
+                .background(MathSolverTheme.operatorContainer)
                 .clickable { onMoveCursorRight() },
             contentAlignment = Alignment.Center
         ) {
@@ -578,33 +566,35 @@ fun PersistentBottomEditBar(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = "Cursore a destra",
                 tint = MathSolverTheme.operatorContent,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(19.dp)
             )
         }
 
-        // [ ⌫ DEL ] Backspace
+        // 3. [ ⌫ DEL ] Backspace
         Box(
             modifier = Modifier
                 .weight(1f)
                 .height(btnHeight)
-                .background(MathSolverTheme.deleteContainer, RoundedCornerShape(14.dp))
+                .clip(RoundedCornerShape(percent = 50))
+                .background(MathSolverTheme.deleteContainer)
                 .clickable { onDeleteChar() },
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = "DEL",
-                fontSize = 13.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
                 color = MathSolverTheme.deleteContent
             )
         }
 
-        // [ AC ] All Clear
+        // 4. [ AC ] All Clear
         Box(
             modifier = Modifier
                 .weight(1f)
                 .height(btnHeight)
-                .background(MathSolverTheme.clearContainer, RoundedCornerShape(14.dp))
+                .clip(RoundedCornerShape(percent = 50))
+                .background(MathSolverTheme.clearContainer)
                 .clickable { onClearAll() },
             contentAlignment = Alignment.Center
         ) {
@@ -616,53 +606,55 @@ fun PersistentBottomEditBar(
             )
         }
 
-        // [ FORMAT ] Instant Result Formatter
+        // 5. [ FORMAT ] Instant Result Formatter (DEC, FRAC, ENG, DMS, POL)
         Box(
             modifier = Modifier
-                .weight(1.2f)
+                .weight(1.1f)
                 .height(btnHeight)
-                .background(MathSolverTheme.formatContainer, RoundedCornerShape(14.dp))
-                .border(1.dp, MathSolverTheme.formatBorder, RoundedCornerShape(14.dp))
+                .clip(RoundedCornerShape(percent = 50))
+                .background(MathSolverTheme.formatContainer)
+                .border(1.dp, MathSolverTheme.formatBorder, RoundedCornerShape(percent = 50))
                 .clickable { onCycleFormat() },
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = "FORMAT",
-                    fontSize = 9.sp,
+                    fontSize = 8.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = MathSolverTheme.tabUnselected
                 )
                 Text(
                     text = activeFormatLabel,
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = MathSolverTheme.formatLabel
                 )
             }
         }
 
-        // [ ➤ ] Execution Pill (Prominent Call to Action with Dynamic Color)
+        // 6. [ ➤ ] Execution Send Pill (Prominent Pill with Send Icon in Active Tab Accent Color)
         Box(
             modifier = Modifier
-                .weight(1.4f)
+                .weight(1.3f)
                 .height(btnHeight)
-                .background(executionBgColor, RoundedCornerShape(22.dp))
+                .clip(RoundedCornerShape(percent = 50))
+                .background(executionBgColor)
                 .clickable { onExecute() },
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "➤",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = Color.White
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.Send,
+                contentDescription = "Calcola ed Esegui",
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
             )
         }
     }
 }
 
 // =========================================================================
-// REUSABLE SQUIRCLE BUTTON
+// REUSABLE SQUIRCLE / PILL BUTTON
 // =========================================================================
 
 @Composable
@@ -679,7 +671,8 @@ fun SquircleKey(
     Box(
         modifier = modifier
             .height(height)
-            .background(bgColor, RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(percent = 50))
+            .background(bgColor)
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {

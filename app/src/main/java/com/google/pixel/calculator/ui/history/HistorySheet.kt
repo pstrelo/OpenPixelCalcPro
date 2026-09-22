@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.pixel.calculator.data.HistoryItem
 import com.google.pixel.calculator.ui.theme.CalculatorTheme
+import com.google.pixel.calculator.ui.theme.QuicksandFontFamily
+import com.google.pixel.calculator.ui.theme.SystemFontFamily
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -88,7 +90,7 @@ fun PixelHistoryPanel(
                         text = "Cronologia vuota",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Normal,
-                        fontFamily = FontFamily.SansSerif,
+                        fontFamily = SystemFontFamily,
                         color = colors.onSurfaceVariant
                     )
                 }
@@ -110,7 +112,7 @@ fun PixelHistoryPanel(
                                 text = dateHeader,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Normal,
-                                fontFamily = FontFamily.SansSerif,
+                                fontFamily = SystemFontFamily,
                                 color = colors.onSurfaceVariant.copy(alpha = 0.7f),
                                 modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                             )
@@ -130,8 +132,8 @@ fun PixelHistoryPanel(
                                 Text(
                                     text = item.expression,
                                     fontSize = 19.sp,
-                                    fontWeight = FontWeight.Normal,
-                                    fontFamily = FontFamily.SansSerif,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontFamily = QuicksandFontFamily,
                                     color = colors.onSurfaceVariant.copy(alpha = 0.8f),
                                     textAlign = TextAlign.End
                                 )
@@ -139,8 +141,8 @@ fun PixelHistoryPanel(
                                 Text(
                                     text = item.result,
                                     fontSize = 28.sp,
-                                    fontWeight = FontWeight.Normal,
-                                    fontFamily = FontFamily.SansSerif,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontFamily = QuicksandFontFamily,
                                     color = colors.onSurface,
                                     textAlign = TextAlign.End
                                 )
@@ -180,7 +182,7 @@ fun PixelHistoryPanel(
                 text = "Espressione corrente",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Normal,
-                fontFamily = FontFamily.SansSerif,
+                fontFamily = SystemFontFamily,
                 color = colors.onSurfaceVariant.copy(alpha = 0.75f)
             )
 
@@ -193,8 +195,8 @@ fun PixelHistoryPanel(
             Text(
                 text = displayVal,
                 fontSize = 32.sp,
-                fontWeight = FontWeight.Light,
-                fontFamily = FontFamily.SansSerif,
+                fontWeight = FontWeight.SemiBold,
+                fontFamily = QuicksandFontFamily,
                 color = colors.onSurface,
                 textAlign = TextAlign.End
             )

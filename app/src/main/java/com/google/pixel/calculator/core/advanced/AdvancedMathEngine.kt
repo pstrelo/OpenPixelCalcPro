@@ -127,7 +127,7 @@ class AdvancedMathEngine(
             return solveEquation(clean, isRadians)
         }
 
-        // 6. Espressione con incognita x non azzerata (es. "x^2 - 4" -> trova zeri f(x)=0)
+        // 6. Espressione con incognita x non azzerata (es. "x^2 - 25" o "cos(x)")
         if (clean.contains("x", ignoreCase = true)) {
             return findRootsOfFunction(clean, isRadians)
         }
@@ -179,6 +179,7 @@ class AdvancedMathEngine(
         }
 
         val foundRoots = mutableListOf<Double>()
+        val isTrig = functionExpr.contains("sin") || functionExpr.contains("cos") || functionExpr.contains("tan")
         val xMin = -50.0
         val xMax = 50.0
         val steps = 1000
@@ -206,14 +207,21 @@ class AdvancedMathEngine(
             prevY = curY
         }
 
-        return if (foundRoots.isEmpty()) {
+        // Ordina le radici per vicinanza all'origine |x|
+        foundRoots.sortBy { abs(it) }
+        // Per funzioni periodiche/trigonometriche (come cos(x)), limita alle radici principali (max 2 vicino a 0),
+        // per polinomi limita a max 4 radici. Elimina l'esplosione caotica di 32 radici!
+        val maxRoots = if (isTrig) 2 else 4
+        val cappedRoots = foundRoots.distinctBy { (it * 1000).roundToLong() }.take(maxRoots).sorted()
+
+        return if (cappedRoots.isEmpty()) {
             SolveResult.Error("Nessuna radice reale trovata nell'intervallo [-50, 50]")
         } else {
-            val formatted = foundRoots.mapIndexed { idx, r ->
-                if (foundRoots.size == 1) "x = ${formatNumber(r)}"
+            val formatted = cappedRoots.mapIndexed { idx, r ->
+                if (cappedRoots.size == 1) "x = ${formatNumber(r)}"
                 else "x${idx + 1} = ${formatNumber(r)}"
             }.joinToString(", ")
-            SolveResult.EquationRoots(foundRoots, formatted)
+            SolveResult.EquationRoots(cappedRoots, formatted)
         }
     }
 
@@ -549,7 +557,7 @@ class AdvancedMathEngine(
         expr: String,
         xMin: Float,
         xMax: Float,
-        steps: Int = 300,
+        steps: Int = 500,
         isRadians: Boolean = true
     ): List<Point?> {
         val clean = autoCloseParentheses(expr)
@@ -557,9 +565,12 @@ class AdvancedMathEngine(
 
         val ast = try { parser.parse(clean) } catch (e: Exception) { return emptyList() }
         val points = mutableListOf<Point?>()
-        val stepSize = (xMax - xMin) / steps
+        val totalSteps = steps.coerceAtLeast(2)
+        val stepSize = (xMax - xMin) / totalSteps
 
-        for (i in 0..steps) {
+        var prevY: Double? = null
+
+        for (i in 0..totalSteps) {
             val x = xMin + i * stepSize
             try {
                 val ctx = EvaluationContext(
@@ -569,12 +580,20 @@ class AdvancedMathEngine(
                 )
                 val yVal = ast.evaluate(ctx).toDouble()
                 if (yVal.isFinite() && !yVal.isNaN() && abs(yVal) < 1e5) {
+                    // Rilevamento asintoti verticali: se il segno cambia rapidamente con pendenza altissima
+                    val lastY = prevY
+                    if (lastY != null && lastY * yVal < 0 && abs(yVal - lastY) > 40.0 && abs(yVal - lastY) / stepSize > 300.0) {
+                        points.add(null) // Discontinuità asintotica (es. tan(x), cot(x), 1/x)
+                    }
                     points.add(Point(x, yVal.toFloat()))
+                    prevY = yVal
                 } else {
                     points.add(null) // Discontinuità o asintoto verticale
+                    prevY = null
                 }
             } catch (e: Exception) {
                 points.add(null)
+                prevY = null
             }
         }
         return points

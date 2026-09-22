@@ -288,11 +288,40 @@ class AdvancedCalculatorViewModel(
                 }
                 updateGraphForActiveEquation()
             }
-            "xⁿ", "x□" -> insertCharacter("^")
-            "x²" -> insertCharacter("^2")
+            "xⁿ", "x□", "□^□" -> insertCharacter("^")
+            "x²", "□²" -> insertCharacter("^2")
             "ⁿ√", "ⁿ√□" -> insertCharacter("ʸ√")
             "√", "√□" -> insertCharacter("sqrt(")
             "□/□" -> insertCharacter("/")
+            "|x|", "|□|" -> insertCharacter("abs(")
+            "n!", "x!", "□!" -> insertCharacter("!")
+            "log", "log_□" -> insertCharacter("log(")
+            "ln" -> insertCharacter("ln(")
+            "f(x)" -> openCatalog()
+            "CATALOG" -> openCatalog()
+            "d/dx", "d/d□" -> insertCharacter("d/dx(")
+            "∫", "∫□" -> insertCharacter("∫(")
+            "∫_a^b", "∫_□^□" -> insertCharacter("∫(")
+            "lim", "lim_□→□" -> insertCharacter("lim(")
+            "lim+", "lim_□→□+" -> insertCharacter("lim(")
+            "lim-", "lim_□→□-" -> insertCharacter("lim(")
+            "Σ" -> insertCharacter("Σ(")
+            "∞" -> insertCharacter("∞")
+            "sin" -> insertCharacter("sin(")
+            "cos" -> insertCharacter("cos(")
+            "tan" -> insertCharacter("tan(")
+            "arcsin" -> insertCharacter("arcsin(")
+            "arccos" -> insertCharacter("arccos(")
+            "arctan" -> insertCharacter("arctan(")
+            "csc" -> insertCharacter("csc(")
+            "sec" -> insertCharacter("sec(")
+            "cot" -> insertCharacter("cot(")
+            "π" -> insertCharacter("π")
+            "°", "□°" -> insertCharacter("°")
+            "C(n,k)" -> insertCharacter("C(")
+            "P(n,k)" -> insertCharacter("P(")
+            "e" -> insertCharacter("e")
+            "i" -> insertCharacter("i")
 
             // TASTO '=': Inserisce strettamente l'uguale nella formula (NON calcola!)
             "=" -> insertCharacter(" = ")
@@ -302,9 +331,6 @@ class AdvancedCalculatorViewModel(
 
             // TASTO 'FORMAT': Cicla istantaneamente la rappresentazione
             "FORMAT" -> cycleFormat()
-
-            // Catalog
-            "CATALOG" -> openCatalog()
 
             // Variabili
             "x" -> insertCharacter("x")
@@ -330,12 +356,17 @@ class AdvancedCalculatorViewModel(
 
             when (result) {
                 is AdvancedMathEngine.SolveResult.SingleValue -> {
-                    val formatted = engine.formatNumber(result.raw, format, isRad)
+                    val formatted = if (result.formatted.startsWith("f(0)") || result.formatted.startsWith("f'(") || result.formatted.startsWith("lim(")) {
+                        result.formatted
+                    } else {
+                        "= ${engine.formatNumber(result.raw, format, isRad)}"
+                    }
+                    val isFuncSummary = result.formatted.startsWith("f(0)") || result.formatted.startsWith("f(x)")
                     updateEquationAt(curIndex) {
                         it.copy(
-                            formattedResult = "= $formatted",
+                            formattedResult = formatted,
                             lastSolveResult = result,
-                            roots = listOf(result.raw),
+                            roots = if (isFuncSummary) emptyList() else listOf(result.raw),
                             isError = false
                         )
                     }
@@ -589,13 +620,14 @@ class AdvancedCalculatorViewModel(
         viewModelScope.launch(dispatcher) {
             val state = _uiState.value
             val scale = state.graphViewport.scaleX
-            val halfSpan = (300f / scale) + 10f
+            // Buffer generoso pari ad almeno 2.5x la larghezza dello schermo per prevenire troncamenti
+            val halfSpan = maxOf((1600f / scale) * 1.5f, 40f)
             val centerX = state.graphViewport.centerMathX.toFloat()
             val xMin = centerX - halfSpan
             val xMax = centerX + halfSpan
 
             val plotExpr = preparePlotExpression(eq.expression)
-            val points = engine.sampleFunction(plotExpr, xMin, xMax, 350, state.isRadians)
+            val points = engine.sampleFunction(plotExpr, xMin, xMax, 550, state.isRadians)
 
             updateEquationAt(curIndex) { it.copy(sampledPoints = points) }
         }
@@ -605,7 +637,8 @@ class AdvancedCalculatorViewModel(
         viewModelScope.launch(dispatcher) {
             val state = _uiState.value
             val scale = state.graphViewport.scaleX
-            val halfSpan = (300f / scale) + 10f
+            // Buffer generoso pari ad almeno 2.5x la larghezza dello schermo per prevenire troncamenti
+            val halfSpan = maxOf((1600f / scale) * 1.5f, 40f)
             val centerX = state.graphViewport.centerMathX.toFloat()
             val xMin = centerX - halfSpan
             val xMax = centerX + halfSpan
@@ -613,7 +646,7 @@ class AdvancedCalculatorViewModel(
             val updated = state.equations.map { entry ->
                 if (entry.expression.isNotBlank()) {
                     val plotExpr = preparePlotExpression(entry.expression)
-                    val pts = engine.sampleFunction(plotExpr, xMin, xMax, 350, state.isRadians)
+                    val pts = engine.sampleFunction(plotExpr, xMin, xMax, 550, state.isRadians)
                     entry.copy(sampledPoints = pts)
                 } else {
                     entry.copy(sampledPoints = emptyList())

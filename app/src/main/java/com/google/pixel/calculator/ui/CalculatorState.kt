@@ -28,7 +28,7 @@ data class CalculatorState(
     val isShiftActive: Boolean = false,
     val isAwaitingRootIndex: Boolean = false,
     val isHapticEnabled: Boolean = true,
-    val themeMode: AppThemeMode = AppThemeMode.SYSTEM,
+    val themeMode: AppThemeMode = AppThemeMode.SYSTEM_AUTO,
     val decimalPrecision: Int = 10,
     val memoryValue: BigDecimal? = null,
     val activeScreen: ActiveScreen = ActiveScreen.MAIN_CALCULATOR,
