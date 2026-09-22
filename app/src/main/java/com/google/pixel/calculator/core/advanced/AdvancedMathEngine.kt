@@ -407,6 +407,11 @@ class AdvancedMathEngine(
             }
         }
 
+        val fAtX0 = f(x0)
+        if (fAtX0.isNaN() || fAtX0.isInfinite()) {
+            return SolveResult.Error("Derivata non definita in x = $x0")
+        }
+
         // Stencil a 5 punti: f'(x) ≈ (-f(x+2h) + 8f(x+h) - 8f(x-h) + f(x-2h)) / 12h
         val h = 1e-5
         val deriv = (-f(x0 + 2 * h) + 8 * f(x0 + h) - 8 * f(x0 - h) + f(x0 - 2 * h)) / (12 * h)
@@ -641,8 +646,18 @@ class AdvancedMathEngine(
         val exp = floor(log10(x)).toInt()
         val engExp = if (exp >= 0) (exp / 3) * 3 else ((exp - 2) / 3) * 3
         val mantissa = x / 10.0.pow(engExp)
-        val roundedMantissa = (mantissa * 1e4).roundToLong() / 1e4
-        return if (engExp == 0) "$sign$roundedMantissa" else "$sign$roundedMantissa × 10^$engExp"
+        var finalExp = engExp
+        var roundedMantissa = (mantissa * 1e4).roundToLong() / 1e4
+        if (roundedMantissa >= 1000.0) {
+            roundedMantissa /= 1000.0
+            finalExp += 3
+        }
+        val mantissaStr = if (roundedMantissa == roundedMantissa.toLong().toDouble()) {
+            roundedMantissa.toLong().toString()
+        } else {
+            roundedMantissa.toString()
+        }
+        return if (finalExp == 0) "$sign$mantissaStr" else "$sign$mantissaStr × 10^$finalExp"
     }
 
     /**

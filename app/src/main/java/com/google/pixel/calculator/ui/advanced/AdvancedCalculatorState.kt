@@ -79,14 +79,14 @@ data class GraphViewport(
     val scaleY: Float = 40f
 ) {
     fun mathToScreen(mathX: Double, mathY: Double, canvasSize: Size): Offset {
-        val screenX = (canvasSize.width / 2f) + ((mathX - centerMathX) * scaleX).toFloat()
-        val screenY = (canvasSize.height / 2f) - ((mathY - centerMathY) * scaleY).toFloat()
+        val screenX = ((canvasSize.width.toDouble() / 2.0) + (mathX - centerMathX) * scaleX.toDouble()).toFloat()
+        val screenY = ((canvasSize.height.toDouble() / 2.0) - (mathY - centerMathY) * scaleY.toDouble()).toFloat()
         return Offset(screenX, screenY)
     }
 
     fun screenToMath(screenOffset: Offset, canvasSize: Size): Pair<Double, Double> {
-        val mathX = centerMathX + ((screenOffset.x - (canvasSize.width / 2f)) / scaleX).toDouble()
-        val mathY = centerMathY - ((screenOffset.y - (canvasSize.height / 2f)) / scaleY).toDouble()
+        val mathX = centerMathX + (screenOffset.x.toDouble() - (canvasSize.width.toDouble() / 2.0)) / scaleX.toDouble()
+        val mathY = centerMathY - (screenOffset.y.toDouble() - (canvasSize.height.toDouble() / 2.0)) / scaleY.toDouble()
         return Pair(mathX, mathY)
     }
 
