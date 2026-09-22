@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- Esclude la cronologia calcoli dal backup cloud non crittografato per massima privacy utente -->
+        <exclude domain="sharedpref" path="pixel_calc_history.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="sharedpref" path="pixel_calc_history.xml" />
+    </device-transfer>
+</data-extraction-rules>

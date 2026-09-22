@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 892" width="412" height="892">
+  <rect width="412" height="892" fill="#131418"/>
+  
+    <!-- Status Bar (Figma Native Vectors) -->
+    <g id="StatusBar">
+      <text x="36" y="38" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="600">09:41</text>
+      <!-- Signal Bars -->
+      <g transform="translate(322, 26)" fill="#E2E2E6">
+        <rect x="0" y="10" width="3" height="4" rx="0.5"/>
+        <rect x="5" y="7" width="3" height="7" rx="0.5"/>
+        <rect x="10" y="4" width="3" height="10" rx="0.5"/>
+        <rect x="15" y="1" width="3" height="13" rx="0.5"/>
+      </g>
+      <!-- WiFi Icon -->
+      <path d="M352 38 a 2 2 0 1 1 0.01 0 M347 34 a 8 8 0 0 1 10 0 M343 30 a 14 14 0 0 1 18 0" stroke="#E2E2E6" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <!-- Battery Icon -->
+      <g transform="translate(366, 26)">
+        <rect x="0" y="1" width="22" height="12" rx="3.5" fill="none" stroke="#E2E2E6" stroke-width="1.8"/>
+        <rect x="2" y="3" width="14" height="8" rx="2" fill="#E2E2E6"/>
+        <path d="M23 5 C23.8 5 24 5.5 24 7 C24 8.5 23.8 9 23 9" fill="#E2E2E6"/>
+      </g>
+    </g>
+    <!-- Home Gesture Indicator -->
+    <g id="HomeIndicator">
+      <rect x="166" y="874" width="80" height="4" rx="2" fill="#8E9099" fill-opacity="0.6"/>
+    </g>
+    
+  <g id='TopBar'>
+        <g id="BackBtn" cursor="pointer">
+          <circle cx="44" cy="74" r="22" fill="transparent"/>
+          <path d="M48 64 L38 74 L48 84" stroke="#E2E2E6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </g>
+        <text x="78" y="80" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="20" font-weight="600">Risolutore Equazioni</text>
+        </g>
+
+  <!-- Segmented Tabs -->
+  <g id="Tabs" transform="translate(20, 115)">
+    <rect x="0" y="0" width="372" height="44" rx="22" ry="22" fill="#1E2025"/>
+    <text x="62" y="27" fill="#8E9099" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" text-anchor="middle">1° Grado</text>
+    
+    <rect x="124" y="4" width="124" height="36" rx="18" ry="18" fill="#A8C7FA"/>
+    <text x="186" y="26" fill="#041E49" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" text-anchor="middle">2° Grado</text>
+
+    <text x="310" y="27" fill="#8E9099" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" text-anchor="middle">Sistemi 2×2</text>
+  </g>
+
+  <!-- Formula Header Preview -->
+  <g id="FormulaHeader">
+    <rect x="20" y="180" width="372" height="60" rx="16" ry="16" fill="#26282E"/>
+    <text x="206" y="216" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="20" font-weight="500" text-anchor="middle">ax² + bx + c = 0</text>
+  </g>
+
+  <!-- Input Fields (a, b, c) -->
+  <g id="Inputs">
+    <!-- a -->
+    <rect x="20" y="260" width="112" height="62" rx="14" ry="14" fill="#1E2025" stroke="#373942" stroke-width="1.5"/>
+    <text x="36" y="282" fill="#A8C7FA" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600">a</text>
+    <text x="36" y="306" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="18" font-weight="500">1</text>
+
+    <!-- b -->
+    <rect x="150" y="260" width="112" height="62" rx="14" ry="14" fill="#1E2025" stroke="#373942" stroke-width="1.5"/>
+    <text x="166" y="282" fill="#A8C7FA" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600">b</text>
+    <text x="166" y="306" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="18" font-weight="500">-5</text>
+
+    <!-- c -->
+    <rect x="280" y="260" width="112" height="62" rx="14" ry="14" fill="#1E2025" stroke="#373942" stroke-width="1.5"/>
+    <text x="296" y="282" fill="#A8C7FA" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="600">c</text>
+    <text x="296" y="306" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="18" font-weight="500">6</text>
+  </g>
+
+  <!-- Solve Action Button -->
+  <g id="SolveBtn" cursor="pointer">
+    <rect x="20" y="340" width="372" height="52" rx="26" ry="26" fill="#A8C7FA"/>
+    <text x="206" y="372" fill="#041E49" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="16" font-weight="600" text-anchor="middle">Risolvi Equazione</text>
+  </g>
+
+  <!-- Solutions & Detailed Steps -->
+  <g id="SolutionCard">
+    <rect x="20" y="415" width="372" height="390" rx="20" ry="20" fill="#1E2025" stroke="#2C2E35" stroke-width="1"/>
+    
+    <text x="40" y="445" fill="#34D399" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="700">DUE SOLUZIONI REALI DISTINTE</text>
+    
+    <!-- Solution Pills -->
+    <rect x="40" y="465" width="158" height="64" rx="14" ry="14" fill="#26282E"/>
+    <text x="60" y="490" fill="#8E9099" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="12">Soluzione x₁</text>
+    <text x="60" y="515" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="22" font-weight="600">x₁ = 3</text>
+
+    <rect x="214" y="465" width="158" height="64" rx="14" ry="14" fill="#26282E"/>
+    <text x="234" y="490" fill="#8E9099" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="12">Soluzione x₂</text>
+    <text x="234" y="515" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="22" font-weight="600">x₂ = 2</text>
+
+    <!-- Resolution Steps -->
+    <text x="40" y="560" fill="#A8C7FA" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="600">Passaggi di Risoluzione:</text>
+    <text x="40" y="590" fill="#C4C6D0" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="14">1. Calcolo del Discriminante (Δ):</text>
+    <text x="56" y="615" fill="#8E9099" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="13">Δ = b² - 4ac = (-5)² - 4(1)(6) = 25 - 24 = 1</text>
+    
+    <text x="40" y="650" fill="#C4C6D0" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="14">2. Formula Risolutiva Quadratica:</text>
+    <text x="56" y="675" fill="#8E9099" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="13">x = (-b ± √Δ) / 2a = (5 ± √1) / 2</text>
+
+    <text x="40" y="710" fill="#C4C6D0" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="14">3. Calcolo dei Valori Finali:</text>
+    <text x="56" y="735" fill="#8E9099" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="13">x₁ = (5 + 1) / 2 = 6/2 = 3</text>
+    <text x="56" y="760" fill="#8E9099" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="13">x₂ = (5 - 1) / 2 = 4/2 = 2</text>
+  </g>
+</svg>

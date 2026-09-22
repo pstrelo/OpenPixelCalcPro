@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 892" width="412" height="892">
+  <rect width="412" height="892" fill="#131418"/>
+  
+    <!-- Status Bar (Figma Native Vectors) -->
+    <g id="StatusBar">
+      <text x="36" y="38" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="600">09:41</text>
+      <!-- Signal Bars -->
+      <g transform="translate(322, 26)" fill="#E2E2E6">
+        <rect x="0" y="10" width="3" height="4" rx="0.5"/>
+        <rect x="5" y="7" width="3" height="7" rx="0.5"/>
+        <rect x="10" y="4" width="3" height="10" rx="0.5"/>
+        <rect x="15" y="1" width="3" height="13" rx="0.5"/>
+      </g>
+      <!-- WiFi Icon -->
+      <path d="M352 38 a 2 2 0 1 1 0.01 0 M347 34 a 8 8 0 0 1 10 0 M343 30 a 14 14 0 0 1 18 0" stroke="#E2E2E6" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <!-- Battery Icon -->
+      <g transform="translate(366, 26)">
+        <rect x="0" y="1" width="22" height="12" rx="3.5" fill="none" stroke="#E2E2E6" stroke-width="1.8"/>
+        <rect x="2" y="3" width="14" height="8" rx="2" fill="#E2E2E6"/>
+        <path d="M23 5 C23.8 5 24 5.5 24 7 C24 8.5 23.8 9 23 9" fill="#E2E2E6"/>
+      </g>
+    </g>
+    <!-- Home Gesture Indicator -->
+    <g id="HomeIndicator">
+      <rect x="166" y="874" width="80" height="4" rx="2" fill="#8E9099" fill-opacity="0.6"/>
+    </g>
+    
+  <g id='TopBar'>
+        <g id="BackBtn" cursor="pointer">
+          <circle cx="44" cy="74" r="22" fill="transparent"/>
+          <path d="M48 64 L38 74 L48 84" stroke="#E2E2E6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </g>
+        <text x="78" y="80" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="20" font-weight="600">Convertitore Unità</text>
+        </g>
+
+  <!-- Category Selection Pills -->
+  <g id="Categories">
+    <rect x="20" y="115" width="94" height="38" rx="19" ry="19" fill="#A8C7FA"/>
+    <text x="67" y="139" fill="#041E49" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="600" text-anchor="middle">Velocità</text>
+
+    <rect x="122" y="115" width="86" height="38" rx="19" ry="19" fill="#1E2025"/>
+    <text x="165" y="139" fill="#8E9099" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" text-anchor="middle">Lunghezza</text>
+
+    <rect x="216" y="115" width="76" height="38" rx="19" ry="19" fill="#1E2025"/>
+    <text x="254" y="139" fill="#8E9099" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" text-anchor="middle">Massa</text>
+
+    <rect x="300" y="115" width="92" height="38" rx="19" ry="19" fill="#1E2025"/>
+    <text x="346" y="139" fill="#8E9099" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="13" font-weight="500" text-anchor="middle">Volume</text>
+  </g>
+
+  <!-- From Input Box -->
+  <g id="FromBox">
+    <rect x="20" y="180" width="372" height="110" rx="20" ry="20" fill="#1E2025" stroke="#2C2E35"/>
+    <text x="40" y="212" fill="#8E9099" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="13">Da:</text>
+    <text x="40" y="240" fill="#A8C7FA" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="16" font-weight="600">Chilometri orari (km/h) ▾</text>
+    <text x="372" y="265" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="36" font-weight="400" text-anchor="end">100</text>
+  </g>
+
+  <!-- Swap Icon Button -->
+  <g id="SwapBtn" cursor="pointer">
+    <circle cx="206" cy="325" r="22" fill="#2D2F36" stroke="#373942"/>
+    <path d="M201 321 L211 321 M208 318 L211 321 L208 324" stroke="#E2E2E6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M211 329 L201 329 M204 326 L201 329 L204 332" stroke="#E2E2E6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- To Output Box -->
+  <g id="ToBox">
+    <rect x="20" y="340" width="372" height="110" rx="20" ry="20" fill="#1E2025" stroke="#373942"/>
+    <text x="40" y="372" fill="#8E9099" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="13">A:</text>
+    <text x="40" y="400" fill="#A8C7FA" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="16" font-weight="600">Miglia orarie (mph) ▾</text>
+    <text x="372" y="425" fill="#34D399" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="36" font-weight="500" text-anchor="end">62.1371</text>
+  </g>
+
+  <!-- Numerical Pad -->
+  <g id="ConverterNumpad">
+    
+    <g id="Btn_7" cursor="pointer">
+      <rect x="20" y="480" width="116" height="58" rx="18" ry="18" fill="#26282E"/>
+      <text x="78.0" y="517.4" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="24" font-weight="500" text-anchor="middle" dominant-baseline="central">7</text>
+    </g>
+    <g id="Btn_8" cursor="pointer">
+      <rect x="148" y="480" width="116" height="58" rx="18" ry="18" fill="#26282E"/>
+      <text x="206.0" y="517.4" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="24" font-weight="500" text-anchor="middle" dominant-baseline="central">8</text>
+    </g>
+    <g id="Btn_9" cursor="pointer">
+      <rect x="276" y="480" width="116" height="58" rx="18" ry="18" fill="#26282E"/>
+      <text x="334.0" y="517.4" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="24" font-weight="500" text-anchor="middle" dominant-baseline="central">9</text>
+    </g>
+    <g id="Btn_4" cursor="pointer">
+      <rect x="20" y="550" width="116" height="58" rx="18" ry="18" fill="#26282E"/>
+      <text x="78.0" y="587.4" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="24" font-weight="500" text-anchor="middle" dominant-baseline="central">4</text>
+    </g>
+    <g id="Btn_5" cursor="pointer">
+      <rect x="148" y="550" width="116" height="58" rx="18" ry="18" fill="#26282E"/>
+      <text x="206.0" y="587.4" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="24" font-weight="500" text-anchor="middle" dominant-baseline="central">5</text>
+    </g>
+    <g id="Btn_6" cursor="pointer">
+      <rect x="276" y="550" width="116" height="58" rx="18" ry="18" fill="#26282E"/>
+      <text x="334.0" y="587.4" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="24" font-weight="500" text-anchor="middle" dominant-baseline="central">6</text>
+    </g>
+    <g id="Btn_1" cursor="pointer">
+      <rect x="20" y="620" width="116" height="58" rx="18" ry="18" fill="#26282E"/>
+      <text x="78.0" y="657.4" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="24" font-weight="500" text-anchor="middle" dominant-baseline="central">1</text>
+    </g>
+    <g id="Btn_2" cursor="pointer">
+      <rect x="148" y="620" width="116" height="58" rx="18" ry="18" fill="#26282E"/>
+      <text x="206.0" y="657.4" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="24" font-weight="500" text-anchor="middle" dominant-baseline="central">2</text>
+    </g>
+    <g id="Btn_3" cursor="pointer">
+      <rect x="276" y="620" width="116" height="58" rx="18" ry="18" fill="#26282E"/>
+      <text x="334.0" y="657.4" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="24" font-weight="500" text-anchor="middle" dominant-baseline="central">3</text>
+    </g>
+    <g id="Btn_C" cursor="pointer">
+      <rect x="20" y="690" width="116" height="58" rx="18" ry="18" fill="#373942"/>
+      <text x="78.0" y="727.4" fill="#FFB4AB" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="24" font-weight="500" text-anchor="middle" dominant-baseline="central">C</text>
+    </g>
+    <g id="Btn_0" cursor="pointer">
+      <rect x="148" y="690" width="116" height="58" rx="18" ry="18" fill="#26282E"/>
+      <text x="206.0" y="727.4" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="24" font-weight="500" text-anchor="middle" dominant-baseline="central">0</text>
+    </g>
+    <g id="Btn_Backspace" cursor="pointer">
+      <rect x="276" y="690" width="116" height="58" rx="18" ry="18" fill="#373942"/>
+      <g transform="translate(322.0, 707.0)">
+        <path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 7.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z" fill="#E2E2E6"/>
+      </g>
+    </g>
+  </g>
+</svg>

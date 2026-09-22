@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 892" width="412" height="892">
+  <rect width="412" height="892" fill="#131418"/>
+  
+    <!-- Status Bar (Figma Native Vectors) -->
+    <g id="StatusBar">
+      <text x="36" y="38" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="600">09:41</text>
+      <!-- Signal Bars -->
+      <g transform="translate(322, 26)" fill="#E2E2E6">
+        <rect x="0" y="10" width="3" height="4" rx="0.5"/>
+        <rect x="5" y="7" width="3" height="7" rx="0.5"/>
+        <rect x="10" y="4" width="3" height="10" rx="0.5"/>
+        <rect x="15" y="1" width="3" height="13" rx="0.5"/>
+      </g>
+      <!-- WiFi Icon -->
+      <path d="M352 38 a 2 2 0 1 1 0.01 0 M347 34 a 8 8 0 0 1 10 0 M343 30 a 14 14 0 0 1 18 0" stroke="#E2E2E6" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <!-- Battery Icon -->
+      <g transform="translate(366, 26)">
+        <rect x="0" y="1" width="22" height="12" rx="3.5" fill="none" stroke="#E2E2E6" stroke-width="1.8"/>
+        <rect x="2" y="3" width="14" height="8" rx="2" fill="#E2E2E6"/>
+        <path d="M23 5 C23.8 5 24 5.5 24 7 C24 8.5 23.8 9 23 9" fill="#E2E2E6"/>
+      </g>
+    </g>
+    <!-- Home Gesture Indicator -->
+    <g id="HomeIndicator">
+      <rect x="166" y="874" width="80" height="4" rx="2" fill="#8E9099" fill-opacity="0.6"/>
+    </g>
+    
+  <g id='TopBar'>
+        <g id="BackBtn" cursor="pointer">
+          <circle cx="44" cy="74" r="22" fill="transparent"/>
+          <path d="M48 64 L38 74 L48 84" stroke="#E2E2E6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </g>
+        <text x="78" y="80" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="20" font-weight="600">Strumenti e Funzioni</text>
+        </g>
+
+  <!-- Section 1: Calcolo Avanzato -->
+  <text x="24" y="130" fill="#A8C7FA" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="700">CALCOLO AVANZATO</text>
+  
+        <g id="Card_Calcolatrice_Avanzata" cursor="pointer">
+          <rect x="20" y="145" width="372" height="74" rx="20" ry="20" fill="#1E2025" stroke="#2C2E35" stroke-width="1"/>
+          <rect x="34" y="159" width="46" height="46" rx="14" ry="14" fill="#2B2F38"/>
+          <text x="57" y="187" font-size="22" text-anchor="middle" dominant-baseline="central">🧮</text>
+          <text x="94" y="179" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="15" font-weight="600">Calcolatrice Avanzata</text>
+          <text x="94" y="199" fill="#8E9099" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400">Derivate, integrali, formule complesse</text>
+          <path d="M366 177 L372 182 L366 187" stroke="#8E9099" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </g>
+        
+  
+        <g id="Card_Risolutore_di_Equazioni" cursor="pointer">
+          <rect x="20" y="230" width="372" height="74" rx="20" ry="20" fill="#1E2025" stroke="#2C2E35" stroke-width="1"/>
+          <rect x="34" y="244" width="46" height="46" rx="14" ry="14" fill="#2B2F38"/>
+          <text x="57" y="272" font-size="22" text-anchor="middle" dominant-baseline="central">📐</text>
+          <text x="94" y="264" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="15" font-weight="600">Risolutore di Equazioni</text>
+          <text x="94" y="284" fill="#8E9099" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400">1°, 2° grado e sistemi a 2 incognite</text>
+          <path d="M366 262 L372 267 L366 272" stroke="#8E9099" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </g>
+        
+  
+        <g id="Card_Grafici_2D_di_Funzioni" cursor="pointer">
+          <rect x="20" y="315" width="372" height="74" rx="20" ry="20" fill="#1E2025" stroke="#2C2E35" stroke-width="1"/>
+          <rect x="34" y="329" width="46" height="46" rx="14" ry="14" fill="#2B2F38"/>
+          <text x="57" y="357" font-size="22" text-anchor="middle" dominant-baseline="central">📈</text>
+          <text x="94" y="349" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="15" font-weight="600">Grafici 2D di Funzioni</text>
+          <text x="94" y="369" fill="#8E9099" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400">Piano cartesiano interattivo con zoom/pan</text>
+          <path d="M366 347 L372 352 L366 357" stroke="#8E9099" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </g>
+        
+
+  <!-- Section 2: Sensori e Utilità Pixel -->
+  <text x="24" y="425" fill="#A8C7FA" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="14" font-weight="700">SENSORI &amp; STRUMENTI FISICI</text>
+  
+        <g id="Card_Convertitore_di_Unità" cursor="pointer">
+          <rect x="20" y="440" width="372" height="74" rx="20" ry="20" fill="#1E2025" stroke="#2C2E35" stroke-width="1"/>
+          <rect x="34" y="454" width="46" height="46" rx="14" ry="14" fill="#2B2F38"/>
+          <text x="57" y="482" font-size="22" text-anchor="middle" dominant-baseline="central">🔄</text>
+          <text x="94" y="474" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="15" font-weight="600">Convertitore di Unità</text>
+          <text x="94" y="494" fill="#8E9099" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400">Lunghezza, Peso, Valuta, Temperatura</text>
+          <path d="M366 472 L372 477 L366 482" stroke="#8E9099" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </g>
+        
+  
+        <g id="Card_Livella_a_Bolla_Digitale" cursor="pointer">
+          <rect x="20" y="525" width="372" height="74" rx="20" ry="20" fill="#1E2025" stroke="#2C2E35" stroke-width="1"/>
+          <rect x="34" y="539" width="46" height="46" rx="14" ry="14" fill="#2B2F38"/>
+          <text x="57" y="567" font-size="22" text-anchor="middle" dominant-baseline="central">⚖️</text>
+          <text x="94" y="559" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="15" font-weight="600">Livella a Bolla Digitale</text>
+          <text x="94" y="579" fill="#8E9099" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400">Inclinometro di precisione Pixel con sensori</text>
+          <path d="M366 557 L372 562 L366 567" stroke="#8E9099" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </g>
+        
+  
+        <g id="Card_Bussola_Digitale" cursor="pointer">
+          <rect x="20" y="610" width="372" height="74" rx="20" ry="20" fill="#1E2025" stroke="#2C2E35" stroke-width="1"/>
+          <rect x="34" y="624" width="46" height="46" rx="14" ry="14" fill="#2B2F38"/>
+          <text x="57" y="652" font-size="22" text-anchor="middle" dominant-baseline="central">🧭</text>
+          <text x="94" y="644" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="15" font-weight="600">Bussola Digitale</text>
+          <text x="94" y="664" fill="#8E9099" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400">Azimut, coordinate e direzione reale</text>
+          <path d="M366 642 L372 647 L366 652" stroke="#8E9099" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </g>
+        
+  
+        <g id="Card_Righello_su_Schermo" cursor="pointer">
+          <rect x="20" y="695" width="372" height="74" rx="20" ry="20" fill="#1E2025" stroke="#2C2E35" stroke-width="1"/>
+          <rect x="34" y="709" width="46" height="46" rx="14" ry="14" fill="#2B2F38"/>
+          <text x="57" y="737" font-size="22" text-anchor="middle" dominant-baseline="central">📏</text>
+          <text x="94" y="729" fill="#E2E2E6" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="15" font-weight="600">Righello su Schermo</text>
+          <text x="94" y="749" fill="#8E9099" font-family="Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="12" font-weight="400">Calibrazione PPI per mm, cm e pollici</text>
+          <path d="M366 727 L372 732 L366 737" stroke="#8E9099" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </g>
+        
+</svg>
