@@ -128,7 +128,8 @@ class AdvancedMathEngine(
         }
 
         // 6. Espressione con incognita x non azzerata (es. "x^2 - 25" o "cos(x)")
-        if (clean.contains("x", ignoreCase = true)) {
+        val hasVariableX = Regex("(?<![a-zA-Z])x(?![a-zA-Z])", RegexOption.IGNORE_CASE).containsMatchIn(clean)
+        if (hasVariableX) {
             return findRootsOfFunction(clean, isRadians)
         }
 

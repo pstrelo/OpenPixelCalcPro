@@ -134,19 +134,11 @@ fun AdvancedCalculatorScreen(
                                 onRemoveFormula = { viewModel.removeFormula(it) },
                                 onCycleFormat = { viewModel.onCycleFormat() },
                                 onCycleColor = { viewModel.cycleEquationColor(it) },
+                                onToggleGraph = { viewModel.toggleGraphView() },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .wrapContentHeight()
                                     .padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-
-                            Spacer(modifier = Modifier.height(4.dp))
-
-                            // Tasto Grafico posizionato appena sotto la finestra di testo
-                            InlineGraphToggleButton(
-                                isOpen = state.screenViewMode == ScreenViewMode.SPLIT_SCREEN,
-                                onClick = { viewModel.toggleGraphView() },
-                                modifier = Modifier.padding(horizontal = 6.dp)
                             )
 
                             // Versione minimizzata del grafico (espandibile a schermo intero)
@@ -179,7 +171,6 @@ fun AdvancedCalculatorScreen(
                             onCycleFormat = { viewModel.onCycleFormat() },
                             onExecute = { viewModel.onExecute() },
                             onToggleRadians = { viewModel.toggleRadians() },
-                            onOpenCatalog = { viewModel.openCatalog() },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 2.dp)
@@ -187,13 +178,6 @@ fun AdvancedCalculatorScreen(
                     }
                 }
             }
-
-            // Bottom sheet modale per il Catalogo Funzioni / f(x)
-            AdvancedCatalogSheet(
-                isOpen = state.isCatalogOpen,
-                onDismiss = { viewModel.closeCatalog() },
-                onSelectItem = { viewModel.onSelectCatalogItem(it) }
-            )
         }
     }
 }

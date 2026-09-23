@@ -40,6 +40,24 @@ class ExpressionParser {
             .replace("arcsin", "asin")
             .replace("arccos", "acos")
             .replace("arctan", "atan")
+            .replace("arccsc", "acsc")
+            .replace("arcsec", "asec")
+            .replace("arccot", "acot")
+            .replace("arsinh", "asinh")
+            .replace("arcosh", "acosh")
+            .replace("artanh", "atanh")
+            .replace("nCr(", "binom(")
+            .replace("C(", "binom(")
+            .replace("nPr(", "perm(")
+            .replace("P(", "perm(")
+            .replace("k_B", "kb")
+            .replace("N_A", "na")
+            .replace("q_e", "qe")
+            .replace("m_e", "me")
+            .replace("m_p", "mp")
+            .replace("ε₀", "eps0")
+            .replace("μ₀", "mu0")
+            .replace("ħ", "hbar")
             .replace("csc(", "1/sin(")
             .replace("sec(", "1/cos(")
             .replace("cot(", "1/tan(")
@@ -178,8 +196,13 @@ class ExpressionParser {
                     }
 
                     when (name.lowercase()) {
-                        "sin", "cos", "tan", "cot", "asin", "acos", "atan", "sinh", "cosh", "tanh", "sign",
-                        "sqrt", "cbrt", "root", "nroot", "ln", "log", "log10", "log2", "lg", "logn", "log_n", "exp", "abs", "frac" -> {
+                        "sin", "cos", "tan", "cot", "sec", "csc",
+                        "asin", "acos", "atan", "acot", "asec", "acsc",
+                        "sinh", "cosh", "tanh", "coth", "sech", "csch",
+                        "asinh", "acosh", "atanh", "acoth", "asech", "acsch",
+                        "sign", "sqrt", "cbrt", "root", "nroot", "ln", "log", "log10", "log2", "lg", "logn", "log_n", "exp", "abs", "frac",
+                        "binom", "ncr", "comb", "perm", "npr", "binompdf", "binomcdf", "normpdf", "normcdf",
+                        "mean", "var", "std", "median", "rand", "randint" -> {
                             tokens.add(Token.Function(name.lowercase()))
                         }
                         else -> {

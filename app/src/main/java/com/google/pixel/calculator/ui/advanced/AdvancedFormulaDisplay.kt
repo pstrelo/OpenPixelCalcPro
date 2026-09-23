@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
@@ -28,8 +29,9 @@ fun AdvancedFormulaDisplay(
     onSelectFormula: (Int) -> Unit,
     onAddFormula: () -> Unit,
     onRemoveFormula: (Int) -> Unit,
-    onCycleFormat: () -> Unit,
+    onCycleFormat: () -> Unit = {},
     onCycleColor: (Int) -> Unit = {},
+    onToggleGraph: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val isDark = CalculatorTheme.colors.isDark
@@ -151,29 +153,51 @@ fun AdvancedFormulaDisplay(
                 }
             }
 
-            // Riga inferiore: Badge Formato Attivo + Tasto "+ Aggiungi equazione"
+            // Riga inferiore: Tasto Mostra/Nascondi Grafico + Tasto "+ Aggiungi equazione"
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Badge Formato Attivo (DEC / FRAC / ENG / DMS / POL) - Rimosso il testo "FORMAT:"
-                val curFormat = state.equations.getOrNull(state.activeEquationIndex)?.formatMode ?: AdvancedMathEngine.ResultFormat.DECIMAL
-                val badgeBg = if (isDark) Color(0xFF33384C) else CalculatorTheme.colors.operatorContainer
-                val badgeText = if (isDark) Color(0xFF60A5FA) else CalculatorTheme.colors.operatorContent
+                // Tasto Grafico incorporato nella card (sostituisce il vecchio badge formato)
+                val isGraphOpen = state.screenViewMode != ScreenViewMode.CALCULATOR_ONLY
+                val graphBtnBg = if (isGraphOpen) {
+                    if (isDark) Color(0xFF1E3A8A) else Color(0xFFDBEAFE)
+                } else {
+                    if (isDark) Color(0xFF262C3E) else CalculatorTheme.colors.operatorContainer
+                }
+                val graphBtnText = if (isGraphOpen) {
+                    if (isDark) Color.White else Color(0xFF1D4ED8)
+                } else {
+                    if (isDark) Color(0xFF93C5FD) else CalculatorTheme.colors.operatorContent
+                }
+                val graphBorderColor = if (isGraphOpen) {
+                    Color(0xFF60A5FA)
+                } else {
+                    if (isDark) Color(0xFF3B82F6).copy(alpha = 0.4f) else Color(0xFF93C5FD)
+                }
 
                 Row(
                     modifier = Modifier
-                        .background(badgeBg, RoundedCornerShape(10.dp))
-                        .clickable { onCycleFormat() }
+                        .clip(RoundedCornerShape(percent = 50))
+                        .background(graphBtnBg)
+                        .border(1.dp, graphBorderColor, RoundedCornerShape(percent = 50))
+                        .clickable { onToggleGraph() }
                         .padding(horizontal = 10.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
                 ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ShowChart,
+                        contentDescription = null,
+                        tint = graphBtnText,
+                        modifier = Modifier.size(14.dp)
+                    )
                     Text(
-                        text = curFormat.label,
+                        text = if (isGraphOpen) "Nascondi Grafico ✕" else "Mostra Grafico 📈",
                         fontSize = 11.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = badgeText
+                        fontWeight = FontWeight.Bold,
+                        color = graphBtnText
                     )
                 }
 
