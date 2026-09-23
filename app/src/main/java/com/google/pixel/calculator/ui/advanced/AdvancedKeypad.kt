@@ -24,10 +24,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.pixel.calculator.ui.theme.CalculatorTheme
 
 /**
- * Keypad Material 3 Expressive per Google Math Solver (6 Colonne x 6 Righe + Barra Inferiore di Editing).
- * Riproduce fedelmente la disposizione e l'aspetto di Google Math Solver.
+ * Keypad Material 3 Expressive per Google Math Solver (6 Colonne x 6 Righe + Barra Inferiore di Risoluzione).
+ * Row 1 comune: [ ← ] [ → ] [ RAD/DEG ] [ DEL ] [ AC ] [ = ]
+ * Esponenti con segnaposto: [ □ⁿ ], [ □² ]
+ * Tasto f(x) collegato all'apertura del catalogo funzioni scientifiche complete.
+ * Integrazione cromatica dinamica con CalculatorTheme.colors mantenendo gli accenti per ciascuna tab.
  */
 @Composable
 fun AdvancedKeypad(
@@ -44,6 +48,7 @@ fun AdvancedKeypad(
     isSplitScreen: Boolean = false,
     isRadians: Boolean = true,
     onToggleRadians: () -> Unit = {},
+    onOpenCatalog: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
@@ -75,6 +80,26 @@ fun AdvancedKeypad(
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onToggleRadians()
                 },
+                onMoveCursorLeft = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onMoveCursorLeft()
+                },
+                onMoveCursorRight = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onMoveCursorRight()
+                },
+                onDeleteChar = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onDeleteChar()
+                },
+                onClearAll = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onClearAll()
+                },
+                onOpenCatalog = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onOpenCatalog()
+                },
                 onKey = {
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onInsertChar(it)
@@ -86,6 +111,26 @@ fun AdvancedKeypad(
                 onToggleRadians = {
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onToggleRadians()
+                },
+                onMoveCursorLeft = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onMoveCursorLeft()
+                },
+                onMoveCursorRight = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onMoveCursorRight()
+                },
+                onDeleteChar = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onDeleteChar()
+                },
+                onClearAll = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onClearAll()
+                },
+                onOpenCatalog = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onOpenCatalog()
                 },
                 onKey = {
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -99,6 +144,26 @@ fun AdvancedKeypad(
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onToggleRadians()
                 },
+                onMoveCursorLeft = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onMoveCursorLeft()
+                },
+                onMoveCursorRight = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onMoveCursorRight()
+                },
+                onDeleteChar = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onDeleteChar()
+                },
+                onClearAll = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onClearAll()
+                },
+                onOpenCatalog = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onOpenCatalog()
+                },
                 onKey = {
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onInsertChar(it)
@@ -106,6 +171,27 @@ fun AdvancedKeypad(
             )
             MathSolverTab.ALPHABET -> AlphabetKeypadGrid(
                 btnHeight = buttonHeight,
+                isRadians = isRadians,
+                onToggleRadians = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onToggleRadians()
+                },
+                onMoveCursorLeft = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onMoveCursorLeft()
+                },
+                onMoveCursorRight = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onMoveCursorRight()
+                },
+                onDeleteChar = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onDeleteChar()
+                },
+                onClearAll = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onClearAll()
+                },
                 onKey = {
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onInsertChar(it)
@@ -115,27 +201,11 @@ fun AdvancedKeypad(
 
         Spacer(modifier = Modifier.height(2.dp))
 
-        // 3. Barra persistente inferiore a 6 tasti ([ ← ], [ → ], [ ⌫ DEL ], [ AC ], [ FORMAT ], [ ➤ ])
+        // 3. Barra persistente inferiore ([ FORMAT: DEC ], [ RISOLVI ➤ ])
         PersistentBottomEditBar(
             activeTab = activeTab,
             activeFormatLabel = activeFormatLabel,
             btnHeight = buttonHeight,
-            onMoveCursorLeft = {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                onMoveCursorLeft()
-            },
-            onMoveCursorRight = {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                onMoveCursorRight()
-            },
-            onDeleteChar = {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                onDeleteChar()
-            },
-            onClearAll = {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                onClearAll()
-            },
             onCycleFormat = {
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 onCycleFormat()
@@ -148,7 +218,7 @@ fun AdvancedKeypad(
     }
 }
 
-// Overload basato su stato
+// Overload basato su stato completo
 @Composable
 fun AdvancedKeypad(
     state: AdvancedCalculatorState,
@@ -161,6 +231,7 @@ fun AdvancedKeypad(
     onCycleFormat: () -> Unit,
     onExecute: () -> Unit,
     onToggleRadians: () -> Unit = {},
+    onOpenCatalog: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val activeTab = state.activeTab
@@ -182,11 +253,12 @@ fun AdvancedKeypad(
         isSplitScreen = isSplitScreen,
         isRadians = isRadians,
         onToggleRadians = onToggleRadians,
+        onOpenCatalog = onOpenCatalog,
         modifier = modifier
     )
 }
 
-// Overload legacy retrocompatibile con onKeyClick
+// Overload legacy retrocompatibile
 @Composable
 fun AdvancedKeypad(
     state: AdvancedCalculatorState,
@@ -216,6 +288,7 @@ fun AdvancedKeypad(
         isSplitScreen = state.screenViewMode == ScreenViewMode.SPLIT_SCREEN,
         isRadians = state.isRadians,
         onToggleRadians = { onKeyClick("DEG") },
+        onOpenCatalog = onOpenCatalog,
         modifier = modifier
     )
 }
@@ -230,10 +303,14 @@ fun MathSolverTabBar(
     onTabSelected: (MathSolverTab) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDark = CalculatorTheme.colors.isDark
+    val dividerColor = if (isDark) Color(0xFF2E3448) else CalculatorTheme.colors.operatorContainer
+    val unselectedColor = if (isDark) MathSolverTheme.tabUnselected else CalculatorTheme.colors.onSurfaceVariant
+
     TabRow(
         selectedTabIndex = selectedTab.ordinal,
         containerColor = Color.Transparent,
-        contentColor = Color.White,
+        contentColor = if (isDark) Color.White else CalculatorTheme.colors.onSurface,
         indicator = { tabPositions ->
             TabRowDefaults.SecondaryIndicator(
                 modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab.ordinal]),
@@ -242,7 +319,7 @@ fun MathSolverTabBar(
             )
         },
         divider = {
-            HorizontalDivider(color = Color(0xFF2E3448), thickness = 1.dp)
+            HorizontalDivider(color = dividerColor, thickness = 1.dp)
         },
         modifier = modifier.fillMaxWidth()
     ) {
@@ -256,10 +333,141 @@ fun MathSolverTabBar(
                         text = tab.title,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                         fontSize = 13.sp,
-                        color = if (isSelected) tab.accentColor else MathSolverTheme.tabUnselected
+                        color = if (isSelected) tab.accentColor else unselectedColor
                     )
                 }
             )
+        }
+    }
+}
+
+// =========================================================================
+// ROW 1 COMUNE: [ ← ] [ → ] [ RAD/DEG ] [ DEL ] [ AC ] [ = ]
+// =========================================================================
+
+@Composable
+fun NavigationAndControlRow(
+    btnHeight: Dp,
+    isRadians: Boolean,
+    tabAccentColor: Color,
+    onMoveCursorLeft: () -> Unit,
+    onMoveCursorRight: () -> Unit,
+    onToggleRadians: () -> Unit,
+    onDeleteChar: () -> Unit,
+    onClearAll: () -> Unit,
+    onInsertChar: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isDark = CalculatorTheme.colors.isDark
+    val navBg = if (isDark) MathSolverTheme.operatorContainer else CalculatorTheme.colors.operatorContainer
+    val navColor = if (isDark) MathSolverTheme.operatorContent else CalculatorTheme.colors.operatorContent
+
+    val delBg = if (isDark) MathSolverTheme.deleteContainer else Color(0xFFFFE4E6)
+    val delColor = if (isDark) MathSolverTheme.deleteContent else Color(0xFFE11D48)
+
+    val clearBg = if (isDark) MathSolverTheme.clearContainer else Color(0xFFFEE2E2)
+    val clearColor = if (isDark) MathSolverTheme.clearContent else Color(0xFFDC2626)
+
+    val eqBg = if (isDark) MathSolverTheme.surfaceVariant else CalculatorTheme.colors.operatorContainer
+    val eqColor = tabAccentColor
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // 1. [ ← ] Sposta cursore a sinistra
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(btnHeight)
+                .clip(RoundedCornerShape(percent = 50))
+                .background(navBg)
+                .clickable { onMoveCursorLeft() },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Cursore a sinistra",
+                tint = navColor,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+
+        // 2. [ → ] Sposta cursore a destra
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(btnHeight)
+                .clip(RoundedCornerShape(percent = 50))
+                .background(navBg)
+                .clickable { onMoveCursorRight() },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "Cursore a destra",
+                tint = navColor,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+
+        // 3. [ RAD / DEG ] Tasto cambio unità angolare incorporato in tastiera
+        DegRadKey(
+            isRadians = isRadians,
+            btnHeight = btnHeight,
+            modifier = Modifier.weight(1f),
+            accentColor = tabAccentColor,
+            onToggle = onToggleRadians
+        )
+
+        // 4. [ DEL ] Cancella carattere
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(btnHeight)
+                .clip(RoundedCornerShape(percent = 50))
+                .background(delBg)
+                .clickable { onDeleteChar() },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "DEL",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = delColor
+            )
+        }
+
+        // 5. [ AC ] Pulisce tutto
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(btnHeight)
+                .clip(RoundedCornerShape(percent = 50))
+                .background(clearBg)
+                .clickable { onClearAll() },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "AC",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                color = clearColor
+            )
+        }
+
+        // 6. [ = ] Inserisce simbolo di uguaglianza per equazioni
+        SquircleKey(
+            label = "=",
+            bgColor = eqBg,
+            textColor = eqColor,
+            height = btnHeight,
+            modifier = Modifier.weight(1f),
+            isBold = true,
+            fontSize = 18.sp
+        ) {
+            onInsertChar(" = ")
         }
     }
 }
@@ -273,59 +481,77 @@ private fun AlgebraKeypadGrid(
     btnHeight: Dp,
     isRadians: Boolean = true,
     onToggleRadians: () -> Unit = {},
+    onMoveCursorLeft: () -> Unit = {},
+    onMoveCursorRight: () -> Unit = {},
+    onDeleteChar: () -> Unit = {},
+    onClearAll: () -> Unit = {},
+    onOpenCatalog: () -> Unit = {},
     onKey: (String) -> Unit
 ) {
-    val fnBg = MathSolverTheme.algebraFunctionContainer
-    val fnColor = MathSolverTheme.algebraFunctionContent
-    val numBg = MathSolverTheme.numericContainer
-    val numColor = MathSolverTheme.numericContent
-    val opBg = MathSolverTheme.operatorContainer
-    val opColor = MathSolverTheme.operatorContent
+    val isDark = CalculatorTheme.colors.isDark
+    val tabAccent = MathSolverTab.ALGEBRA.accentColor
+    val fnBg = if (isDark) MathSolverTheme.algebraFunctionContainer else tabAccent.copy(alpha = 0.12f)
+    val fnColor = if (isDark) MathSolverTheme.algebraFunctionContent else Color(0xFF7E22CE)
+    val numBg = if (isDark) MathSolverTheme.numericContainer else CalculatorTheme.colors.numericContainer
+    val numColor = if (isDark) MathSolverTheme.numericContent else CalculatorTheme.colors.numericContent
+    val opBg = if (isDark) MathSolverTheme.operatorContainer else CalculatorTheme.colors.operatorContainer
+    val opColor = if (isDark) MathSolverTheme.operatorContent else CalculatorTheme.colors.operatorContent
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        // Row 1: [□/□], [|x|], [n!], [log], [ln], [ = ]
+        // Row 1: [ ← ], [ → ], [ RAD/DEG ], [ DEL ], [ AC ], [ = ]
+        NavigationAndControlRow(
+            btnHeight = btnHeight,
+            isRadians = isRadians,
+            tabAccentColor = tabAccent,
+            onMoveCursorLeft = onMoveCursorLeft,
+            onMoveCursorRight = onMoveCursorRight,
+            onToggleRadians = onToggleRadians,
+            onDeleteChar = onDeleteChar,
+            onClearAll = onClearAll,
+            onInsertChar = onKey
+        )
+
+        // Row 2: [ □/□ ], [ |x| ], [ √□ ], [ ⁿ√□ ], [ log ], [ ln ]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("□/□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("/") }
             SquircleKey("|x|", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("abs(") }
-            SquircleKey("n!", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("!") }
-            SquircleKey("log", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("log(") }
-            SquircleKey("ln", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("ln(") }
-            SquircleKey("=", MathSolverTheme.surfaceVariant, MathSolverTheme.accentAlgebra, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 18.sp) { onKey(" = ") }
-        }
-        // Row 2: [√□], [ⁿ√□], [<], [≤], [>], [≥]
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("√□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("sqrt(") }
             SquircleKey("ⁿ√□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("ʸ√") }
-            SquircleKey("<", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(" < ") }
-            SquircleKey("≤", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(" <= ") }
-            SquircleKey(">", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(" > ") }
-            SquircleKey("≥", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(" >= ") }
+            SquircleKey("log", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("log(") }
+            SquircleKey("ln", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("ln(") }
         }
-        // Row 3: [xⁿ], [x²], [7], [8], [9], [÷]
+
+        // Row 3: [ □ⁿ ], [ □² ], [ 7 ], [ 8 ], [ 9 ], [ ÷ ]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("xⁿ", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^") }
-            SquircleKey("x²", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^2") }
+            SquircleKey("□ⁿ", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^") }
+            SquircleKey("□²", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^2") }
             SquircleKey("7", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("7") }
             SquircleKey("8", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("8") }
             SquircleKey("9", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("9") }
             SquircleKey("÷", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("/") }
         }
-        // Row 4: [f(x)], [DEG/RAD], [4], [5], [6], [×]
+
+        // Row 4: [ f(x) ], [ n! ], [ 4 ], [ 5 ], [ 6 ], [ × ]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("f(x)", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("f(x)") }
-            DegRadKey(
-                isRadians = isRadians,
-                btnHeight = btnHeight,
+            SquircleKey(
+                label = "f(x)",
+                bgColor = if (isDark) tabAccent.copy(alpha = 0.22f) else tabAccent.copy(alpha = 0.15f),
+                textColor = tabAccent,
+                height = btnHeight,
                 modifier = Modifier.weight(1f),
-                accentColor = MathSolverTheme.accentAlgebra,
-                onToggle = onToggleRadians
-            )
+                isBold = true,
+                fontSize = 13.sp
+            ) {
+                onOpenCatalog()
+            }
+            SquircleKey("n!", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("!") }
             SquircleKey("4", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("4") }
             SquircleKey("5", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("5") }
             SquircleKey("6", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("6") }
             SquircleKey("×", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("*") }
         }
-        // Row 5: [(], [)], [1], [2], [3], [-]
+
+        // Row 5: [ ( ], [ ) ], [ 1 ], [ 2 ], [ 3 ], [ - ]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("(", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("(") }
             SquircleKey(")", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(")") }
@@ -334,10 +560,11 @@ private fun AlgebraKeypadGrid(
             SquircleKey("3", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("3") }
             SquircleKey("-", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("-") }
         }
-        // Row 6: [x], [y], [0], [.], [%], [+]
+
+        // Row 6: [ x ], [ y ], [ 0 ], [ . ], [ % ], [ + ]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("x", fnBg, MathSolverTheme.accentAlgebra, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("x") }
-            SquircleKey("y", fnBg, MathSolverTheme.accentAlgebra, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("y") }
+            SquircleKey("x", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("x") }
+            SquircleKey("y", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("y") }
             SquircleKey("0", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("0") }
             SquircleKey(".", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey(".") }
             SquircleKey("%", opBg, opColor, btnHeight, Modifier.weight(1f)) { onKey("%") }
@@ -355,59 +582,77 @@ private fun TrigonometryKeypadGrid(
     btnHeight: Dp,
     isRadians: Boolean = true,
     onToggleRadians: () -> Unit = {},
+    onMoveCursorLeft: () -> Unit = {},
+    onMoveCursorRight: () -> Unit = {},
+    onDeleteChar: () -> Unit = {},
+    onClearAll: () -> Unit = {},
+    onOpenCatalog: () -> Unit = {},
     onKey: (String) -> Unit
 ) {
-    val fnBg = MathSolverTheme.trigFunctionContainer
-    val fnColor = MathSolverTheme.trigFunctionContent
-    val numBg = MathSolverTheme.numericContainer
-    val numColor = MathSolverTheme.numericContent
-    val opBg = MathSolverTheme.operatorContainer
-    val opColor = MathSolverTheme.operatorContent
+    val isDark = CalculatorTheme.colors.isDark
+    val tabAccent = MathSolverTab.TRIGONOMETRY.accentColor
+    val fnBg = if (isDark) MathSolverTheme.trigFunctionContainer else tabAccent.copy(alpha = 0.12f)
+    val fnColor = if (isDark) MathSolverTheme.trigFunctionContent else Color(0xFF047857)
+    val numBg = if (isDark) MathSolverTheme.numericContainer else CalculatorTheme.colors.numericContainer
+    val numColor = if (isDark) MathSolverTheme.numericContent else CalculatorTheme.colors.numericContent
+    val opBg = if (isDark) MathSolverTheme.operatorContainer else CalculatorTheme.colors.operatorContainer
+    val opColor = if (isDark) MathSolverTheme.operatorContent else CalculatorTheme.colors.operatorContent
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        // Row 1: [□/□], [sin], [cos], [tan], [arcsin], [ = ]
+        // Row 1: [ ← ], [ → ], [ RAD/DEG ], [ DEL ], [ AC ], [ = ]
+        NavigationAndControlRow(
+            btnHeight = btnHeight,
+            isRadians = isRadians,
+            tabAccentColor = tabAccent,
+            onMoveCursorLeft = onMoveCursorLeft,
+            onMoveCursorRight = onMoveCursorRight,
+            onToggleRadians = onToggleRadians,
+            onDeleteChar = onDeleteChar,
+            onClearAll = onClearAll,
+            onInsertChar = onKey
+        )
+
+        // Row 2: [ sin ], [ cos ], [ tan ], [ arcsin ], [ arccos ], [ arctan ]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("□/□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("/") }
             SquircleKey("sin", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("sin(") }
             SquircleKey("cos", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("cos(") }
             SquircleKey("tan", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("tan(") }
             SquircleKey("arcsin", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("arcsin(") }
-            SquircleKey("=", MathSolverTheme.surfaceVariant, MathSolverTheme.accentTrigonometry, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 18.sp) { onKey(" = ") }
-        }
-        // Row 2: [√□], [csc], [sec], [cot], [arctan], [arccos]
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("√□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("sqrt(") }
-            SquircleKey("csc", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("csc(") }
-            SquircleKey("sec", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("sec(") }
-            SquircleKey("cot", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("cot(") }
-            SquircleKey("arctan", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("arctan(") }
             SquircleKey("arccos", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("arccos(") }
+            SquircleKey("arctan", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("arctan(") }
         }
-        // Row 3: [xⁿ], [x²], [7], [8], [9], [÷]
+
+        // Row 3: [ □ⁿ ], [ □² ], [ 7 ], [ 8 ], [ 9 ], [ ÷ ]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("xⁿ", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^") }
-            SquircleKey("x²", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^2") }
+            SquircleKey("□ⁿ", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^") }
+            SquircleKey("□²", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^2") }
             SquircleKey("7", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("7") }
             SquircleKey("8", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("8") }
             SquircleKey("9", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("9") }
             SquircleKey("÷", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("/") }
         }
-        // Row 4: [π], [DEG/RAD], [4], [5], [6], [×]
+
+        // Row 4: [ f(x) ], [ π ], [ 4 ], [ 5 ], [ 6 ], [ × ]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("π", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("π") }
-            DegRadKey(
-                isRadians = isRadians,
-                btnHeight = btnHeight,
+            SquircleKey(
+                label = "f(x)",
+                bgColor = if (isDark) tabAccent.copy(alpha = 0.22f) else tabAccent.copy(alpha = 0.15f),
+                textColor = tabAccent,
+                height = btnHeight,
                 modifier = Modifier.weight(1f),
-                accentColor = MathSolverTheme.accentTrigonometry,
-                onToggle = onToggleRadians
-            )
+                isBold = true,
+                fontSize = 13.sp
+            ) {
+                onOpenCatalog()
+            }
+            SquircleKey("π", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("π") }
             SquircleKey("4", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("4") }
             SquircleKey("5", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("5") }
             SquircleKey("6", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("6") }
             SquircleKey("×", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("*") }
         }
-        // Row 5: [(], [)], [1], [2], [3], [-]
+
+        // Row 5: [ ( ], [ ) ], [ 1 ], [ 2 ], [ 3 ], [ - ]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("(", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("(") }
             SquircleKey(")", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(")") }
@@ -416,10 +661,11 @@ private fun TrigonometryKeypadGrid(
             SquircleKey("3", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("3") }
             SquircleKey("-", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("-") }
         }
-        // Row 6: [x], [y], [0], [.], [%], [+]
+
+        // Row 6: [ x ], [ y ], [ 0 ], [ . ], [ % ], [ + ]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("x", fnBg, MathSolverTheme.accentTrigonometry, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("x") }
-            SquircleKey("y", fnBg, MathSolverTheme.accentTrigonometry, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("y") }
+            SquircleKey("x", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("x") }
+            SquircleKey("y", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("y") }
             SquircleKey("0", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("0") }
             SquircleKey(".", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey(".") }
             SquircleKey("%", opBg, opColor, btnHeight, Modifier.weight(1f)) { onKey("%") }
@@ -437,59 +683,77 @@ private fun CalculusKeypadGrid(
     btnHeight: Dp,
     isRadians: Boolean = true,
     onToggleRadians: () -> Unit = {},
+    onMoveCursorLeft: () -> Unit = {},
+    onMoveCursorRight: () -> Unit = {},
+    onDeleteChar: () -> Unit = {},
+    onClearAll: () -> Unit = {},
+    onOpenCatalog: () -> Unit = {},
     onKey: (String) -> Unit
 ) {
-    val fnBg = MathSolverTheme.calculusFunctionContainer
-    val fnColor = MathSolverTheme.calculusFunctionContent
-    val numBg = MathSolverTheme.numericContainer
-    val numColor = MathSolverTheme.numericContent
-    val opBg = MathSolverTheme.operatorContainer
-    val opColor = MathSolverTheme.operatorContent
+    val isDark = CalculatorTheme.colors.isDark
+    val tabAccent = MathSolverTab.CALCULUS.accentColor
+    val fnBg = if (isDark) MathSolverTheme.calculusFunctionContainer else tabAccent.copy(alpha = 0.12f)
+    val fnColor = if (isDark) MathSolverTheme.calculusFunctionContent else Color(0xFFBE185D)
+    val numBg = if (isDark) MathSolverTheme.numericContainer else CalculatorTheme.colors.numericContainer
+    val numColor = if (isDark) MathSolverTheme.numericContent else CalculatorTheme.colors.numericContent
+    val opBg = if (isDark) MathSolverTheme.operatorContainer else CalculatorTheme.colors.operatorContainer
+    val opColor = if (isDark) MathSolverTheme.operatorContent else CalculatorTheme.colors.operatorContent
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        // Row 1: [d/dx], [C(n,k)], [P(n,k)], [ln], [log], [ = ]
+        // Row 1: [ ← ], [ → ], [ RAD/DEG ], [ DEL ], [ AC ], [ = ]
+        NavigationAndControlRow(
+            btnHeight = btnHeight,
+            isRadians = isRadians,
+            tabAccentColor = tabAccent,
+            onMoveCursorLeft = onMoveCursorLeft,
+            onMoveCursorRight = onMoveCursorRight,
+            onToggleRadians = onToggleRadians,
+            onDeleteChar = onDeleteChar,
+            onClearAll = onClearAll,
+            onInsertChar = onKey
+        )
+
+        // Row 2: [ d/dx ], [ ∫ ], [ lim ], [ Σ ], [ ∞ ], [ □/□ ]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("d/dx", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 13.sp) { onKey("d/dx(") }
-            SquircleKey("C(n,k)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("C(") }
-            SquircleKey("P(n,k)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("P(") }
-            SquircleKey("ln", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("ln(") }
-            SquircleKey("log", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("log(") }
-            SquircleKey("=", MathSolverTheme.surfaceVariant, MathSolverTheme.accentCalculus, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 18.sp) { onKey(" = ") }
-        }
-        // Row 2: [ⁿ√□], [∫], [∫_a^b], [lim], [lim+], [lim-]
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("ⁿ√□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("ʸ√") }
             SquircleKey("∫", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 18.sp) { onKey("∫(") }
-            SquircleKey("∫ₐᵇ", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 13.sp) { onKey("∫(") }
             SquircleKey("lim", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("lim(") }
-            SquircleKey("lim⁺", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("lim(") }
-            SquircleKey("lim⁻", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("lim(") }
-        }
-        // Row 3: [Σ], [∞], [7], [8], [9], [÷]
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("Σ", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 16.sp) { onKey("Σ(") }
             SquircleKey("∞", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 16.sp) { onKey("∞") }
+            SquircleKey("□/□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("/") }
+        }
+
+        // Row 3: [ □ⁿ ], [ □² ], [ 7 ], [ 8 ], [ 9 ], [ ÷ ]
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            SquircleKey("□ⁿ", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^") }
+            SquircleKey("□²", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^2") }
             SquircleKey("7", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("7") }
             SquircleKey("8", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("8") }
             SquircleKey("9", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("9") }
             SquircleKey("÷", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("/") }
         }
-        // Row 4: [f(x)], [DEG/RAD], [4], [5], [6], [×]
+
+        // Row 4: [ f(x) ], [ ln ], [ 4 ], [ 5 ], [ 6 ], [ × ]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("f(x)", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("f(x)") }
-            DegRadKey(
-                isRadians = isRadians,
-                btnHeight = btnHeight,
+            SquircleKey(
+                label = "f(x)",
+                bgColor = if (isDark) tabAccent.copy(alpha = 0.22f) else tabAccent.copy(alpha = 0.15f),
+                textColor = tabAccent,
+                height = btnHeight,
                 modifier = Modifier.weight(1f),
-                accentColor = MathSolverTheme.accentCalculus,
-                onToggle = onToggleRadians
-            )
+                isBold = true,
+                fontSize = 13.sp
+            ) {
+                onOpenCatalog()
+            }
+            SquircleKey("ln", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("ln(") }
             SquircleKey("4", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("4") }
             SquircleKey("5", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("5") }
             SquircleKey("6", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("6") }
             SquircleKey("×", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("*") }
         }
-        // Row 5: [(], [)], [1], [2], [3], [-]
+
+        // Row 5: [ ( ], [ ) ], [ 1 ], [ 2 ], [ 3 ], [ - ]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("(", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("(") }
             SquircleKey(")", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(")") }
@@ -498,10 +762,11 @@ private fun CalculusKeypadGrid(
             SquircleKey("3", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("3") }
             SquircleKey("-", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("-") }
         }
-        // Row 6: [x], [y], [0], [.], [%], [+]
+
+        // Row 6: [ x ], [ y ], [ 0 ], [ . ], [ % ], [ + ]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("x", fnBg, MathSolverTheme.accentCalculus, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("x") }
-            SquircleKey("y", fnBg, MathSolverTheme.accentCalculus, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("y") }
+            SquircleKey("x", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("x") }
+            SquircleKey("y", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("y") }
             SquircleKey("0", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("0") }
             SquircleKey(".", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey(".") }
             SquircleKey("%", opBg, opColor, btnHeight, Modifier.weight(1f)) { onKey("%") }
@@ -511,28 +776,49 @@ private fun CalculusKeypadGrid(
 }
 
 // =========================================================================
-// 4. ALPHABET KEYPAD GRID (6 Colonne x 6 Righe - Latin / Greek)
+// 4. ALPHABET KEYPAD GRID (6 Colonne x 6 Righe)
 // =========================================================================
 
 @Composable
 private fun AlphabetKeypadGrid(
     btnHeight: Dp,
+    isRadians: Boolean = true,
+    onToggleRadians: () -> Unit = {},
+    onMoveCursorLeft: () -> Unit = {},
+    onMoveCursorRight: () -> Unit = {},
+    onDeleteChar: () -> Unit = {},
+    onClearAll: () -> Unit = {},
     onKey: (String) -> Unit
 ) {
-    val fnBg = MathSolverTheme.alphabetFunctionContainer
-    val fnColor = MathSolverTheme.alphabetFunctionContent
+    val isDark = CalculatorTheme.colors.isDark
+    val tabAccent = MathSolverTab.ALPHABET.accentColor
+    val fnBg = if (isDark) MathSolverTheme.alphabetFunctionContainer else tabAccent.copy(alpha = 0.12f)
+    val fnColor = if (isDark) MathSolverTheme.alphabetFunctionContent else Color(0xFFC2410C)
 
-    // Disposizione esatta 6x6 come in media_1790089593416.png
+    // 5 righe da 6 lettere latine e greche = 30 simboli
     val alphabetRows = listOf(
         listOf("a", "b", "c", "d", "e", "f"),
         listOf("g", "h", "i", "j", "k", "l"),
         listOf("m", "n", "o", "p", "q", "r"),
         listOf("s", "t", "u", "v", "w", "x"),
-        listOf("y", "z", "α", "β", "γ", "ε"),
-        listOf("θ", "λ", "μ", "π", "ρ", "φ")
+        listOf("y", "z", "α", "β", "π", "θ")
     )
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        // Row 1: [ ← ], [ → ], [ RAD/DEG ], [ DEL ], [ AC ], [ = ]
+        NavigationAndControlRow(
+            btnHeight = btnHeight,
+            isRadians = isRadians,
+            tabAccentColor = tabAccent,
+            onMoveCursorLeft = onMoveCursorLeft,
+            onMoveCursorRight = onMoveCursorRight,
+            onToggleRadians = onToggleRadians,
+            onDeleteChar = onDeleteChar,
+            onClearAll = onClearAll,
+            onInsertChar = onKey
+        )
+
+        // Rows 2..6: Lettere e caratteri
         alphabetRows.forEach { rowKeys ->
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 rowKeys.forEach { key ->
@@ -553,7 +839,7 @@ private fun AlphabetKeypadGrid(
 }
 
 // =========================================================================
-// 5. PERSISTENT BOTTOM EDIT BAR (6 Keys)
+// 5. PERSISTENT BOTTOM EDIT BAR ([ FORMAT: DEC ], [ RISOLVI ➤ ])
 // =========================================================================
 
 @Composable
@@ -561,141 +847,83 @@ fun PersistentBottomEditBar(
     activeTab: MathSolverTab,
     activeFormatLabel: String,
     btnHeight: Dp,
-    onMoveCursorLeft: () -> Unit,
-    onMoveCursorRight: () -> Unit,
-    onDeleteChar: () -> Unit,
-    onClearAll: () -> Unit,
     onCycleFormat: () -> Unit,
     onExecute: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Dynamic Accent Color for the Execute Pill
     val executionBgColor by animateColorAsState(
         targetValue = activeTab.accentColor,
         animationSpec = tween(durationMillis = 250),
         label = "ExecutionPillColorAnim"
     )
+    val isDark = CalculatorTheme.colors.isDark
+    val formatContainer = if (isDark) MathSolverTheme.formatContainer else CalculatorTheme.colors.operatorContainer
+    val formatBorder = if (isDark) MathSolverTheme.formatBorder else CalculatorTheme.colors.operatorContainer
+    val formatLabelColor = if (isDark) MathSolverTheme.formatLabel else activeTab.accentColor
+    val formatSubtextColor = if (isDark) MathSolverTheme.tabUnselected else CalculatorTheme.colors.onSurfaceVariant
 
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 1. [ ← ] Cursor Left
+        // [ FORMAT ] Tasto per ciclare formato risultato (DEC, FRAC, ENG, DMS, POL)
         Box(
             modifier = Modifier
                 .weight(1f)
                 .height(btnHeight)
                 .clip(RoundedCornerShape(percent = 50))
-                .background(MathSolverTheme.operatorContainer)
-                .clickable { onMoveCursorLeft() },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Cursore a sinistra",
-                tint = MathSolverTheme.operatorContent,
-                modifier = Modifier.size(19.dp)
-            )
-        }
-
-        // 2. [ → ] Cursor Right
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(btnHeight)
-                .clip(RoundedCornerShape(percent = 50))
-                .background(MathSolverTheme.operatorContainer)
-                .clickable { onMoveCursorRight() },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = "Cursore a destra",
-                tint = MathSolverTheme.operatorContent,
-                modifier = Modifier.size(19.dp)
-            )
-        }
-
-        // 3. [ ⌫ DEL ] Backspace
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(btnHeight)
-                .clip(RoundedCornerShape(percent = 50))
-                .background(MathSolverTheme.deleteContainer)
-                .clickable { onDeleteChar() },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "DEL",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = MathSolverTheme.deleteContent
-            )
-        }
-
-        // 4. [ AC ] All Clear
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(btnHeight)
-                .clip(RoundedCornerShape(percent = 50))
-                .background(MathSolverTheme.clearContainer)
-                .clickable { onClearAll() },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "AC",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                color = MathSolverTheme.clearContent
-            )
-        }
-
-        // 5. [ FORMAT ] Instant Result Formatter (DEC, FRAC, ENG, DMS, POL)
-        Box(
-            modifier = Modifier
-                .weight(1.1f)
-                .height(btnHeight)
-                .clip(RoundedCornerShape(percent = 50))
-                .background(MathSolverTheme.formatContainer)
-                .border(1.dp, MathSolverTheme.formatBorder, RoundedCornerShape(percent = 50))
+                .background(formatContainer)
+                .border(1.dp, formatBorder, RoundedCornerShape(percent = 50))
                 .clickable { onCycleFormat() },
             contentAlignment = Alignment.Center
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
                 Text(
                     text = "FORMAT",
-                    fontSize = 8.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MathSolverTheme.tabUnselected
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = formatSubtextColor
                 )
                 Text(
                     text = activeFormatLabel,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MathSolverTheme.formatLabel
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = formatLabelColor
                 )
             }
         }
 
-        // 6. [ ➤ ] Execution Send Pill (Prominent Pill with Send Icon in Active Tab Accent Color)
+        // [ RISOLVI ➤ ] Pulsante pillola di esecuzione / calcolo prominente con accento della tab attiva
         Box(
             modifier = Modifier
-                .weight(1.3f)
+                .weight(1.8f)
                 .height(btnHeight)
                 .clip(RoundedCornerShape(percent = 50))
                 .background(executionBgColor)
                 .clickable { onExecute() },
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.Send,
-                contentDescription = "Calcola ed Esegui",
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "RISOLVI",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Send,
+                    contentDescription = "Calcola ed Esegui",
+                    tint = Color.White,
+                    modifier = Modifier.size(17.dp)
+                )
+            }
         }
     }
 }
@@ -744,17 +972,21 @@ fun DegRadKey(
     accentColor: Color = Color(0xFF10B981),
     onToggle: () -> Unit
 ) {
+    val isDark = CalculatorTheme.colors.isDark
     val isDegActive = !isRadians
-    val bgColor = if (isDegActive) accentColor.copy(alpha = 0.22f) else MathSolverTheme.functionContainer
-    val textColor = if (isDegActive) accentColor else MathSolverTheme.functionContent
-    val borderColor = if (isDegActive) accentColor.copy(alpha = 0.8f) else Color.Transparent
+    val defaultBg = if (isDark) MathSolverTheme.functionContainer else CalculatorTheme.colors.operatorContainer
+    val defaultText = if (isDark) MathSolverTheme.functionContent else CalculatorTheme.colors.operatorContent
+
+    val bgColor = if (isDegActive) accentColor.copy(alpha = if (isDark) 0.25f else 0.2f) else defaultBg
+    val textColor = if (isDegActive) accentColor else defaultText
+    val borderColor = if (isDegActive) accentColor else Color.Transparent
 
     Box(
         modifier = modifier
             .height(btnHeight)
             .clip(RoundedCornerShape(percent = 50))
             .background(bgColor)
-            .border(if (isDegActive) 1.dp else 0.dp, borderColor, RoundedCornerShape(percent = 50))
+            .border(if (isDegActive) 1.5.dp else 0.dp, borderColor, RoundedCornerShape(percent = 50))
             .clickable { onToggle() },
         contentAlignment = Alignment.Center
     ) {

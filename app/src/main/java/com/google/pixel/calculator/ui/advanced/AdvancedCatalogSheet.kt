@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.pixel.calculator.ui.theme.CalculatorTheme
 
 data class CatalogItem(
     val title: String,
@@ -34,15 +35,20 @@ fun AdvancedCatalogSheet(
 ) {
     if (!isOpen) return
 
+    val isDark = CalculatorTheme.colors.isDark
+    val sheetBg = if (isDark) Color(0xFF1E212D) else CalculatorTheme.colors.surface
+    val tabRowBg = if (isDark) Color(0xFF262A3B) else CalculatorTheme.colors.operatorContainer
+    val titleColor = if (isDark) Color.White else CalculatorTheme.colors.onSurface
+
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf("📐 Goniometria", "📈 Analisi", "⚡ Iperboliche", "🔢 Algebra", "⚛️ Costanti")
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-        containerColor = Color(0xFF1E212D),
+        containerColor = sheetBg,
         dragHandle = {
-            BottomSheetDefaults.DragHandle(color = Color(0xFF64748B))
+            BottomSheetDefaults.DragHandle(color = if (isDark) Color(0xFF64748B) else CalculatorTheme.colors.onSurfaceVariant)
         }
     ) {
         Column(
@@ -61,10 +67,14 @@ fun AdvancedCatalogSheet(
                     text = "Libreria Funzioni Scientifiche",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = titleColor
                 )
                 IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = "Chiudi", tint = Color(0xFF94A3B8))
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "Chiudi",
+                        tint = if (isDark) Color(0xFF94A3B8) else CalculatorTheme.colors.onSurfaceVariant
+                    )
                 }
             }
 
@@ -73,7 +83,7 @@ fun AdvancedCatalogSheet(
             // Scrollable Tab Row in stile Pill Expressive
             ScrollableTabRow(
                 selectedTabIndex = selectedTabIndex,
-                containerColor = Color(0xFF262A3B),
+                containerColor = tabRowBg,
                 contentColor = Color(0xFF60A5FA),
                 edgePadding = 0.dp,
                 indicator = { tabPositions ->
@@ -83,7 +93,7 @@ fun AdvancedCatalogSheet(
                         height = 3.dp
                     )
                 },
-                modifier = Modifier.background(Color(0xFF262A3B), RoundedCornerShape(percent = 50))
+                modifier = Modifier.background(tabRowBg, RoundedCornerShape(percent = 50))
             ) {
                 tabs.forEachIndexed { index, tabTitle ->
                     val isSelected = selectedTabIndex == index
@@ -95,7 +105,7 @@ fun AdvancedCatalogSheet(
                                 text = tabTitle,
                                 fontSize = 13.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected) Color(0xFF60A5FA) else Color(0xFF94A3B8)
+                                color = if (isSelected) Color(0xFF60A5FA) else if (isDark) Color(0xFF94A3B8) else CalculatorTheme.colors.onSurfaceVariant
                             )
                         }
                     )
@@ -154,8 +164,12 @@ fun AdvancedCatalogSheet(
                 modifier = Modifier.heightIn(max = 280.dp)
             ) {
                 items(items) { item ->
+                    val cardBg = if (isDark) Color(0xFF2C3040) else CalculatorTheme.colors.operatorContainer
+                    val itemTitleColor = if (isDark) Color(0xFF60A5FA) else Color(0xFF2563EB)
+                    val itemSubtitleColor = if (isDark) Color(0xFF94A3B8) else CalculatorTheme.colors.onSurfaceVariant
+
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF2C3040)),
+                        colors = CardDefaults.cardColors(containerColor = cardBg),
                         shape = RoundedCornerShape(18.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -171,7 +185,7 @@ fun AdvancedCatalogSheet(
                                 text = item.title,
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF60A5FA)
+                                color = itemTitleColor
                             )
                             if (item.subtitle.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(2.dp))
@@ -179,7 +193,7 @@ fun AdvancedCatalogSheet(
                                     text = item.subtitle,
                                     style = MaterialTheme.typography.bodySmall,
                                     fontSize = 11.sp,
-                                    color = Color(0xFF94A3B8)
+                                    color = itemSubtitleColor
                                 )
                             }
                         }

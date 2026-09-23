@@ -445,7 +445,7 @@ fun PixelButton(
             text = text,
             fontSize = fontSize,
             fontFamily = if (isNumeric) QuicksandFontFamily else if( isOperator) QuicksandFontFamily else SystemFontFamily,
-            fontWeight = if (isNumeric) FontWeight.Normal else FontWeight.Medium
+            fontWeight = if (isNumeric) FontWeight.SemiBold else FontWeight.Medium
         )
     }
 }

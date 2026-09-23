@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.pixel.calculator.core.advanced.AdvancedMathEngine
+import com.google.pixel.calculator.ui.theme.CalculatorTheme
 
 @Composable
 fun AdvancedFormulaDisplay(
@@ -31,14 +32,18 @@ fun AdvancedFormulaDisplay(
     onCycleColor: (Int) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val isDark = CalculatorTheme.colors.isDark
+    val cardBg = if (isDark) Color(0xFF222636) else CalculatorTheme.colors.surface
+    val cardBorder = if (isDark) Color(0xFF353C52) else CalculatorTheme.colors.operatorContainer
+
     Card(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .border(1.dp, Color(0xFF353C52), RoundedCornerShape(22.dp)),
+            .border(1.dp, cardBorder, RoundedCornerShape(22.dp)),
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF222636)
+            containerColor = cardBg
         )
     ) {
         Column(
@@ -54,9 +59,14 @@ fun AdvancedFormulaDisplay(
                 val rowBorder = if (isActive) {
                     Modifier.border(1.5.dp, eq.color.copy(alpha = 0.65f), RoundedCornerShape(14.dp))
                 } else {
-                    Modifier.border(1.dp, Color(0xFF2E3346), RoundedCornerShape(14.dp))
+                    val borderCol = if (isDark) Color(0xFF2E3346) else CalculatorTheme.colors.operatorContainer
+                    Modifier.border(1.dp, borderCol, RoundedCornerShape(14.dp))
                 }
-                val rowBg = if (isActive) eq.color.copy(alpha = 0.12f) else Color(0xFF1E2230)
+                val rowBg = if (isActive) {
+                    eq.color.copy(alpha = if (isDark) 0.14f else 0.08f)
+                } else {
+                    if (isDark) Color(0xFF1E2230) else CalculatorTheme.colors.background
+                }
 
                 Row(
                     modifier = Modifier
@@ -141,38 +151,35 @@ fun AdvancedFormulaDisplay(
                 }
             }
 
-            // Riga inferiore: Badge FORMAT + Tasto "+ Aggiungi equazione"
+            // Riga inferiore: Badge Formato Attivo + Tasto "+ Aggiungi equazione"
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Badge Formato Attivo (DEC / FRAC / ENG / DMS / POL)
+                // Badge Formato Attivo (DEC / FRAC / ENG / DMS / POL) - Rimosso il testo "FORMAT:"
                 val curFormat = state.equations.getOrNull(state.activeEquationIndex)?.formatMode ?: AdvancedMathEngine.ResultFormat.DECIMAL
+                val badgeBg = if (isDark) Color(0xFF33384C) else CalculatorTheme.colors.operatorContainer
+                val badgeText = if (isDark) Color(0xFF60A5FA) else CalculatorTheme.colors.operatorContent
+
                 Row(
                     modifier = Modifier
-                        .background(Color(0xFF33384C), RoundedCornerShape(10.dp))
+                        .background(badgeBg, RoundedCornerShape(10.dp))
                         .clickable { onCycleFormat() }
-                        .padding(horizontal = 8.dp, vertical = 3.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "FORMAT:",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF94A3B8)
-                    )
                     Text(
                         text = curFormat.label,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = Color(0xFF60A5FA)
+                        color = badgeText
                     )
                 }
 
                 // Pulsante "+ Aggiungi equazione" (fino a 4 simultanee)
                 if (state.equations.size < 4) {
+                    val addColor = if (isDark) Color(0xFF93C5FD) else CalculatorTheme.colors.onSurfaceVariant
                     Row(
                         modifier = Modifier
                             .clickable { onAddFormula() }
@@ -183,14 +190,14 @@ fun AdvancedFormulaDisplay(
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Aggiungi",
-                            tint = Color(0xFF93C5FD),
+                            tint = addColor,
                             modifier = Modifier.size(15.dp)
                         )
                         Text(
                             text = "Aggiungi equazione",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFF93C5FD)
+                            color = addColor
                         )
                     }
                 }
@@ -210,10 +217,15 @@ fun SolutionMatrixBracket(
     format: AdvancedMathEngine.ResultFormat,
     modifier: Modifier = Modifier
 ) {
+    val isDark = CalculatorTheme.colors.isDark
+    val bracketBg = if (isDark) Color(0xFF1A1D27) else CalculatorTheme.colors.operatorContainer
+    val bracketColor = if (isDark) Color(0xFF60A5FA) else CalculatorTheme.colors.operatorContent
+    val rootColor = if (isDark) Color(0xFF6EE7B7) else Color(0xFF059669)
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
-            .background(Color(0xFF1A1D27), RoundedCornerShape(8.dp))
+            .background(bracketBg, RoundedCornerShape(8.dp))
             .padding(horizontal = 6.dp, vertical = 4.dp)
     ) {
         // Staffa sinistra
@@ -221,7 +233,7 @@ fun SolutionMatrixBracket(
             text = "[",
             fontSize = if (roots.size > 2) 24.sp else 20.sp,
             fontWeight = FontWeight.Light,
-            color = Color(0xFF60A5FA),
+            color = bracketColor,
             fontFamily = FontFamily.Monospace
         )
 
@@ -236,7 +248,7 @@ fun SolutionMatrixBracket(
                     text = "$label$rStr",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF6EE7B7),
+                    color = rootColor,
                     fontFamily = FontFamily.Monospace
                 )
             }
@@ -247,7 +259,7 @@ fun SolutionMatrixBracket(
             text = "]",
             fontSize = if (roots.size > 2) 24.sp else 20.sp,
             fontWeight = FontWeight.Light,
-            color = Color(0xFF60A5FA),
+            color = bracketColor,
             fontFamily = FontFamily.Monospace
         )
     }
@@ -263,6 +275,11 @@ fun FormulaMath2DRenderer(
     cursorPosition: Int = 0,
     modifier: Modifier = Modifier
 ) {
+    val isDark = CalculatorTheme.colors.isDark
+    val textColor = if (isDark) Color.White else CalculatorTheme.colors.onSurface
+    val placeholderColor = if (isDark) Color(0xFF64748B) else CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.6f)
+    val divBarColor = if (isDark) Color(0xFFE2E8F0) else CalculatorTheme.colors.onSurfaceVariant
+
     if (expression.isBlank()) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -279,7 +296,7 @@ fun FormulaMath2DRenderer(
             }
             Text(
                 text = "Inserisci espressione o equazione...",
-                color = Color(0xFF64748B),
+                color = placeholderColor,
                 fontSize = 15.sp
             )
         }
@@ -319,7 +336,7 @@ fun FormulaMath2DRenderer(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = numPart,
-                    color = Color.White,
+                    color = textColor,
                     fontSize = 15.sp,
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Medium
@@ -328,11 +345,11 @@ fun FormulaMath2DRenderer(
                     modifier = Modifier
                         .width((maxOf(numPart.length, denPart.length) * 10).dp.coerceAtLeast(24.dp))
                         .height(1.5.dp)
-                        .background(Color(0xFFE2E8F0))
+                        .background(divBarColor)
                 )
                 Text(
                     text = denPart,
-                    color = Color.White,
+                    color = textColor,
                     fontSize = 15.sp,
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Medium
@@ -353,7 +370,7 @@ fun FormulaMath2DRenderer(
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = formatExponents(restPart),
-                    color = Color.White,
+                    color = textColor,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Normal
                 )
@@ -372,7 +389,7 @@ fun FormulaMath2DRenderer(
             if (beforeCursor.isNotEmpty()) {
                 Text(
                     text = formatExponents(beforeCursor),
-                    color = Color.White,
+                    color = textColor,
                     fontSize = 16.sp,
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Normal
@@ -389,7 +406,7 @@ fun FormulaMath2DRenderer(
             if (afterCursor.isNotEmpty()) {
                 Text(
                     text = formatExponents(afterCursor),
-                    color = Color.White,
+                    color = textColor,
                     fontSize = 16.sp,
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Normal

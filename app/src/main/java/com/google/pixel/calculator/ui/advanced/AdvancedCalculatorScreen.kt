@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.pixel.calculator.ui.theme.CalculatorTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,6 +35,7 @@ fun AdvancedCalculatorScreen(
     viewModel: AdvancedCalculatorViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val isDark = CalculatorTheme.colors.isDark
 
     Scaffold(
         topBar = {
@@ -43,7 +45,7 @@ fun AdvancedCalculatorScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Torna agli strumenti",
-                            tint = Color.White
+                            tint = CalculatorTheme.colors.onSurface
                         )
                     }
                 },
@@ -52,15 +54,15 @@ fun AdvancedCalculatorScreen(
                         text = "Google Math Solver",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.White
+                        color = CalculatorTheme.colors.onSurface
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF1E212D)
+                    containerColor = CalculatorTheme.colors.background
                 )
             )
         },
-        containerColor = Color(0xFF1E212D)
+        containerColor = CalculatorTheme.colors.background
     ) { padding ->
         Box(
             modifier = Modifier
@@ -177,6 +179,7 @@ fun AdvancedCalculatorScreen(
                             onCycleFormat = { viewModel.onCycleFormat() },
                             onExecute = { viewModel.onExecute() },
                             onToggleRadians = { viewModel.toggleRadians() },
+                            onOpenCatalog = { viewModel.openCatalog() },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 2.dp)
@@ -205,9 +208,22 @@ fun InlineGraphToggleButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val bgColor = if (isOpen) Color(0xFF1E3A8A) else Color(0xFF262C3E)
-    val contentColor = if (isOpen) Color.White else Color(0xFF93C5FD)
-    val borderColor = if (isOpen) Color(0xFF60A5FA) else Color(0xFF3B82F6).copy(alpha = 0.5f)
+    val isDark = CalculatorTheme.colors.isDark
+    val bgColor = if (isOpen) {
+        if (isDark) Color(0xFF1E3A8A) else Color(0xFFDBEAFE)
+    } else {
+        if (isDark) Color(0xFF262C3E) else CalculatorTheme.colors.surface
+    }
+    val contentColor = if (isOpen) {
+        if (isDark) Color.White else Color(0xFF1D4ED8)
+    } else {
+        if (isDark) Color(0xFF93C5FD) else Color(0xFF2563EB)
+    }
+    val borderColor = if (isOpen) {
+        Color(0xFF60A5FA)
+    } else {
+        if (isDark) Color(0xFF3B82F6).copy(alpha = 0.5f) else Color(0xFF93C5FD)
+    }
 
     Box(
         modifier = modifier
@@ -252,13 +268,17 @@ fun MinimizedGraphCard(
     onExpandFullscreen: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDark = CalculatorTheme.colors.isDark
+    val cardBg = if (isDark) Color(0xFF181B26) else CalculatorTheme.colors.surface
+    val cardBorder = if (isDark) Color(0xFF353C52) else CalculatorTheme.colors.operatorContainer
+
     Card(
         modifier = modifier
             .fillMaxWidth()
             .height(170.dp)
-            .border(1.dp, Color(0xFF353C52), RoundedCornerShape(16.dp)),
+            .border(1.dp, cardBorder, RoundedCornerShape(16.dp)),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF181B26))
+        colors = CardDefaults.cardColors(containerColor = cardBg)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             // Canvas Cartesiano interattivo 2D
