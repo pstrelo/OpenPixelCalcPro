@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -41,19 +42,31 @@ fun RulerView(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Righello Schermo Pixel") },
+                title = {
+                    Text(
+                        text = "Righello Schermo Pixel",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer ?: MaterialTheme.colorScheme.surface
+                ),
                 actions = {
                     FilterChip(
                         selected = useInches,
                         onClick = { useInches = !useInches },
-                        label = { Text(if (useInches) "Pollici (in)" else "Millimetri (mm)") }
+                        label = { Text(if (useInches) "Pollici (in)" else "Millimetri (mm)") },
+                        shape = RoundedCornerShape(percent = 50),
+                        modifier = Modifier.padding(end = 8.dp)
                     )
                 }
             )
@@ -64,30 +77,43 @@ fun RulerView(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Scheda valore misurato in cima
-            Surface(
-                color = MaterialTheme.colorScheme.primaryContainer,
+            // Scheda valore misurato in cima con forma M3 Expressive
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(20.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text("Misura attuale:", fontSize = 13.sp)
+                        Text(
+                            text = "Misura attuale",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = measuredValue,
-                            fontSize = 24.sp,
+                            style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
-                    Text(
-                        text = "Trascina la linea blu",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                    )
+                    Surface(
+                        shape = RoundedCornerShape(percent = 50),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.12f)
+                    ) {
+                        Text(
+                            text = "Trascina la linea",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        )
+                    }
                 }
             }
 
@@ -95,7 +121,7 @@ fun RulerView(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFF1B1B1B))
+                    .background(MaterialTheme.colorScheme.surfaceContainerLowest ?: Color(0xFF1B1B1B))
                     .pointerInput(Unit) {
                         detectDragGestures { change, dragAmount ->
                             change.consume()

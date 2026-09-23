@@ -2,6 +2,7 @@ package com.google.pixel.calculator.ui.equations
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -30,14 +31,24 @@ fun EquationSolverScreen(
     val solver = remember { EquationSolver() }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Risolutore di Equazioni") },
+                title = {
+                    Text(
+                        text = "Risolutore di Equazioni",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer ?: MaterialTheme.colorScheme.surface
+                )
             )
         }
     ) { padding ->
@@ -45,38 +56,49 @@ fun EquationSolverScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
+                .padding(horizontal = 20.dp, vertical = 12.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow ?: MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                ),
+                shape = RoundedCornerShape(24.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(20.dp)) {
                     Text(
                         text = "Forma canonica: ax² + bx + c = 0",
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
                         color = MaterialTheme.colorScheme.primary
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Inserisci i coefficienti per ottenere radici reali/complesse e passaggi dettagliati.",
-                        fontSize = 14.sp
+                        text = "Inserisci i coefficienti per calcolare radici reali, complesse e passaggi passo-passo.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
-            // Input coefficienti a, b, c
+            // Input coefficienti a, b, c con forme M3
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 OutlinedTextField(
                     value = aStr,
                     onValueChange = { aStr = it },
                     label = { Text("a") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer ?: MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow ?: MaterialTheme.colorScheme.surface
+                    ),
                     modifier = Modifier.weight(1f)
                 )
                 OutlinedTextField(
@@ -84,6 +106,11 @@ fun EquationSolverScreen(
                     onValueChange = { bStr = it },
                     label = { Text("b") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer ?: MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow ?: MaterialTheme.colorScheme.surface
+                    ),
                     modifier = Modifier.weight(1f)
                 )
                 OutlinedTextField(
@@ -91,10 +118,16 @@ fun EquationSolverScreen(
                     onValueChange = { cStr = it },
                     label = { Text("c") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer ?: MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow ?: MaterialTheme.colorScheme.surface
+                    ),
                     modifier = Modifier.weight(1f)
                 )
             }
 
+            // Bottone Risolvi in forma Pill (RoundedCornerShape(percent = 50))
             Button(
                 onClick = {
                     val a = aStr.toDoubleOrNull() ?: 1.0
@@ -102,57 +135,104 @@ fun EquationSolverScreen(
                     val c = cStr.toDoubleOrNull() ?: 0.0
                     solution = solver.solveQuadratic(a, b, c)
                 },
+                shape = RoundedCornerShape(percent = 50),
+                contentPadding = PaddingValues(vertical = 14.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Risolvi Equazione", fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Risolvi Equazione",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
             }
 
-            // Risultato e Passaggi
+            // Risultato e Passaggi con forma M3 Expressive
             solution?.let { sol ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Text(
-                            text = "Risultato:",
+                            text = "Risultato",
+                            style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
+                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
                         )
 
                         when (sol) {
                             is EquationSolver.Solution.QuadraticReal -> {
-                                Text("x₁ = ${sol.x1}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                                Text("x₂ = ${sol.x2}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                                Text(
+                                    text = "x₁ = ${sol.x1}",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                                Text(
+                                    text = "x₂ = ${sol.x2}",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
                             }
                             is EquationSolver.Solution.QuadraticComplex -> {
                                 Text(
-                                    "x = ${sol.realPart} ± ${sol.imagPart} i",
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold
+                                    text = "x = ${sol.realPart} ± ${sol.imagPart} i",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
                                 )
                             }
                             is EquationSolver.Solution.Linear -> {
-                                Text("x = ${sol.x}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                                Text(
+                                    text = "x = ${sol.x}",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
                             }
                             is EquationSolver.Solution.InfiniteSolutions -> {
-                                Text(sol.message, fontSize = 16.sp)
+                                Text(
+                                    text = sol.message,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
                             }
                             is EquationSolver.Solution.NoSolution -> {
-                                Text(sol.message, fontSize = 16.sp, color = MaterialTheme.colorScheme.error)
+                                Text(
+                                    text = sol.message,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.error
+                                )
                             }
                             is EquationSolver.Solution.Error -> {
-                                Text(sol.message, fontSize = 16.sp, color = MaterialTheme.colorScheme.error)
+                                Text(
+                                    text = sol.message,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.error
+                                )
                             }
                             else -> {}
                         }
 
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f)
+                        )
 
-                        Text("Passaggi di risoluzione:", fontWeight = FontWeight.SemiBold)
+                        Text(
+                            text = "Passaggi di risoluzione:",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
                         val steps = when (sol) {
                             is EquationSolver.Solution.QuadraticReal -> sol.steps
                             is EquationSolver.Solution.QuadraticComplex -> sol.steps
@@ -163,7 +243,8 @@ fun EquationSolverScreen(
                             Text(
                                 text = "• $step",
                                 fontFamily = FontFamily.Monospace,
-                                fontSize = 13.sp
+                                fontSize = 13.sp,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
                             )
                         }
                     }

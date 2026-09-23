@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +39,7 @@ fun AdvancedCatalogSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         containerColor = Color(0xFF1E212D),
         dragHandle = {
             BottomSheetDefaults.DragHandle(color = Color(0xFF64748B))
@@ -56,7 +58,7 @@ fun AdvancedCatalogSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Libreria Funzioni Scientifiche (Catalog)",
+                    text = "Libreria Funzioni Scientifiche",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -66,26 +68,34 @@ fun AdvancedCatalogSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            // Scrollable Tab Row
+            // Scrollable Tab Row in stile Pill Expressive
             ScrollableTabRow(
                 selectedTabIndex = selectedTabIndex,
                 containerColor = Color(0xFF262A3B),
                 contentColor = Color(0xFF60A5FA),
                 edgePadding = 0.dp,
-                modifier = Modifier.background(Color(0xFF262A3B), RoundedCornerShape(12.dp))
+                indicator = { tabPositions ->
+                    TabRowDefaults.SecondaryIndicator(
+                        modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                        color = Color(0xFF60A5FA),
+                        height = 3.dp
+                    )
+                },
+                modifier = Modifier.background(Color(0xFF262A3B), RoundedCornerShape(percent = 50))
             ) {
                 tabs.forEachIndexed { index, tabTitle ->
+                    val isSelected = selectedTabIndex == index
                     Tab(
-                        selected = selectedTabIndex == index,
+                        selected = isSelected,
                         onClick = { selectedTabIndex = index },
                         text = {
                             Text(
                                 text = tabTitle,
                                 fontSize = 13.sp,
-                                fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Normal,
-                                color = if (selectedTabIndex == index) Color(0xFF60A5FA) else Color(0xFF94A3B8)
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) Color(0xFF60A5FA) else Color(0xFF94A3B8)
                             )
                         }
                     )
@@ -146,7 +156,7 @@ fun AdvancedCatalogSheet(
                 items(items) { item ->
                     Card(
                         colors = CardDefaults.cardColors(containerColor = Color(0xFF2C3040)),
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(18.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
@@ -155,17 +165,19 @@ fun AdvancedCatalogSheet(
                             }
                     ) {
                         Column(
-                            modifier = Modifier.padding(12.dp)
+                            modifier = Modifier.padding(14.dp)
                         ) {
                             Text(
                                 text = item.title,
-                                fontSize = 16.sp,
+                                style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF60A5FA)
                             )
                             if (item.subtitle.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = item.subtitle,
+                                    style = MaterialTheme.typography.bodySmall,
                                     fontSize = 11.sp,
                                     color = Color(0xFF94A3B8)
                                 )

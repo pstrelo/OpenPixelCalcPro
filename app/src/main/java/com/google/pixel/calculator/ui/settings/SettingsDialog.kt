@@ -76,11 +76,14 @@ fun ThemeSelectionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(28.dp),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh ?: MaterialTheme.colorScheme.surface,
         title = {
             Text(
                 text = "Scegli tema",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Medium
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
             )
         },
         text = {
@@ -93,15 +96,20 @@ fun ThemeSelectionDialog(
             ) {
                 themeOptions.forEach { option ->
                     val isSelected = option.mode == currentTheme
+                    val itemBg = if (isSelected) {
+                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+                    } else Color.Transparent
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(itemBg)
                             .clickable {
                                 onSelectTheme(option.mode)
                                 onDismiss()
                             }
-                            .padding(horizontal = 8.dp, vertical = 10.dp),
+                            .padding(horizontal = 10.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
@@ -115,25 +123,36 @@ fun ThemeSelectionDialog(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = option.title,
-                                fontSize = 15.sp,
-                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
                                 text = option.subtitle,
-                                fontSize = 12.sp,
-                                color = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.8f)
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                         Spacer(modifier = Modifier.width(8.dp))
-                        // Swatches circolari con i colori di anteprima
-                        Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                            option.colors.forEach { col ->
-                                Box(
-                                    modifier = Modifier
-                                        .size(13.dp)
-                                        .background(col, CircleShape)
-                                        .border(0.5.dp, Color.Black.copy(alpha = 0.2f), CircleShape)
-                                )
+                        // Swatches circolari con i colori di anteprima in pillola
+                        Surface(
+                            shape = RoundedCornerShape(percent = 50),
+                            color = MaterialTheme.colorScheme.surfaceContainerHighest ?: MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier.padding(start = 4.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                option.colors.forEach { col ->
+                                    Box(
+                                        modifier = Modifier
+                                            .size(10.dp)
+                                            .background(col, CircleShape)
+                                            .border(0.5.dp, Color.Black.copy(alpha = 0.2f), CircleShape)
+                                    )
+                                }
                             }
                         }
                     }
@@ -141,8 +160,15 @@ fun ThemeSelectionDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Chiudi")
+            TextButton(
+                onClick = onDismiss,
+                shape = RoundedCornerShape(percent = 50)
+            ) {
+                Text(
+                    text = "Chiudi",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     )
@@ -162,31 +188,52 @@ fun ClearHistoryConfirmDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(28.dp),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh ?: MaterialTheme.colorScheme.surface,
         title = {
             Text(
                 text = "Cancella cronologia?",
-                fontWeight = FontWeight.Medium
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
             )
         },
         text = {
             Text(
-                text = "Questa operazione rimuoverà tutti i calcoli salvati nella cronologia."
+                text = "Questa operazione rimuoverà tutti i calcoli salvati nella cronologia.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         },
         confirmButton = {
-            TextButton(
+            Button(
                 onClick = {
                     onConfirm()
                     onDismiss()
                 },
-                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError
+                ),
+                shape = RoundedCornerShape(percent = 50)
             ) {
-                Text("Cancella", fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Cancella",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Annulla")
+            TextButton(
+                onClick = onDismiss,
+                shape = RoundedCornerShape(percent = 50)
+            ) {
+                Text(
+                    text = "Annulla",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     )

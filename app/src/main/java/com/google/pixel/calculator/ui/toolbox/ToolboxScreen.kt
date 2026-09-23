@@ -1,8 +1,10 @@
 package com.google.pixel.calculator.ui.toolbox
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -12,6 +14,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -24,6 +29,7 @@ fun ToolboxScreen(
     onSelectTool: (ActiveScreen) -> Unit
 ) {
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 navigationIcon = {
@@ -42,7 +48,7 @@ fun ToolboxScreen(
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer ?: MaterialTheme.colorScheme.surface
                 )
             )
         }
@@ -52,81 +58,116 @@ fun ToolboxScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             // SEZIONE 1: CALCOLO AVANZATO
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     text = "Calcolo Avanzato",
-                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(start = 4.dp)
                 )
 
+                // 1. Calcolatrice Avanzata & Grafica (Squircle Expressive Shape: 24dp, container accent)
                 ToolCard(
                     icon = "🧮",
                     title = "Calcolatrice Avanzata & Grafica",
                     description = "Calcolo scientifico, equazioni, disequazioni, derivate, integrali e grafici 2D interattivi",
+                    cardShape = RoundedCornerShape(26.dp),
+                    iconContainerShape = RoundedCornerShape(18.dp),
+                    iconBgColor = MaterialTheme.colorScheme.primaryContainer,
+                    iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
                     onClick = { onSelectTool(ActiveScreen.ADVANCED_CALCULATOR) }
                 )
 
+                // 2. Risolutore di Equazioni (Pill / Asymmetric Curvature: 20dp & 12dp)
                 ToolCard(
                     icon = "📐",
                     title = "Risolutore di Equazioni",
                     description = "Equazioni di 1°, 2° grado e sistemi lineari a due incognite con passaggi",
+                    cardShape = RoundedCornerShape(topStart = 24.dp, topEnd = 14.dp, bottomEnd = 24.dp, bottomStart = 14.dp),
+                    iconContainerShape = CircleShape,
+                    iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
+                    iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
                     onClick = { onSelectTool(ActiveScreen.EQUATION_SOLVER) }
                 )
 
+                // 3. Grafici 2D (Smooth Cut / Organic Pill: 14dp & 24dp)
                 ToolCard(
                     icon = "📈",
                     title = "Grafici 2D di Funzioni",
                     description = "Grafico cartesiano interattivo con zoom, pan, tracciamento radici e massimi",
+                    cardShape = RoundedCornerShape(topStart = 14.dp, topEnd = 24.dp, bottomEnd = 14.dp, bottomStart = 24.dp),
+                    iconContainerShape = RoundedCornerShape(14.dp),
+                    iconBgColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    iconTint = MaterialTheme.colorScheme.onTertiaryContainer,
                     onClick = { onSelectTool(ActiveScreen.GRAPH_2D) }
                 )
             }
 
             // SEZIONE 2: SENSORI E STRUMENTI FISICI PIXEL
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     text = "Utilità e Sensori Pixel",
-                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(start = 4.dp)
                 )
 
+                // 4. Convertitore di Unità (Pill rounded 22dp)
                 ToolCard(
                     icon = "⚖️",
                     title = "Convertitore di Unità",
                     description = "Lunghezza, massa, temperatura, volume, velocità e archiviazione dati offline",
+                    cardShape = RoundedCornerShape(22.dp),
+                    iconContainerShape = RoundedCornerShape(16.dp),
+                    iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
+                    iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
                     onClick = { onSelectTool(ActiveScreen.TOOLBOX_CONVERTER) }
                 )
 
+                // 5. Livella a Bolla Digitale (Organic Curvature: topStart/bottomEnd 24dp, topEnd/bottomStart 16dp)
                 ToolCard(
                     icon = "🟢",
                     title = "Livella a Bolla Digitale",
                     description = "Misurazione dell'inclinazione su due assi con feedback haptic e accelerometro",
+                    cardShape = RoundedCornerShape(topStart = 24.dp, topEnd = 16.dp, bottomEnd = 24.dp, bottomStart = 16.dp),
+                    iconContainerShape = CircleShape,
+                    iconBgColor = MaterialTheme.colorScheme.primaryContainer,
+                    iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
                     onClick = { onSelectTool(ActiveScreen.TOOLBOX_LEVEL) }
                 )
 
+                // 6. Bussola Digitale (Circle icon container & 22dp card)
                 ToolCard(
                     icon = "🧭",
                     title = "Bussola Digitale",
                     description = "Orientamento magnetico 360°, calcolo azimut e indicazione punti cardinali",
+                    cardShape = RoundedCornerShape(22.dp),
+                    iconContainerShape = CircleShape,
+                    iconBgColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    iconTint = MaterialTheme.colorScheme.onTertiaryContainer,
                     onClick = { onSelectTool(ActiveScreen.TOOLBOX_COMPASS) }
                 )
 
+                // 7. Righello su Schermo (Asymmetric: topStart 16dp, topEnd 24dp, bottomEnd 16dp, bottomStart 24dp)
                 ToolCard(
                     icon = "📏",
                     title = "Righello su Schermo",
                     description = "Scala millimetrica e pollici calibrata fisicamente sui display Pixel",
+                    cardShape = RoundedCornerShape(topStart = 16.dp, topEnd = 24.dp, bottomEnd = 16.dp, bottomStart = 24.dp),
+                    iconContainerShape = RoundedCornerShape(14.dp),
+                    iconBgColor = MaterialTheme.colorScheme.surfaceContainerHighest ?: MaterialTheme.colorScheme.surfaceVariant,
+                    iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
                     onClick = { onSelectTool(ActiveScreen.TOOLBOX_RULER) }
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
         }
     }
 }
@@ -136,16 +177,22 @@ private fun ToolCard(
     icon: String,
     title: String,
     description: String,
+    cardShape: Shape,
+    iconContainerShape: Shape,
+    iconBgColor: Color,
+    iconTint: Color,
     onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(cardShape)
             .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
+        shape = cardShape,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
-        )
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow ?: MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -153,12 +200,12 @@ private fun ToolCard(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surface,
-                modifier = Modifier.size(48.dp)
+                shape = iconContainerShape,
+                color = iconBgColor,
+                modifier = Modifier.size(52.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text(text = icon, fontSize = 24.sp)
+                    Text(text = icon, fontSize = 26.sp)
                 }
             }
 
@@ -169,7 +216,7 @@ private fun ToolCard(
                     fontSize = 16.sp,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(3.dp))
                 Text(
                     text = description,
                     fontSize = 12.sp,
@@ -178,12 +225,20 @@ private fun ToolCard(
                 )
             }
 
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                modifier = Modifier.size(16.dp)
-            )
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceContainerHighest ?: MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(13.dp)
+                    )
+                }
+            }
         }
     }
 }

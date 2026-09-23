@@ -38,21 +38,38 @@ fun Graph2DScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Grafici 2D f(x)") },
+                title = {
+                    Text(
+                        text = "Grafici 2D f(x)",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer ?: MaterialTheme.colorScheme.surface
+                ),
                 actions = {
-                    TextButton(onClick = {
-                        scale = 40f
-                        offsetX = 0f
-                        offsetY = 0f
-                    }) {
-                        Text("Reset Vista")
+                    TextButton(
+                        onClick = {
+                            scale = 40f
+                            offsetX = 0f
+                            offsetY = 0f
+                        },
+                        shape = RoundedCornerShape(percent = 50)
+                    ) {
+                        Text(
+                            text = "Reset Vista",
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             )
@@ -69,7 +86,7 @@ fun Graph2DScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 OutlinedTextField(
                     value = formula,
@@ -77,36 +94,64 @@ fun Graph2DScreen(
                     label = { Text("f(x) =") },
                     placeholder = { Text("es: sin(x), x^2 - 4, 1/x") },
                     singleLine = true,
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer ?: MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow ?: MaterialTheme.colorScheme.surface
+                    ),
                     modifier = Modifier.weight(1f)
                 )
 
-                Button(onClick = {
-                    // Trigger ricalcolo
-                }) {
+                Button(
+                    onClick = {
+                        // Trigger ricalcolo
+                    },
+                    shape = RoundedCornerShape(percent = 50),
+                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
+                ) {
                     Text("Disegna", fontWeight = FontWeight.Bold)
                 }
             }
 
-            // Pulsanti veloci di formule predefinite
+            // Pulsanti veloci di formule predefinite in pillole Expressive
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                SuggestionChip(onClick = { formula = "sin(x)" }, label = { Text("sin(x)") })
-                SuggestionChip(onClick = { formula = "cos(x)" }, label = { Text("cos(x)") })
-                SuggestionChip(onClick = { formula = "x^2 - 4" }, label = { Text("x² - 4") })
-                SuggestionChip(onClick = { formula = "1/x" }, label = { Text("1/x") })
+                SuggestionChip(
+                    onClick = { formula = "sin(x)" },
+                    label = { Text("sin(x)") },
+                    shape = RoundedCornerShape(percent = 50)
+                )
+                SuggestionChip(
+                    onClick = { formula = "cos(x)" },
+                    label = { Text("cos(x)") },
+                    shape = RoundedCornerShape(percent = 50)
+                )
+                SuggestionChip(
+                    onClick = { formula = "x^2 - 4" },
+                    label = { Text("x² - 4") },
+                    shape = RoundedCornerShape(percent = 50)
+                )
+                SuggestionChip(
+                    onClick = { formula = "1/x" },
+                    label = { Text("1/x") },
+                    shape = RoundedCornerShape(percent = 50)
+                )
             }
 
-            // Area Canvas del Grafico con Pan e Zoom
+            // Area Canvas del Grafico con Pan e Zoom (Arrotondamento M3 Expressive a 20dp)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(8.dp)
-                    .background(Color(0xFF1E1E1E), shape = RoundedCornerShape(12.dp))
+                    .padding(12.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceContainerLowest ?: Color(0xFF1E1E1E),
+                        shape = RoundedCornerShape(20.dp)
+                    )
                     .pointerInput(Unit) {
                         detectTransformGestures { _, pan, zoom, _ ->
                             scale = (scale * zoom).coerceIn(10f, 300f)

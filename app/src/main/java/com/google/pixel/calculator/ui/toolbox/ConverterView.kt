@@ -2,11 +2,13 @@ package com.google.pixel.calculator.ui.toolbox
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -35,14 +37,24 @@ fun ConverterView(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Convertitore di Unità") },
+                title = {
+                    Text(
+                        text = "Convertitore di Unità",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer ?: MaterialTheme.colorScheme.surface
+                )
             )
         }
     ) { padding ->
@@ -50,43 +62,72 @@ fun ConverterView(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
+                .padding(horizontal = 20.dp, vertical = 12.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             // Selettore Categoria
-            Text(text = "Categoria:", fontWeight = FontWeight.Bold)
+            Text(
+                text = "Categoria",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
             ScrollableTabRow(
                 selectedTabIndex = selectedCategory.ordinal,
-                edgePadding = 0.dp
+                edgePadding = 0.dp,
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow ?: MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                indicator = { tabPositions ->
+                    TabRowDefaults.SecondaryIndicator(
+                        modifier = Modifier.tabIndicatorOffset(tabPositions[selectedCategory.ordinal]),
+                        color = MaterialTheme.colorScheme.primary,
+                        height = 3.dp
+                    )
+                }
             ) {
                 UnitConverter.Category.values().forEach { cat ->
+                    val isSelected = selectedCategory == cat
                     Tab(
-                        selected = selectedCategory == cat,
+                        selected = isSelected,
                         onClick = { selectedCategory = cat },
-                        text = { Text(cat.displayName) }
+                        text = {
+                            Text(
+                                text = cat.displayName,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
 
             // Input valore da convertire
             OutlinedTextField(
                 value = inputValueStr,
                 onValueChange = { inputValueStr = it },
-                label = { Text("Valore di partenza") },
+                label = { Text("Valore da convertire") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer ?: MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow ?: MaterialTheme.colorScheme.surface
+                ),
                 modifier = Modifier.fillMaxWidth()
             )
 
             // Da unità a unità
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Da:", fontWeight = FontWeight.SemiBold)
+                    Text(
+                        text = "Da:",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 6.dp)
+                    )
                     UnitDropdown(
                         units = units,
                         selectedCode = fromUnitCode,
@@ -95,7 +136,13 @@ fun ConverterView(
                 }
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("A:", fontWeight = FontWeight.SemiBold)
+                    Text(
+                        text = "A:",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 6.dp)
+                    )
                     UnitDropdown(
                         units = units,
                         selectedCode = toUnitCode,
@@ -104,20 +151,23 @@ fun ConverterView(
                 }
             }
 
-            // Card Risultato
+            // Card Risultato in stile Expressive (Arrotondamento 24dp, enfasi colore)
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                shape = RoundedCornerShape(24.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(20.dp)) {
+                Column(modifier = Modifier.padding(24.dp)) {
                     Text(
-                        text = "Risultato:",
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                        text = "Risultato convertito",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                     )
+                    Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = "$convertedValue ${units.find { it.code == toUnitCode }?.symbol ?: ""}",
-                        fontSize = 28.sp,
+                        style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
@@ -145,7 +195,12 @@ fun UnitDropdown(
             value = current.name,
             onValueChange = {},
             readOnly = true,
+            shape = RoundedCornerShape(16.dp),
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer ?: MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow ?: MaterialTheme.colorScheme.surface
+            ),
             modifier = Modifier.menuAnchor()
         )
         ExposedDropdownMenu(
