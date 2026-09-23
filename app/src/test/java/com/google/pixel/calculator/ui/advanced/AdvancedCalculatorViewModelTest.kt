@@ -242,4 +242,41 @@ class AdvancedCalculatorViewModelTest {
         viewModel.toggleGraphView()
         assertEquals(ScreenViewMode.SPLIT_SCREEN, viewModel.uiState.value.screenViewMode)
     }
+
+    @Test
+    fun testToggleRadiansViaKeypadKey() {
+        assertTrue(viewModel.uiState.value.isRadians)
+
+        // Press DEG key incorporated in keypad
+        viewModel.onKeyClick("DEG")
+        assertFalse(viewModel.uiState.value.isRadians)
+
+        // Test trig evaluation in DEG mode: sin(90) = 1
+        viewModel.onClearAll()
+        viewModel.insertText("sin(90)")
+        viewModel.executeSolve()
+        val eqDeg = viewModel.uiState.value.activeEquation!!
+        assertTrue("Expected sin(90) = 1 in DEG mode", eqDeg.formattedResult.contains("1"))
+
+        // Press RAD key in keypad to switch back to radians
+        viewModel.onKeyClick("RAD")
+        assertTrue(viewModel.uiState.value.isRadians)
+    }
+
+    @Test
+    fun testCycleEquationColors() {
+        val initialColor = viewModel.uiState.value.equations[0].color
+        assertEquals(Color(0xFF4E75F6), initialColor)
+
+        // Cycle color once
+        viewModel.cycleEquationColor(0)
+        val secondColor = viewModel.uiState.value.equations[0].color
+        assertEquals(Color(0xFF10B981), secondColor)
+
+        // Cycle through all 6 colors and ensure it wraps around
+        repeat(5) {
+            viewModel.cycleEquationColor(0)
+        }
+        assertEquals(initialColor, viewModel.uiState.value.equations[0].color)
+    }
 }

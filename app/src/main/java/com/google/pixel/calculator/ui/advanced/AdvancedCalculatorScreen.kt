@@ -2,16 +2,25 @@ package com.google.pixel.calculator.ui.advanced
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.CloseFullscreen
+import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -46,30 +55,6 @@ fun AdvancedCalculatorScreen(
                         color = Color.White
                     )
                 },
-                actions = {
-                    // 1. Pillola DEG / RAD
-                    Box(
-                        modifier = Modifier
-                            .background(Color(0xFF383C4E), RoundedCornerShape(14.dp))
-                            .clickable { viewModel.toggleRadians() }
-                            .padding(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        Text(
-                            text = if (state.isRadians) "RAD" else "DEG",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF60A5FA)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    // 2. Pulsante Grafico scorporato in alto (Requirement R5)
-                    DetachedGraphButton(
-                        screenViewMode = state.screenViewMode,
-                        onClick = { viewModel.toggleGraphView() }
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFF1E212D)
                 )
@@ -83,95 +68,6 @@ fun AdvancedCalculatorScreen(
                 .padding(padding)
         ) {
             when (state.screenViewMode) {
-                // STATO A: SOLO CALCOLATORE RISOLUTORE
-                ScreenViewMode.CALCULATOR_ONLY -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(bottom = 6.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                                .padding(bottom = 4.dp),
-                            contentAlignment = Alignment.BottomCenter
-                        ) {
-                            AdvancedFormulaDisplay(
-                                state = state,
-                                onSelectFormula = { viewModel.selectFormula(it) },
-                                onAddFormula = { viewModel.addFormula() },
-                                onRemoveFormula = { viewModel.removeFormula(it) },
-                                onCycleFormat = { viewModel.onCycleFormat() }
-                            )
-                        }
-
-                        AdvancedKeypad(
-                            state = state,
-                            onTabSelected = { viewModel.selectTab(it) },
-                            onInsertChar = { viewModel.insertCharacter(it) },
-                            onMoveCursorLeft = { viewModel.moveCursorLeft() },
-                            onMoveCursorRight = { viewModel.moveCursorRight() },
-                            onDeleteChar = { viewModel.deleteAtCursor() },
-                            onClearAll = { viewModel.onClearAll() },
-                            onCycleFormat = { viewModel.onCycleFormat() },
-                            onExecute = { viewModel.onExecute() }
-                        )
-                    }
-                }
-
-                // STATO B: SPLIT-SCREEN (Metà superiore Grafico 2D, metà inferiore Display + Tastiera)
-                ScreenViewMode.SPLIT_SCREEN -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        // 1. Finestra Grafico 2D
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            AdvancedGraphCanvas(
-                                state = state,
-                                onTransform = { zoom, pan -> viewModel.onGraphTransform(zoom, pan) },
-                                onReset = { viewModel.onResetGraph() },
-                                onPointSelected = { viewModel.selectGraphPoint(it) },
-                                onToggleFullscreen = { viewModel.setScreenViewMode(ScreenViewMode.FULLSCREEN_GRAPH) }
-                            )
-                        }
-
-                        // 2. Display formule + Tastiera compatta
-                        Column(
-                            modifier = Modifier
-                                .weight(1.4f)
-                                .fillMaxWidth()
-                                .padding(bottom = 2.dp),
-                            verticalArrangement = Arrangement.Bottom
-                        ) {
-                            AdvancedFormulaDisplay(
-                                state = state,
-                                onSelectFormula = { viewModel.selectFormula(it) },
-                                onAddFormula = { viewModel.addFormula() },
-                                onRemoveFormula = { viewModel.removeFormula(it) },
-                                onCycleFormat = { viewModel.onCycleFormat() }
-                            )
-
-                            AdvancedKeypad(
-                                state = state,
-                                onTabSelected = { viewModel.selectTab(it) },
-                                onInsertChar = { viewModel.insertCharacter(it) },
-                                onMoveCursorLeft = { viewModel.moveCursorLeft() },
-                                onMoveCursorRight = { viewModel.moveCursorRight() },
-                                onDeleteChar = { viewModel.deleteAtCursor() },
-                                onClearAll = { viewModel.onClearAll() },
-                                onCycleFormat = { viewModel.onCycleFormat() },
-                                onExecute = { viewModel.onExecute() }
-                            )
-                        }
-                    }
-                }
-
                 // STATO C: GRAFICO A TUTTO SCHERMO
                 ScreenViewMode.FULLSCREEN_GRAPH -> {
                     Box(modifier = Modifier.fillMaxSize()) {
@@ -209,6 +105,84 @@ fun AdvancedCalculatorScreen(
                         }
                     }
                 }
+
+                // STATO A & B: CALCOLATORE STANDARD & ANTEPRIMA GRAFICO MINIMIZZATO
+                // Struttura a 2 sezioni per garantire che tutti i tasti siano SEMPRE visibili al 100%
+                else -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .navigationBarsPadding()
+                    ) {
+                        // 1. ZONA SUPERIORE: Display formule in alto + Tasto Grafico + Grafico Minimizzato
+                        // Scrollabile verticalmente in caso di display ridotto per non comprimere mai la tastiera
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                                .verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.Top,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            // Finestra di testo in alto con dimensione auto-adattiva
+                            AdvancedFormulaDisplay(
+                                state = state,
+                                onSelectFormula = { viewModel.selectFormula(it) },
+                                onAddFormula = { viewModel.addFormula() },
+                                onRemoveFormula = { viewModel.removeFormula(it) },
+                                onCycleFormat = { viewModel.onCycleFormat() },
+                                onCycleColor = { viewModel.cycleEquationColor(it) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .wrapContentHeight()
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            // Tasto Grafico posizionato appena sotto la finestra di testo
+                            InlineGraphToggleButton(
+                                isOpen = state.screenViewMode == ScreenViewMode.SPLIT_SCREEN,
+                                onClick = { viewModel.toggleGraphView() },
+                                modifier = Modifier.padding(horizontal = 6.dp)
+                            )
+
+                            // Versione minimizzata del grafico (espandibile a schermo intero)
+                            if (state.screenViewMode == ScreenViewMode.SPLIT_SCREEN) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                MinimizedGraphCard(
+                                    state = state,
+                                    onTransform = { zoom, pan -> viewModel.onGraphTransform(zoom, pan) },
+                                    onReset = { viewModel.onResetGraph() },
+                                    onPointSelected = { viewModel.selectGraphPoint(it) },
+                                    onExpandFullscreen = { viewModel.setScreenViewMode(ScreenViewMode.FULLSCREEN_GRAPH) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 6.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
+
+                        // 2. ZONA INFERIORE: TASTIERA ANCORATA ALLA BASE - SEMPRE VISIBILE AL 100%
+                        AdvancedKeypad(
+                            state = state,
+                            onTabSelected = { viewModel.selectTab(it) },
+                            onInsertChar = { viewModel.insertCharacter(it) },
+                            onMoveCursorLeft = { viewModel.moveCursorLeft() },
+                            onMoveCursorRight = { viewModel.moveCursorRight() },
+                            onDeleteChar = { viewModel.deleteAtCursor() },
+                            onClearAll = { viewModel.onClearAll() },
+                            onCycleFormat = { viewModel.onCycleFormat() },
+                            onExecute = { viewModel.onExecute() },
+                            onToggleRadians = { viewModel.toggleRadians() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 2.dp)
+                        )
+                    }
+                }
             }
 
             // Bottom sheet modale per il Catalogo Funzioni / f(x)
@@ -222,7 +196,145 @@ fun AdvancedCalculatorScreen(
 }
 
 /**
- * Pulsante grafico scorporato in alto, posizionato nella TopAppBar accanto alla formula (Requirement R5).
+ * Pulsante grafico posizionato appena sotto la finestra di testo.
+ * Apre la versione minimizzata del grafico inline, oppure la richiude.
+ */
+@Composable
+fun InlineGraphToggleButton(
+    isOpen: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val bgColor = if (isOpen) Color(0xFF1E3A8A) else Color(0xFF262C3E)
+    val contentColor = if (isOpen) Color.White else Color(0xFF93C5FD)
+    val borderColor = if (isOpen) Color(0xFF60A5FA) else Color(0xFF3B82F6).copy(alpha = 0.5f)
+
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(percent = 50))
+            .background(bgColor)
+            .border(1.dp, borderColor, RoundedCornerShape(percent = 50))
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ShowChart,
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier.size(15.dp)
+            )
+            Text(
+                text = if (isOpen) "Nascondi Grafico ✕" else "Mostra Grafico 📈",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = contentColor
+            )
+        }
+    }
+}
+
+/**
+ * Card Grafico Minimizzato:
+ * Mostra il piano cartesiano 2D con altezza compatta (~170dp),
+ * con legenda colori delle equazioni e tasto per espandere a schermo intero.
+ */
+@Composable
+fun MinimizedGraphCard(
+    state: AdvancedCalculatorState,
+    onTransform: (zoomChange: Float, panChange: Offset) -> Unit,
+    onReset: () -> Unit,
+    onPointSelected: (Pair<Float, Float>?) -> Unit,
+    onExpandFullscreen: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(170.dp)
+            .border(1.dp, Color(0xFF353C52), RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF181B26))
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Canvas Cartesiano interattivo 2D
+            AdvancedGraphCanvas(
+                state = state,
+                onTransform = onTransform,
+                onReset = onReset,
+                onPointSelected = onPointSelected,
+                onToggleFullscreen = onExpandFullscreen,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            // Header bar overlay: Legenda rapida dei colori delle curve
+            Row(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(6.dp)
+                    .background(Color(0xCC1A1D27), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                state.equations.forEachIndexed { idx, eq ->
+                    if (eq.expression.isNotBlank()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(eq.color)
+                            )
+                            Text(
+                                text = "y${idx + 1}",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = eq.color
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Pulsante rapido "Espandi ⤢" nell'angolo in basso a destra
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(8.dp)
+                    .background(Color(0xDD1E3A8A), RoundedCornerShape(12.dp))
+                    .border(1.dp, Color(0xFF60A5FA), RoundedCornerShape(12.dp))
+                    .clickable { onExpandFullscreen() }
+                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.OpenInFull,
+                    contentDescription = "Espandi a Schermo Intero",
+                    tint = Color.White,
+                    modifier = Modifier.size(12.dp)
+                )
+                Text(
+                    text = "Espandi",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Pulsante grafico scorporato (retrocompatibile per test legacy se invocato).
  */
 @Composable
 fun DetachedGraphButton(

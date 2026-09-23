@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import com.google.pixel.calculator.ui.icons.SquareFoot
 import com.google.pixel.calculator.ui.theme.CalculatorTheme
 import com.google.pixel.calculator.ui.theme.QuicksandFontFamily
+
 import com.google.pixel.calculator.ui.theme.SystemFontFamily
 
 enum class PixelButtonType {
@@ -280,7 +281,7 @@ fun BaseKeypad(
             )
             PixelButton(
                 text = "%",
-                type = PixelButtonType.CONTROL,
+                type = PixelButtonType.OPERATOR,
                 height = btnHeight,
                 modifier = Modifier.weight(1f),
                 onClick = {
@@ -439,11 +440,12 @@ fun PixelButton(
             else -> if (text.length > 2) 18.sp else 22.sp
         }
         val isNumeric = type == PixelButtonType.NUMERIC || text.all { it.isDigit() || it == '.' || it == ',' }
+        val isOperator = type == PixelButtonType.OPERATOR
         Text(
             text = text,
             fontSize = fontSize,
-            fontFamily = if (isNumeric) QuicksandFontFamily else SystemFontFamily,
-            fontWeight = if (isNumeric) FontWeight.SemiBold else FontWeight.Medium
+            fontFamily = if (isNumeric) QuicksandFontFamily else if( isOperator) QuicksandFontFamily else SystemFontFamily,
+            fontWeight = if (isNumeric) FontWeight.Normal else FontWeight.Medium
         )
     }
 }

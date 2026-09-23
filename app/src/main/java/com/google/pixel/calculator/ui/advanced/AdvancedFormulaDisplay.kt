@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -12,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -26,12 +28,13 @@ fun AdvancedFormulaDisplay(
     onAddFormula: () -> Unit,
     onRemoveFormula: (Int) -> Unit,
     onCycleFormat: () -> Unit,
+    onCycleColor: (Int) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 6.dp, vertical = 2.dp)
+            .wrapContentHeight()
             .border(1.dp, Color(0xFF353C52), RoundedCornerShape(22.dp)),
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
@@ -41,35 +44,47 @@ fun AdvancedFormulaDisplay(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .wrapContentHeight()
                 .padding(10.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            // Elenco equazioni stile Desmos/GeoGebra con badge colorati
+            // Elenco equazioni stile Desmos/GeoGebra con badge colorati interattivi
             state.equations.forEachIndexed { index, eq ->
                 val isActive = index == state.activeEquationIndex
-                val borderModifier = if (isActive) {
-                    Modifier.border(1.dp, Color(0xFF4C5572), RoundedCornerShape(14.dp))
-                } else Modifier
+                val rowBorder = if (isActive) {
+                    Modifier.border(1.5.dp, eq.color.copy(alpha = 0.65f), RoundedCornerShape(14.dp))
+                } else {
+                    Modifier.border(1.dp, Color(0xFF2E3346), RoundedCornerShape(14.dp))
+                }
+                val rowBg = if (isActive) eq.color.copy(alpha = 0.12f) else Color(0xFF1E2230)
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(
-                            if (isActive) Color(0xFF2A2F42) else Color.Transparent,
-                            RoundedCornerShape(14.dp)
-                        )
-                        .then(borderModifier)
+                        .wrapContentHeight()
+                        .background(rowBg, RoundedCornerShape(14.dp))
+                        .then(rowBorder)
                         .clickable { onSelectFormula(index) }
                         .padding(horizontal = 8.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Badge colorato della curva (abbinato al grafico 2D)
+                    // Badge colorato interattivo della curva (es. y₁, y₂, ... cliccabile per cambiare colore)
                     Box(
                         modifier = Modifier
-                            .width(5.dp)
-                            .height(if (eq.expression.contains("/") || eq.roots.size > 1) 44.dp else 28.dp)
-                            .background(eq.color, RoundedCornerShape(3.dp))
-                    )
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .background(eq.color.copy(alpha = 0.25f))
+                            .border(1.5.dp, eq.color, CircleShape)
+                            .clickable { onCycleColor(index) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "y${index + 1}",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = eq.color
+                        )
+                    }
 
                     Spacer(modifier = Modifier.width(8.dp))
 

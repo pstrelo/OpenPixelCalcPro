@@ -20,11 +20,13 @@ class AdvancedCalculatorViewModel(
     private val dispatcher: CoroutineDispatcher = Dispatchers.Default
 ) : ViewModel() {
 
-    private val availableColors = listOf(
+    val availableColors = listOf(
         Color(0xFF4E75F6), // Google Pixel Blue
         Color(0xFF10B981), // Emerald Mint Green
         Color(0xFFF59E0B), // Radiant Amber
-        Color(0xFFEC4899)  // Crimson Fuchsia
+        Color(0xFFEC4899), // Crimson Fuchsia
+        Color(0xFF8B5CF6), // Vivid Violet
+        Color(0xFF06B6D4)  // Cyan Teal
     )
 
     private val _uiState = MutableStateFlow(AdvancedCalculatorState())
@@ -119,6 +121,16 @@ class AdvancedCalculatorViewModel(
     fun selectFormula(index: Int) = selectEquation(index)
     fun addFormula() = addEquation()
     fun removeFormula(index: Int) = removeEquation(index)
+
+    fun cycleEquationColor(index: Int) {
+        if (index !in _uiState.value.equations.indices) return
+        val currentEq = _uiState.value.equations[index]
+        val curIndex = availableColors.indexOf(currentEq.color)
+        val nextIndex = if (curIndex >= 0) (curIndex + 1) % availableColors.size else 0
+        val newColor = availableColors[nextIndex]
+        updateEquationAt(index) { it.copy(color = newColor) }
+        updateAllGraphPoints()
+    }
 
     // ==========================================
     // 3. CURSORE ED EDITING IN-PLACE
@@ -331,6 +343,9 @@ class AdvancedCalculatorViewModel(
 
             // TASTO 'FORMAT': Cicla istantaneamente la rappresentazione
             "FORMAT" -> cycleFormat()
+
+            // Tasto 'DEG / RAD' incorporato nella tastiera
+            "DEG", "RAD", "DEG/RAD" -> toggleRadians()
 
             // Variabili
             "x" -> insertCharacter("x")

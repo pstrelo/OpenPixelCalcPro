@@ -42,10 +42,12 @@ fun AdvancedKeypad(
     onCycleFormat: () -> Unit,
     onExecute: () -> Unit,
     isSplitScreen: Boolean = false,
+    isRadians: Boolean = true,
+    onToggleRadians: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
-    val buttonHeight = if (isSplitScreen) 38.dp else 44.dp
+    val buttonHeight = if (isSplitScreen) 37.dp else 42.dp
 
     Column(
         modifier = modifier
@@ -68,6 +70,11 @@ fun AdvancedKeypad(
         when (activeTab) {
             MathSolverTab.ALGEBRA -> AlgebraKeypadGrid(
                 btnHeight = buttonHeight,
+                isRadians = isRadians,
+                onToggleRadians = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onToggleRadians()
+                },
                 onKey = {
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onInsertChar(it)
@@ -75,6 +82,11 @@ fun AdvancedKeypad(
             )
             MathSolverTab.TRIGONOMETRY -> TrigonometryKeypadGrid(
                 btnHeight = buttonHeight,
+                isRadians = isRadians,
+                onToggleRadians = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onToggleRadians()
+                },
                 onKey = {
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onInsertChar(it)
@@ -82,6 +94,11 @@ fun AdvancedKeypad(
             )
             MathSolverTab.CALCULUS -> CalculusKeypadGrid(
                 btnHeight = buttonHeight,
+                isRadians = isRadians,
+                onToggleRadians = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onToggleRadians()
+                },
                 onKey = {
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onInsertChar(it)
@@ -143,11 +160,13 @@ fun AdvancedKeypad(
     onClearAll: () -> Unit,
     onCycleFormat: () -> Unit,
     onExecute: () -> Unit,
+    onToggleRadians: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val activeTab = state.activeTab
     val activeFormatLabel = state.equations.getOrNull(state.activeEquationIndex)?.formatMode?.label ?: "DEC"
     val isSplitScreen = state.screenViewMode == ScreenViewMode.SPLIT_SCREEN
+    val isRadians = state.isRadians
 
     AdvancedKeypad(
         activeTab = activeTab,
@@ -161,6 +180,8 @@ fun AdvancedKeypad(
         onCycleFormat = onCycleFormat,
         onExecute = onExecute,
         isSplitScreen = isSplitScreen,
+        isRadians = isRadians,
+        onToggleRadians = onToggleRadians,
         modifier = modifier
     )
 }
@@ -193,6 +214,8 @@ fun AdvancedKeypad(
         onCycleFormat = onCycleFormat,
         onExecute = onExecute,
         isSplitScreen = state.screenViewMode == ScreenViewMode.SPLIT_SCREEN,
+        isRadians = state.isRadians,
+        onToggleRadians = { onKeyClick("DEG") },
         modifier = modifier
     )
 }
@@ -248,6 +271,8 @@ fun MathSolverTabBar(
 @Composable
 private fun AlgebraKeypadGrid(
     btnHeight: Dp,
+    isRadians: Boolean = true,
+    onToggleRadians: () -> Unit = {},
     onKey: (String) -> Unit
 ) {
     val fnBg = MathSolverTheme.algebraFunctionContainer
@@ -285,10 +310,16 @@ private fun AlgebraKeypadGrid(
             SquircleKey("9", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("9") }
             SquircleKey("÷", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("/") }
         }
-        // Row 4: [f(x)], [i], [4], [5], [6], [×]
+        // Row 4: [f(x)], [DEG/RAD], [4], [5], [6], [×]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("f(x)", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("f(x)") }
-            SquircleKey("i", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("i") }
+            DegRadKey(
+                isRadians = isRadians,
+                btnHeight = btnHeight,
+                modifier = Modifier.weight(1f),
+                accentColor = MathSolverTheme.accentAlgebra,
+                onToggle = onToggleRadians
+            )
             SquircleKey("4", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("4") }
             SquircleKey("5", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("5") }
             SquircleKey("6", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("6") }
@@ -322,6 +353,8 @@ private fun AlgebraKeypadGrid(
 @Composable
 private fun TrigonometryKeypadGrid(
     btnHeight: Dp,
+    isRadians: Boolean = true,
+    onToggleRadians: () -> Unit = {},
     onKey: (String) -> Unit
 ) {
     val fnBg = MathSolverTheme.trigFunctionContainer
@@ -359,10 +392,16 @@ private fun TrigonometryKeypadGrid(
             SquircleKey("9", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("9") }
             SquircleKey("÷", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("/") }
         }
-        // Row 4: [π], [°], [4], [5], [6], [×]
+        // Row 4: [π], [DEG/RAD], [4], [5], [6], [×]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("π", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("π") }
-            SquircleKey("°", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 17.sp) { onKey("°") }
+            DegRadKey(
+                isRadians = isRadians,
+                btnHeight = btnHeight,
+                modifier = Modifier.weight(1f),
+                accentColor = MathSolverTheme.accentTrigonometry,
+                onToggle = onToggleRadians
+            )
             SquircleKey("4", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("4") }
             SquircleKey("5", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("5") }
             SquircleKey("6", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("6") }
@@ -396,6 +435,8 @@ private fun TrigonometryKeypadGrid(
 @Composable
 private fun CalculusKeypadGrid(
     btnHeight: Dp,
+    isRadians: Boolean = true,
+    onToggleRadians: () -> Unit = {},
     onKey: (String) -> Unit
 ) {
     val fnBg = MathSolverTheme.calculusFunctionContainer
@@ -433,10 +474,16 @@ private fun CalculusKeypadGrid(
             SquircleKey("9", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("9") }
             SquircleKey("÷", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("/") }
         }
-        // Row 4: [f(x)], [e], [4], [5], [6], [×]
+        // Row 4: [f(x)], [DEG/RAD], [4], [5], [6], [×]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("f(x)", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("f(x)") }
-            SquircleKey("e", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("e") }
+            DegRadKey(
+                isRadians = isRadians,
+                btnHeight = btnHeight,
+                modifier = Modifier.weight(1f),
+                accentColor = MathSolverTheme.accentCalculus,
+                onToggle = onToggleRadians
+            )
             SquircleKey("4", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("4") }
             SquircleKey("5", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("5") }
             SquircleKey("6", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("6") }
@@ -680,6 +727,41 @@ fun SquircleKey(
             text = label,
             fontSize = fontSize,
             fontWeight = if (isBold) FontWeight.Bold else FontWeight.Medium,
+            color = textColor
+        )
+    }
+}
+
+/**
+ * Tasto DEG / RAD incorporato direttamente nel tastierino matematico.
+ * Si illumina e si contorna quando la modalità DEG è attiva.
+ */
+@Composable
+fun DegRadKey(
+    isRadians: Boolean,
+    btnHeight: Dp,
+    modifier: Modifier = Modifier,
+    accentColor: Color = Color(0xFF10B981),
+    onToggle: () -> Unit
+) {
+    val isDegActive = !isRadians
+    val bgColor = if (isDegActive) accentColor.copy(alpha = 0.22f) else MathSolverTheme.functionContainer
+    val textColor = if (isDegActive) accentColor else MathSolverTheme.functionContent
+    val borderColor = if (isDegActive) accentColor.copy(alpha = 0.8f) else Color.Transparent
+
+    Box(
+        modifier = modifier
+            .height(btnHeight)
+            .clip(RoundedCornerShape(percent = 50))
+            .background(bgColor)
+            .border(if (isDegActive) 1.dp else 0.dp, borderColor, RoundedCornerShape(percent = 50))
+            .clickable { onToggle() },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = if (isRadians) "RAD" else "DEG",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
             color = textColor
         )
     }
