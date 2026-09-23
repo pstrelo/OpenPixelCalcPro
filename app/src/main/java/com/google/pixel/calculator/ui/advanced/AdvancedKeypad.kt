@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
@@ -28,10 +29,11 @@ import com.google.pixel.calculator.ui.theme.CalculatorTheme
 
 /**
  * Keypad Material 3 Expressive per Google Math Solver (6 Colonne x 6 Righe + Barra Inferiore di Risoluzione).
- * Row 1 comune: [ ← ] [ → ] [ RAD/DEG ] [ DEL ] [ AC ] [ = ]
- * Esponenti con segnaposto: [ □ⁿ ], [ □² ]
- * Tasto f(x) collegato all'apertura del catalogo funzioni scientifiche complete.
- * Integrazione cromatica dinamica con CalculatorTheme.colors mantenendo gli accenti per ciascuna tab.
+ * - Tab 1 (Algebra): Tasti di navigazione cursore (←, →), RAD/DEG, DEL, AC, =, tastierino numerico completo e operazioni base.
+ * - Tab 2 (Trigonometria): Tutte le funzioni goniometriche dirette, inverse, iperboliche, inverse iperboliche, unità d'angolo e costanti.
+ * - Tab 3 (Calcolo & Probabilità): Derivate, integrali, limiti, serie, coefficiente binomiale, distribuzioni (binompdf/cdf, normpdf/cdf), statistica (mean, var, std) e random.
+ * - Tab 4 (Alfabeto & Costanti): Selettore a 3 schede per Lettere greche/latine, Costanti fisiche/matematiche (c, G, h, ħ, k_B, N_A, R, q_e, m_e...) e Prefissi metrici SI (k, M, G, T, m, μ, n, p...).
+ * - Barra persistente inferiore: [ FORMAT: DEC/ENG/FRAC... ] e [ RISOLVI ➤ ].
  */
 @Composable
 fun AdvancedKeypad(
@@ -52,7 +54,7 @@ fun AdvancedKeypad(
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
-    val buttonHeight = if (isSplitScreen) 37.dp else 42.dp
+    val buttonHeight = if (isSplitScreen) 36.dp else 40.dp
 
     Column(
         modifier = modifier
@@ -71,7 +73,7 @@ fun AdvancedKeypad(
 
         Spacer(modifier = Modifier.height(2.dp))
 
-        // 2. Griglia tasti 6 Colonne x 6 Righe della Tab attiva
+        // 2. Griglia tasti della Tab attiva
         when (activeTab) {
             MathSolverTab.ALGEBRA -> AlgebraKeypadGrid(
                 btnHeight = buttonHeight,
@@ -96,10 +98,6 @@ fun AdvancedKeypad(
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onClearAll()
                 },
-                onOpenCatalog = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onOpenCatalog()
-                },
                 onKey = {
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onInsertChar(it)
@@ -107,30 +105,9 @@ fun AdvancedKeypad(
             )
             MathSolverTab.TRIGONOMETRY -> TrigonometryKeypadGrid(
                 btnHeight = buttonHeight,
-                isRadians = isRadians,
-                onToggleRadians = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onToggleRadians()
-                },
-                onMoveCursorLeft = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onMoveCursorLeft()
-                },
-                onMoveCursorRight = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onMoveCursorRight()
-                },
                 onDeleteChar = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onDeleteChar()
-                },
-                onClearAll = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onClearAll()
-                },
-                onOpenCatalog = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onOpenCatalog()
                 },
                 onKey = {
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -139,30 +116,9 @@ fun AdvancedKeypad(
             )
             MathSolverTab.CALCULUS -> CalculusKeypadGrid(
                 btnHeight = buttonHeight,
-                isRadians = isRadians,
-                onToggleRadians = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onToggleRadians()
-                },
-                onMoveCursorLeft = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onMoveCursorLeft()
-                },
-                onMoveCursorRight = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onMoveCursorRight()
-                },
                 onDeleteChar = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onDeleteChar()
-                },
-                onClearAll = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onClearAll()
-                },
-                onOpenCatalog = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onOpenCatalog()
                 },
                 onKey = {
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -170,20 +126,7 @@ fun AdvancedKeypad(
                 }
             )
             MathSolverTab.ALPHABET -> AlphabetKeypadGrid(
-                btnHeight = buttonHeight,
-                isRadians = isRadians,
-                onToggleRadians = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onToggleRadians()
-                },
-                onMoveCursorLeft = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onMoveCursorLeft()
-                },
-                onMoveCursorRight = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onMoveCursorRight()
-                },
+                btnHeight = if (isSplitScreen) 32.dp else 36.dp,
                 onDeleteChar = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onDeleteChar()
@@ -342,7 +285,7 @@ fun MathSolverTabBar(
 }
 
 // =========================================================================
-// ROW 1 COMUNE: [ ← ] [ → ] [ RAD/DEG ] [ DEL ] [ AC ] [ = ]
+// ROW 1 COMUNE PER ALGEBRA: [ ← ] [ → ] [ RAD/DEG ] [ DEL ] [ AC ] [ = ]
 // =========================================================================
 
 @Composable
@@ -485,7 +428,6 @@ private fun AlgebraKeypadGrid(
     onMoveCursorRight: () -> Unit = {},
     onDeleteChar: () -> Unit = {},
     onClearAll: () -> Unit = {},
-    onOpenCatalog: () -> Unit = {},
     onKey: (String) -> Unit
 ) {
     val isDark = CalculatorTheme.colors.isDark
@@ -531,20 +473,10 @@ private fun AlgebraKeypadGrid(
             SquircleKey("÷", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("/") }
         }
 
-        // Row 4: [ f(x) ], [ n! ], [ 4 ], [ 5 ], [ 6 ], [ × ]
+        // Row 4: [ < ], [ > ], [ 4 ], [ 5 ], [ 6 ], [ × ]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey(
-                label = "f(x)",
-                bgColor = if (isDark) tabAccent.copy(alpha = 0.22f) else tabAccent.copy(alpha = 0.15f),
-                textColor = tabAccent,
-                height = btnHeight,
-                modifier = Modifier.weight(1f),
-                isBold = true,
-                fontSize = 13.sp
-            ) {
-                onOpenCatalog()
-            }
-            SquircleKey("n!", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("!") }
+            SquircleKey("<", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true) { onKey(" < ") }
+            SquircleKey(">", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true) { onKey(" > ") }
             SquircleKey("4", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("4") }
             SquircleKey("5", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("5") }
             SquircleKey("6", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("6") }
@@ -574,263 +506,455 @@ private fun AlgebraKeypadGrid(
 }
 
 // =========================================================================
-// 2. TRIGONOMETRY KEYPAD GRID (6 Colonne x 6 Righe)
+// 2. TRIGONOMETRY KEYPAD GRID (6 Colonne x 6 Righe - 100% Funzioni)
 // =========================================================================
 
 @Composable
 private fun TrigonometryKeypadGrid(
     btnHeight: Dp,
-    isRadians: Boolean = true,
-    onToggleRadians: () -> Unit = {},
-    onMoveCursorLeft: () -> Unit = {},
-    onMoveCursorRight: () -> Unit = {},
-    onDeleteChar: () -> Unit = {},
-    onClearAll: () -> Unit = {},
-    onOpenCatalog: () -> Unit = {},
+    onDeleteChar: () -> Unit,
     onKey: (String) -> Unit
 ) {
     val isDark = CalculatorTheme.colors.isDark
     val tabAccent = MathSolverTab.TRIGONOMETRY.accentColor
     val fnBg = if (isDark) MathSolverTheme.trigFunctionContainer else tabAccent.copy(alpha = 0.12f)
     val fnColor = if (isDark) MathSolverTheme.trigFunctionContent else Color(0xFF047857)
-    val numBg = if (isDark) MathSolverTheme.numericContainer else CalculatorTheme.colors.numericContainer
-    val numColor = if (isDark) MathSolverTheme.numericContent else CalculatorTheme.colors.numericContent
-    val opBg = if (isDark) MathSolverTheme.operatorContainer else CalculatorTheme.colors.operatorContainer
-    val opColor = if (isDark) MathSolverTheme.operatorContent else CalculatorTheme.colors.operatorContent
+    val delBg = if (isDark) MathSolverTheme.deleteContainer else Color(0xFFFFE4E6)
+    val delColor = if (isDark) MathSolverTheme.deleteContent else Color(0xFFE11D48)
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        // Row 1: [ ← ], [ → ], [ RAD/DEG ], [ DEL ], [ AC ], [ = ]
-        NavigationAndControlRow(
-            btnHeight = btnHeight,
-            isRadians = isRadians,
-            tabAccentColor = tabAccent,
-            onMoveCursorLeft = onMoveCursorLeft,
-            onMoveCursorRight = onMoveCursorRight,
-            onToggleRadians = onToggleRadians,
-            onDeleteChar = onDeleteChar,
-            onClearAll = onClearAll,
-            onInsertChar = onKey
-        )
-
-        // Row 2: [ sin ], [ cos ], [ tan ], [ arcsin ], [ arccos ], [ arctan ]
+        // Row 1: Funzioni Goniometriche Dirette e Reciproche
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("sin", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("sin(") }
             SquircleKey("cos", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("cos(") }
             SquircleKey("tan", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("tan(") }
+            SquircleKey("csc", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("csc(") }
+            SquircleKey("sec", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("sec(") }
+            SquircleKey("cot", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("cot(") }
+        }
+
+        // Row 2: Funzioni Goniometriche Inverse
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("arcsin", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("arcsin(") }
             SquircleKey("arccos", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("arccos(") }
             SquircleKey("arctan", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("arctan(") }
+            SquircleKey("arccsc", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("arccsc(") }
+            SquircleKey("arcsec", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("arcsec(") }
+            SquircleKey("arccot", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("arccot(") }
         }
 
-        // Row 3: [ □ⁿ ], [ □² ], [ 7 ], [ 8 ], [ 9 ], [ ÷ ]
+        // Row 3: Funzioni Iperboliche Dirette e Reciproche
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("□ⁿ", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^") }
+            SquircleKey("sinh", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("sinh(") }
+            SquircleKey("cosh", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("cosh(") }
+            SquircleKey("tanh", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("tanh(") }
+            SquircleKey("csch", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("csch(") }
+            SquircleKey("sech", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("sech(") }
+            SquircleKey("coth", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("coth(") }
+        }
+
+        // Row 4: Funzioni Iperboliche Inverse
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            SquircleKey("asinh", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("asinh(") }
+            SquircleKey("acosh", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("acosh(") }
+            SquircleKey("atanh", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("atanh(") }
+            SquircleKey("acsch", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("acsch(") }
+            SquircleKey("asech", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("asech(") }
+            SquircleKey("acoth", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("acoth(") }
+        }
+
+        // Row 5: Unità d'Angolo, Costanti & Potenze
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            SquircleKey("π", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("π") }
+            SquircleKey("°", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("°") }
+            SquircleKey("rad", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("*(1)") }
+            SquircleKey("□/□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("/") }
+            SquircleKey("√□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("sqrt(") }
             SquircleKey("□²", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^2") }
-            SquircleKey("7", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("7") }
-            SquircleKey("8", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("8") }
-            SquircleKey("9", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("9") }
-            SquircleKey("÷", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("/") }
         }
 
-        // Row 4: [ f(x) ], [ π ], [ 4 ], [ 5 ], [ 6 ], [ × ]
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey(
-                label = "f(x)",
-                bgColor = if (isDark) tabAccent.copy(alpha = 0.22f) else tabAccent.copy(alpha = 0.15f),
-                textColor = tabAccent,
-                height = btnHeight,
-                modifier = Modifier.weight(1f),
-                isBold = true,
-                fontSize = 13.sp
-            ) {
-                onOpenCatalog()
-            }
-            SquircleKey("π", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("π") }
-            SquircleKey("4", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("4") }
-            SquircleKey("5", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("5") }
-            SquircleKey("6", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("6") }
-            SquircleKey("×", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("*") }
-        }
-
-        // Row 5: [ ( ], [ ) ], [ 1 ], [ 2 ], [ 3 ], [ - ]
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("(", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("(") }
-            SquircleKey(")", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(")") }
-            SquircleKey("1", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("1") }
-            SquircleKey("2", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("2") }
-            SquircleKey("3", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("3") }
-            SquircleKey("-", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("-") }
-        }
-
-        // Row 6: [ x ], [ y ], [ 0 ], [ . ], [ % ], [ + ]
+        // Row 6: Variabili, Parentesi & Cancellazione
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("x", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("x") }
             SquircleKey("y", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("y") }
-            SquircleKey("0", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("0") }
-            SquircleKey(".", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey(".") }
-            SquircleKey("%", opBg, opColor, btnHeight, Modifier.weight(1f)) { onKey("%") }
-            SquircleKey("+", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("+") }
+            SquircleKey("θ", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("x") }
+            SquircleKey("(", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("(") }
+            SquircleKey(")", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(")") }
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(btnHeight)
+                    .clip(RoundedCornerShape(percent = 50))
+                    .background(delBg)
+                    .clickable { onDeleteChar() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Backspace,
+                    contentDescription = "Cancella carattere",
+                    tint = delColor,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
         }
     }
 }
 
 // =========================================================================
-// 3. CALCULUS KEYPAD GRID (6 Colonne x 6 Righe)
+// 3. CALCULUS KEYPAD GRID (6 Colonne x 6 Righe - 100% Funzioni)
 // =========================================================================
 
 @Composable
 private fun CalculusKeypadGrid(
     btnHeight: Dp,
-    isRadians: Boolean = true,
-    onToggleRadians: () -> Unit = {},
-    onMoveCursorLeft: () -> Unit = {},
-    onMoveCursorRight: () -> Unit = {},
-    onDeleteChar: () -> Unit = {},
-    onClearAll: () -> Unit = {},
-    onOpenCatalog: () -> Unit = {},
+    onDeleteChar: () -> Unit,
     onKey: (String) -> Unit
 ) {
     val isDark = CalculatorTheme.colors.isDark
     val tabAccent = MathSolverTab.CALCULUS.accentColor
     val fnBg = if (isDark) MathSolverTheme.calculusFunctionContainer else tabAccent.copy(alpha = 0.12f)
     val fnColor = if (isDark) MathSolverTheme.calculusFunctionContent else Color(0xFFBE185D)
-    val numBg = if (isDark) MathSolverTheme.numericContainer else CalculatorTheme.colors.numericContainer
-    val numColor = if (isDark) MathSolverTheme.numericContent else CalculatorTheme.colors.numericContent
-    val opBg = if (isDark) MathSolverTheme.operatorContainer else CalculatorTheme.colors.operatorContainer
-    val opColor = if (isDark) MathSolverTheme.operatorContent else CalculatorTheme.colors.operatorContent
+    val delBg = if (isDark) MathSolverTheme.deleteContainer else Color(0xFFFFE4E6)
+    val delColor = if (isDark) MathSolverTheme.deleteContent else Color(0xFFE11D48)
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        // Row 1: [ ← ], [ → ], [ RAD/DEG ], [ DEL ], [ AC ], [ = ]
-        NavigationAndControlRow(
-            btnHeight = btnHeight,
-            isRadians = isRadians,
-            tabAccentColor = tabAccent,
-            onMoveCursorLeft = onMoveCursorLeft,
-            onMoveCursorRight = onMoveCursorRight,
-            onToggleRadians = onToggleRadians,
-            onDeleteChar = onDeleteChar,
-            onClearAll = onClearAll,
-            onInsertChar = onKey
-        )
-
-        // Row 2: [ d/dx ], [ ∫ ], [ lim ], [ Σ ], [ ∞ ], [ □/□ ]
+        // Row 1: Derivate, Integrali, Limiti, Somme, Produttorie
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("d/dx", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 13.sp) { onKey("d/dx(") }
+            SquircleKey("d/dx", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 12.sp) { onKey("d/dx(") }
             SquircleKey("∫", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 18.sp) { onKey("∫(") }
-            SquircleKey("lim", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("lim(") }
+            SquircleKey("∫ₐᵇ", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 13.sp) { onKey("defint(") }
+            SquircleKey("lim", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 13.sp) { onKey("lim(") }
             SquircleKey("Σ", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 16.sp) { onKey("Σ(") }
+            SquircleKey("Π", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 16.sp) { onKey("prod(") }
+        }
+
+        // Row 2: Costanti, Logaritmi & Potenze
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("∞", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 16.sp) { onKey("∞") }
-            SquircleKey("□/□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("/") }
-        }
-
-        // Row 3: [ □ⁿ ], [ □² ], [ 7 ], [ 8 ], [ 9 ], [ ÷ ]
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("□ⁿ", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^") }
-            SquircleKey("□²", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^2") }
-            SquircleKey("7", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("7") }
-            SquircleKey("8", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("8") }
-            SquircleKey("9", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("9") }
-            SquircleKey("÷", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("/") }
-        }
-
-        // Row 4: [ f(x) ], [ ln ], [ 4 ], [ 5 ], [ 6 ], [ × ]
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey(
-                label = "f(x)",
-                bgColor = if (isDark) tabAccent.copy(alpha = 0.22f) else tabAccent.copy(alpha = 0.15f),
-                textColor = tabAccent,
-                height = btnHeight,
-                modifier = Modifier.weight(1f),
-                isBold = true,
-                fontSize = 13.sp
-            ) {
-                onOpenCatalog()
-            }
+            SquircleKey("e", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("e") }
             SquircleKey("ln", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("ln(") }
-            SquircleKey("4", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("4") }
-            SquircleKey("5", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("5") }
-            SquircleKey("6", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("6") }
-            SquircleKey("×", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("*") }
+            SquircleKey("log", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("log(") }
+            SquircleKey("□ⁿ", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^") }
+            SquircleKey("√□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("sqrt(") }
         }
 
-        // Row 5: [ ( ], [ ) ], [ 1 ], [ 2 ], [ 3 ], [ - ]
+        // Row 3: Combinatoria & Probabilità (Binomiale nCk, Permutazioni nPk, Fattoriale, Random, Gamma)
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SquircleKey("(", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("(") }
-            SquircleKey(")", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(")") }
-            SquircleKey("1", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("1") }
-            SquircleKey("2", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("2") }
-            SquircleKey("3", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("3") }
-            SquircleKey("-", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("-") }
+            SquircleKey("binom", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 11.sp) { onKey("binom(") }
+            SquircleKey("nPr", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 12.sp) { onKey("perm(") }
+            SquircleKey("n!", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 14.sp) { onKey("!") }
+            SquircleKey("rand", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("rand()") }
+            SquircleKey("randInt", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 10.sp) { onKey("randint(") }
+            SquircleKey("Γ", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 15.sp) { onKey("gamma(") }
         }
 
-        // Row 6: [ x ], [ y ], [ 0 ], [ . ], [ % ], [ + ]
+        // Row 4: Distribuzioni Statistiche (Binomiale & Normale PDF/CDF), Frazione & Valore Assoluto
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            SquircleKey("binompdf", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 9.sp) { onKey("binompdf(") }
+            SquircleKey("binomcdf", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 9.sp) { onKey("binomcdf(") }
+            SquircleKey("normpdf", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 9.sp) { onKey("normpdf(") }
+            SquircleKey("normcdf", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 9.sp) { onKey("normcdf(") }
+            SquircleKey("□/□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("/") }
+            SquircleKey("|x|", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("abs(") }
+        }
+
+        // Row 5: Statistica Descrittiva (Media, Varianza, Deviazione Standard, Mediana) & Relazioni
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            SquircleKey("mean", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("mean(") }
+            SquircleKey("var", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("var(") }
+            SquircleKey("std", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("std(") }
+            SquircleKey("median", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 10.sp) { onKey("median(") }
+            SquircleKey("<", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true) { onKey(" < ") }
+            SquircleKey(">", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true) { onKey(" > ") }
+        }
+
+        // Row 6: Variabili, Separatore Argomenti (,), Parentesi & Cancellazione
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("x", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("x") }
-            SquircleKey("y", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("y") }
-            SquircleKey("0", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("0") }
-            SquircleKey(".", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey(".") }
-            SquircleKey("%", opBg, opColor, btnHeight, Modifier.weight(1f)) { onKey("%") }
-            SquircleKey("+", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("+") }
+            SquircleKey("t", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("t") }
+            SquircleKey(",", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 18.sp) { onKey(", ") }
+            SquircleKey("(", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("(") }
+            SquircleKey(")", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(")") }
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(btnHeight)
+                    .clip(RoundedCornerShape(percent = 50))
+                    .background(delBg)
+                    .clickable { onDeleteChar() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Backspace,
+                    contentDescription = "Cancella carattere",
+                    tint = delColor,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
         }
     }
 }
 
 // =========================================================================
-// 4. ALPHABET KEYPAD GRID (6 Colonne x 6 Righe)
+// 4. ALPHABET, CONSTANTS & SI PREFIXES KEYPAD GRID
 // =========================================================================
+
+enum class AlphabetSubTab(val label: String) {
+    LETTERS("Lettere"),
+    CONSTANTS("Costanti"),
+    SI_PREFIXES("Prefissi SI")
+}
 
 @Composable
 private fun AlphabetKeypadGrid(
     btnHeight: Dp,
-    isRadians: Boolean = true,
-    onToggleRadians: () -> Unit = {},
-    onMoveCursorLeft: () -> Unit = {},
-    onMoveCursorRight: () -> Unit = {},
-    onDeleteChar: () -> Unit = {},
-    onClearAll: () -> Unit = {},
+    onDeleteChar: () -> Unit,
+    onClearAll: () -> Unit,
     onKey: (String) -> Unit
 ) {
+    var subTab by remember { mutableStateOf(AlphabetSubTab.LETTERS) }
     val isDark = CalculatorTheme.colors.isDark
     val tabAccent = MathSolverTab.ALPHABET.accentColor
     val fnBg = if (isDark) MathSolverTheme.alphabetFunctionContainer else tabAccent.copy(alpha = 0.12f)
     val fnColor = if (isDark) MathSolverTheme.alphabetFunctionContent else Color(0xFFC2410C)
-
-    // 5 righe da 6 lettere latine e greche = 30 simboli
-    val alphabetRows = listOf(
-        listOf("a", "b", "c", "d", "e", "f"),
-        listOf("g", "h", "i", "j", "k", "l"),
-        listOf("m", "n", "o", "p", "q", "r"),
-        listOf("s", "t", "u", "v", "w", "x"),
-        listOf("y", "z", "α", "β", "π", "θ")
-    )
+    val delBg = if (isDark) MathSolverTheme.deleteContainer else Color(0xFFFFE4E6)
+    val delColor = if (isDark) MathSolverTheme.deleteContent else Color(0xFFE11D48)
+    val clearBg = if (isDark) MathSolverTheme.clearContainer else Color(0xFFFEE2E2)
+    val clearColor = if (isDark) MathSolverTheme.clearContent else Color(0xFFDC2626)
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        // Row 1: [ ← ], [ → ], [ RAD/DEG ], [ DEL ], [ AC ], [ = ]
-        NavigationAndControlRow(
-            btnHeight = btnHeight,
-            isRadians = isRadians,
-            tabAccentColor = tabAccent,
-            onMoveCursorLeft = onMoveCursorLeft,
-            onMoveCursorRight = onMoveCursorRight,
-            onToggleRadians = onToggleRadians,
-            onDeleteChar = onDeleteChar,
-            onClearAll = onClearAll,
-            onInsertChar = onKey
-        )
+        // Selettore a 3 schede per sotto-sezioni (Lettere, Costanti, Prefissi SI)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 1.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            AlphabetSubTab.values().forEach { tab ->
+                val isSelected = tab == subTab
+                val chipBg = if (isSelected) tabAccent else if (isDark) Color(0xFF262A38) else Color(0xFFF1F5F9)
+                val chipTextColor = if (isSelected) Color.White else if (isDark) Color(0xFF94A3B8) else Color(0xFF475569)
 
-        // Rows 2..6: Lettere e caratteri
-        alphabetRows.forEach { rowKeys ->
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                rowKeys.forEach { key ->
-                    SquircleKey(
-                        label = key,
-                        bgColor = fnBg,
-                        textColor = fnColor,
-                        height = btnHeight,
-                        modifier = Modifier.weight(1f),
-                        fontSize = 16.sp
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(28.dp)
+                        .clip(RoundedCornerShape(percent = 50))
+                        .background(chipBg)
+                        .clickable { subTab = tab },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = tab.label,
+                        fontSize = 11.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        color = chipTextColor
+                    )
+                }
+            }
+        }
+
+        when (subTab) {
+            AlphabetSubTab.LETTERS -> {
+                // Lettere latine e greche complete (30 simboli + Backspace)
+                val letterRows = listOf(
+                    listOf("a", "b", "c", "d", "e", "f"),
+                    listOf("g", "h", "i", "j", "k", "l"),
+                    listOf("m", "n", "o", "p", "q", "r"),
+                    listOf("s", "t", "u", "v", "w", "x"),
+                    listOf("y", "z", "α", "β", "θ", "λ")
+                )
+                letterRows.forEach { rowKeys ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        rowKeys.forEach { key ->
+                            SquircleKey(
+                                label = key,
+                                bgColor = fnBg,
+                                textColor = fnColor,
+                                height = btnHeight,
+                                modifier = Modifier.weight(1f),
+                                fontSize = 16.sp
+                            ) {
+                                onKey(key)
+                            }
+                        }
+                    }
+                }
+                // Riga 6 lettere greche avanzate e cancellazione
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf("μ", "π", "φ", "ω", "Δ").forEach { key ->
+                        SquircleKey(
+                            label = key,
+                            bgColor = fnBg,
+                            textColor = fnColor,
+                            height = btnHeight,
+                            modifier = Modifier.weight(1f),
+                            fontSize = 16.sp
+                        ) {
+                            onKey(key)
+                        }
+                    }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(btnHeight)
+                            .clip(RoundedCornerShape(percent = 50))
+                            .background(delBg)
+                            .clickable { onDeleteChar() },
+                        contentAlignment = Alignment.Center
                     ) {
-                        onKey(key)
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Backspace,
+                            contentDescription = "Cancella carattere",
+                            tint = delColor,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+            }
+
+            AlphabetSubTab.CONSTANTS -> {
+                // Costanti Fisiche e Matematiche universali
+                // Row 1: Velocità della luce, Gravitazione, Gravità terrestre, Costante di Planck, ħ, Boltzmann
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SquircleKey("c", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true) { onKey("c") }
+                    SquircleKey("G", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true) { onKey("G") }
+                    SquircleKey("g", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true) { onKey("g") }
+                    SquircleKey("h", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true) { onKey("h") }
+                    SquircleKey("ħ", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true) { onKey("ħ") }
+                    SquircleKey("k_B", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 11.sp) { onKey("k_B") }
+                }
+                // Row 2: Numero di Avogadro, Costante dei Gas, Carica elettrone, Massa elettrone, Massa protone, Unità massa atomica
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SquircleKey("N_A", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 11.sp) { onKey("N_A") }
+                    SquircleKey("R", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true) { onKey("R") }
+                    SquircleKey("q_e", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 11.sp) { onKey("q_e") }
+                    SquircleKey("m_e", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 11.sp) { onKey("m_e") }
+                    SquircleKey("m_p", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 11.sp) { onKey("m_p") }
+                    SquircleKey("u", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true) { onKey("u") }
+                }
+                // Row 3: Costanti Dielettriche, Stefan-Boltzmann, Sezione Aurea, Eulero, Pi Greco
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SquircleKey("ε₀", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 15.sp) { onKey("ε₀") }
+                    SquircleKey("μ₀", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 15.sp) { onKey("μ₀") }
+                    SquircleKey("σ", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 15.sp) { onKey("σ") }
+                    SquircleKey("φ", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 15.sp) { onKey("φ") }
+                    SquircleKey("e", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 15.sp) { onKey("e") }
+                    SquircleKey("π", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 15.sp) { onKey("π") }
+                }
+                // Row 4: Costanti Matematiche Frequenti & Potenze
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SquircleKey("√2", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("sqrt(2)") }
+                    SquircleKey("√3", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("sqrt(3)") }
+                    SquircleKey("ln2", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("ln(2)") }
+                    SquircleKey("ln10", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("ln(10)") }
+                    SquircleKey("□ⁿ", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^") }
+                    SquircleKey("√□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("sqrt(") }
+                }
+                // Row 5: Operatori e Parentesi
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SquircleKey("(", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("(") }
+                    SquircleKey(")", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(")") }
+                    SquircleKey("×", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 16.sp) { onKey("*") }
+                    SquircleKey("÷", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 16.sp) { onKey("/") }
+                    SquircleKey("+", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 16.sp) { onKey("+") }
+                    SquircleKey("-", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 16.sp) { onKey("-") }
+                }
+                // Row 6: Variabili, Uguale & Cancellazione
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SquircleKey("x", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("x") }
+                    SquircleKey("y", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("y") }
+                    SquircleKey("=", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey(" = ") }
+                    SquircleKey("DEL", delBg, delColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 11.sp) { onDeleteChar() }
+                    SquircleKey("AC", clearBg, clearColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 12.sp) { onClearAll() }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(btnHeight)
+                            .clip(RoundedCornerShape(percent = 50))
+                            .background(delBg)
+                            .clickable { onDeleteChar() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Backspace,
+                            contentDescription = "Cancella carattere",
+                            tint = delColor,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+            }
+
+            AlphabetSubTab.SI_PREFIXES -> {
+                // Prefissi Metrici del Sistema Internazionale (inserimento moltiplicatore scientifico immediato)
+                // Row 1: Grandi Multipli: Tera (10¹²), Giga (10⁹), Mega (10⁶), kilo (10³), etto (10²), deca (10¹)
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SquircleKey("T (10¹²)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 9.sp) { onKey("*10^12") }
+                    SquircleKey("G (10⁹)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 10.sp) { onKey("*10^9") }
+                    SquircleKey("M (10⁶)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 10.sp) { onKey("*10^6") }
+                    SquircleKey("k (10³)", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 10.sp) { onKey("*10^3") }
+                    SquircleKey("h (10²)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 10.sp) { onKey("*10^2") }
+                    SquircleKey("da (10¹)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 9.sp) { onKey("*10^1") }
+                }
+                // Row 2: Sottomultipli: deci (10⁻¹), centi (10⁻²), milli (10⁻³), micro (10⁻⁶), nano (10⁻⁹), pico (10⁻¹²)
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SquircleKey("d (10⁻¹)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 9.sp) { onKey("*10^-1") }
+                    SquircleKey("c (10⁻²)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 9.sp) { onKey("*10^-2") }
+                    SquircleKey("m (10⁻³)", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 9.sp) { onKey("*10^-3") }
+                    SquircleKey("μ (10⁻⁶)", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 9.sp) { onKey("*10^-6") }
+                    SquircleKey("n (10⁻⁹)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 9.sp) { onKey("*10^-9") }
+                    SquircleKey("p (10⁻¹²)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 8.sp) { onKey("*10^-12") }
+                }
+                // Row 3: Estremi & Notazione Scientifica: femto (10⁻¹⁵), atto (10⁻¹⁸), Peta (10¹⁵), Exa (10¹⁸), ×10ⁿ, □/□
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SquircleKey("f (10⁻¹⁵)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 8.sp) { onKey("*10^-15") }
+                    SquircleKey("a (10⁻¹⁸)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 8.sp) { onKey("*10^-18") }
+                    SquircleKey("P (10¹⁵)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 9.sp) { onKey("*10^15") }
+                    SquircleKey("E (10¹⁸)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 9.sp) { onKey("*10^18") }
+                    SquircleKey("×10ⁿ", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 11.sp) { onKey("*10^") }
+                    SquircleKey("□/□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("/") }
+                }
+                // Row 4: Potenze, Radici, Parentesi & Moltiplicazione
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SquircleKey("□ⁿ", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^") }
+                    SquircleKey("□²", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^2") }
+                    SquircleKey("√□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("sqrt(") }
+                    SquircleKey("(", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("(") }
+                    SquircleKey(")", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(")") }
+                    SquircleKey("×", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 16.sp) { onKey("*") }
+                }
+                // Row 5: Potenze Base di 10 e separatore decimale
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SquircleKey("1", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true) { onKey("1") }
+                    SquircleKey("10", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true) { onKey("10") }
+                    SquircleKey("100", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true) { onKey("100") }
+                    SquircleKey("1000", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 12.sp) { onKey("1000") }
+                    SquircleKey(".", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey(".") }
+                    SquircleKey("+", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 16.sp) { onKey("+") }
+                }
+                // Row 6: Variabili, Uguale & Cancellazione
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SquircleKey("x", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("x") }
+                    SquircleKey("y", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("y") }
+                    SquircleKey("=", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey(" = ") }
+                    SquircleKey("DEL", delBg, delColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 11.sp) { onDeleteChar() }
+                    SquircleKey("AC", clearBg, clearColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 12.sp) { onClearAll() }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(btnHeight)
+                            .clip(RoundedCornerShape(percent = 50))
+                            .background(delBg)
+                            .clickable { onDeleteChar() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Backspace,
+                            contentDescription = "Cancella carattere",
+                            tint = delColor,
+                            modifier = Modifier.size(16.dp)
+                        )
                     }
                 }
             }

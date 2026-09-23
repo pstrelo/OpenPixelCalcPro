@@ -541,9 +541,16 @@ data class EvaluationContext(
             "me" to BigDecimal("9.1093837015e-31"),
             "mp" to BigDecimal("1.67262192369e-27"),
             "eps0" to BigDecimal("8.8541878128e-12"),
+            "eps_0" to BigDecimal("8.8541878128e-12"),
             "ε₀" to BigDecimal("8.8541878128e-12"),
             "mu0" to BigDecimal("1.25663706212e-6"),
-            "μ₀" to BigDecimal("1.25663706212e-6")
+            "mu_0" to BigDecimal("1.25663706212e-6"),
+            "μ₀" to BigDecimal("1.25663706212e-6"),
+            "G" to BigDecimal("6.67430e-11"),
+            "R" to BigDecimal("8.314462618"),
+            "u" to BigDecimal("1.66053906660e-27"),
+            "sigma" to BigDecimal("5.670374419e-8"),
+            "σ" to BigDecimal("5.670374419e-8")
         )
         val DEFAULT = EvaluationContext(variables = DEFAULT_VARIABLES)
     }

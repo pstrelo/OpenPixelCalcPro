@@ -143,4 +143,66 @@ class AdvancedMathEngineTest {
         val pts = engine.sampleFunction("tan(x)", 1.0f, 2.0f, 60)
         assertTrue("Sampling tan(x) across π/2 must insert null at asymptote", pts.any { it == null })
     }
+
+    @Test
+    fun testCombinatoricsAndProbability() {
+        // Binomial coefficient: binom(5, 2) = 10
+        val binomRes = engine.evaluateExpression("binom(5, 2)")
+        assertEquals("10", binomRes)
+
+        // Permutations: perm(5, 2) = 20
+        val permRes = engine.evaluateExpression("perm(5, 2)")
+        assertEquals("20", permRes)
+
+        // Binomial PDF: binompdf(4, 0.5, 2) = 6 * 0.5^4 = 0.375
+        val binomPdfRes = engine.evaluateExpression("binompdf(4, 0.5, 2)")
+        assertEquals("0.375", binomPdfRes)
+
+        // Normal PDF at 0: 1/sqrt(2*pi) ~ 0.398942
+        val normPdfRes = engine.evaluateExpression("normpdf(0)")
+        assertTrue("normpdf(0) is ~0.3989", normPdfRes.startsWith("0.3989"))
+    }
+
+    @Test
+    fun testStatisticsFunctions() {
+        val meanRes = engine.evaluateExpression("mean(2, 4, 6)")
+        assertEquals("4", meanRes)
+
+        val stdRes = engine.evaluateExpression("std(2, 4, 6)")
+        assertEquals("2", stdRes)
+
+        val medRes = engine.evaluateExpression("median(1, 5, 10)")
+        assertEquals("5", medRes)
+    }
+
+    @Test
+    fun testPhysicalConstantsAndEvaluation() {
+        val cRes = engine.evaluateExpression("c")
+        assertEquals("299792458", cRes)
+
+        val gRes = engine.evaluateExpression("g")
+        assertEquals("9.80665", gRes)
+
+        val gGravRes = engine.evaluateExpression("G")
+        assertTrue("G is 6.6743e-11", gGravRes.startsWith("0.000000000066743") || gGravRes.contains("6.6743"))
+
+        val phiRes = engine.evaluateExpression("φ")
+        assertTrue("φ is 1.618...", phiRes.startsWith("1.618"))
+
+        val kRes = engine.evaluateExpression("2.5*10^3")
+        assertEquals("2500", kRes)
+    }
+
+    @Test
+    fun testHyperbolicAndReciprocalTrig() {
+        val sinhZero = engine.evaluateExpression("sinh(0)")
+        assertEquals("0", sinhZero)
+
+        val coshZero = engine.evaluateExpression("cosh(0)")
+        assertEquals("1", coshZero)
+
+        val secZero = engine.evaluateExpression("sec(0)", isRadians = true)
+        assertEquals("1", secZero)
+    }
 }
+

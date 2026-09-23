@@ -614,7 +614,10 @@ class AdvancedMathEngine(
         if (value.isNaN()) return "NaN"
         if (value.isInfinite()) return if (value > 0) "+∞" else "-∞"
         if (abs(value) < 1e-12) return "0"
-        val rounded = (value * 1e6).roundToLong() / 1e6
+        if (abs(value) < 1e-4 || abs(value) >= 1e10) {
+            return BigDecimal(value, MathContext(8, RoundingMode.HALF_UP)).stripTrailingZeros().toString()
+        }
+        val rounded = (value * 1e8).roundToLong() / 1e8
         return if (rounded == rounded.toLong().toDouble()) {
             rounded.toLong().toString()
         } else {

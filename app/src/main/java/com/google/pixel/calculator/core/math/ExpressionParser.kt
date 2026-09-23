@@ -62,6 +62,8 @@ class ExpressionParser {
             .replace("sec(", "1/cos(")
             .replace("cot(", "1/tan(")
             .replace("°", "*(π/180)")
+            .replace("defint(", "∫(")
+            .replace("σ", "sigma")
             .replace("∛", "(3)ʸ√")
             .replace("∜", "(4)ʸ√")
 
