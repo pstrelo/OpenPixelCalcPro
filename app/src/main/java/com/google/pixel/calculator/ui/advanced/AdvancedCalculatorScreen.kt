@@ -51,7 +51,7 @@ fun AdvancedCalculatorScreen(
                 },
                 title = {
                     Text(
-                        text = "Google Math Solver",
+                        text = "Calcolatrice avanzata",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = CalculatorTheme.colors.onSurface

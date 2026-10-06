@@ -176,8 +176,8 @@ data class AdvancedCalculatorState(
     val equations: List<EquationItem> = listOf(
         EquationItem(
             id = "eq_1",
-            expression = "x^2 + 2x - 3 = 2x + 6",
-            cursorPosition = 23,
+            expression = "",
+            cursorPosition = 0,
             color = Color(0xFF4E75F6)
         )
     ),

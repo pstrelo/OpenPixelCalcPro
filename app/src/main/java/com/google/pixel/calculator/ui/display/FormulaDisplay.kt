@@ -27,6 +27,9 @@ import com.google.pixel.calculator.ui.theme.SystemFontFamily
  * - Scorrimento orizzontale automatico verso l'ultima cifra digitata
  * - Anteprima istantanea del risultato in grigio morbido
  */
+import android.content.res.Configuration
+import androidx.compose.ui.platform.LocalConfiguration
+
 @Composable
 fun FormulaDisplay(
     expression: String,
@@ -37,6 +40,7 @@ fun FormulaDisplay(
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     // Scorre automaticamente all'ultima cifra aggiunta
     LaunchedEffect(expression) {
@@ -46,23 +50,24 @@ fun FormulaDisplay(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 12.dp),
+            .padding(horizontal = 24.dp, vertical = if (isLandscape) 4.dp else 12.dp),
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.Bottom
     ) {
-        // Calcoli precedenti della sessione attiva (ultime 2 operazioni)
+        // Calcoli precedenti della sessione attiva (ultime 2 operazioni in portrait, 1 in landscape per compattezza)
         if (sessionHistory.isNotEmpty()) {
+            val historyCount = if (isLandscape) 1 else 2
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 6.dp),
+                    .padding(bottom = if (isLandscape) 2.dp else 6.dp),
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
-                sessionHistory.takeLast(2).forEach { (prevExpr, prevRes) ->
+                sessionHistory.takeLast(historyCount).forEach { (prevExpr, prevRes) ->
                     Text(
                         text = prevRes,
-                        fontSize = 24.sp,
+                        fontSize = if (isLandscape) 16.sp else 24.sp,
                         fontWeight = FontWeight.SemiBold,
                         fontFamily = QuicksandFontFamily,
                         color = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.6f),
@@ -85,11 +90,20 @@ fun FormulaDisplay(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val fontSize = when {
-                    expression.length > 15 -> 38.sp
-                    expression.length > 10 -> 48.sp
-                    expression.length > 7 -> 58.sp
-                    else -> 68.sp
+                val fontSize = if (isLandscape) {
+                    when {
+                        expression.length > 20 -> 22.sp
+                        expression.length > 15 -> 26.sp
+                        expression.length > 10 -> 30.sp
+                        else -> 36.sp
+                    }
+                } else {
+                    when {
+                        expression.length > 15 -> 38.sp
+                        expression.length > 10 -> 48.sp
+                        expression.length > 7 -> 58.sp
+                        else -> 68.sp
+                    }
                 }
 
                 Text(
@@ -104,13 +118,13 @@ fun FormulaDisplay(
             }
         }
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(if (isLandscape) 2.dp else 4.dp))
 
         // Messaggio di Errore
         AnimatedVisibility(visible = errorMessage != null) {
             Text(
                 text = errorMessage ?: "",
-                fontSize = 20.sp,
+                fontSize = if (isLandscape) 15.sp else 20.sp,
                 fontWeight = FontWeight.Normal,
                 fontFamily = SystemFontFamily,
                 color = MaterialTheme.colorScheme.error,
@@ -122,7 +136,7 @@ fun FormulaDisplay(
         AnimatedVisibility(visible = resultPreview.isNotEmpty() && errorMessage == null) {
             Text(
                 text = "= $resultPreview",
-                fontSize = 32.sp,
+                fontSize = if (isLandscape) 20.sp else 32.sp,
                 fontWeight = FontWeight.SemiBold,
                 fontFamily = QuicksandFontFamily,
                 color = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.85f),

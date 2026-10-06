@@ -26,6 +26,8 @@ import com.google.pixel.calculator.ui.settings.ThemeSelectionDialog
 import com.google.pixel.calculator.ui.theme.CalculatorTheme
 import com.google.pixel.calculator.ui.toolbox.*
 
+import androidx.compose.runtime.saveable.rememberSaveable
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalculatorApp(
@@ -40,7 +42,7 @@ fun CalculatorApp(
     val state by vm.uiState.collectAsState()
     val historyList by storage.historyFlow.collectAsState()
 
-    var showHistorySheet by remember { mutableStateOf(false) }
+    var showHistorySheet by rememberSaveable { mutableStateOf(false) }
 
     // Routing schermate secondarie
     when (state.activeScreen) {
