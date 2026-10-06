@@ -189,4 +189,11 @@ class UnitConverterTest {
             }
         }
     }
+
+    @Test
+    fun testAllCategoriesHaveIcons() {
+        for (category in UnitConverter.Category.values()) {
+            assertTrue("La categoria ${category.name} deve avere un'icona non vuota", category.icon.isNotEmpty())
+        }
+    }
 }

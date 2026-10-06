@@ -162,33 +162,21 @@ private fun ConverterBox(
     onBoxClick: () -> Unit,
     onUnitChipClick: () -> Unit
 ) {
-    val containerShape = RoundedCornerShape(20.dp)
-    val containerBg = if (isActive) {
-        CalculatorTheme.colors.operatorContainer.copy(alpha = 0.28f)
-    } else {
-        Color.Transparent
-    }
-    val borderStroke = if (isActive) {
-        BorderStroke(1.5.dp, CalculatorTheme.colors.equalsContainer.copy(alpha = 0.70f))
-    } else {
-        BorderStroke(1.5.dp, Color.Transparent)
-    }
-
     val textColor = if (isActive) {
         CalculatorTheme.colors.onSurface
     } else {
-        CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.45f) // Sbiadita quando non selezionata
+        CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.40f) // Sbiadita quando non selezionata
     }
 
     Surface(
-        shape = containerShape,
-        color = containerBg,
-        border = borderStroke,
+        shape = RoundedCornerShape(16.dp),
+        color = Color.Transparent,
+        border = null,
         modifier = Modifier
             .fillMaxWidth()
-            .clip(containerShape)
+            .clip(RoundedCornerShape(16.dp))
             .clickable { onBoxClick() }
-            .padding(horizontal = 4.dp, vertical = 2.dp)
+            .padding(horizontal = 4.dp, vertical = 4.dp)
     ) {
         Row(
             modifier = Modifier

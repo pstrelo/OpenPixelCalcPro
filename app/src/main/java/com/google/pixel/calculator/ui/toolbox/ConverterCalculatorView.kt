@@ -175,7 +175,7 @@ fun ConverterCalculatorView(
                             )
                         } else {
                             Text(
-                                text = selectedCategory.displayName,
+                                text = "${selectedCategory.icon} ${selectedCategory.displayName}",
                                 fontSize = 12.sp,
                                 color = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.8f)
                             )

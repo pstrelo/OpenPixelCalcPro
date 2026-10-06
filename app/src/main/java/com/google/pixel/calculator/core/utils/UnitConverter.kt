@@ -18,24 +18,24 @@ class UnitConverter(
     val currencyRepository: CurrencyRateRepository? = null
 ) {
 
-    enum class Category(val displayName: String) {
-        CURRENCY("Valuta"),
-        LENGTH("Lunghezza"),
-        MASS("Massa / Peso"),
-        TEMPERATURE("Temperatura"),
-        AREA("Area"),
-        VOLUME("Volume"),
-        SPEED("Velocità"),
-        TIME("Tempo"),
-        PRESSURE("Pressione"),
-        ENERGY("Energia / Lavoro"),
-        POWER("Potenza"),
-        DATA("Dati Digitali"),
-        ANGLE("Angolo"),
-        FUEL("Consumo Carburante"),
-        COOKING("Cucina / Ricette"),
-        TYPOGRAPHY("Tipografia"),
-        FREQUENCY("Frequenza")
+    enum class Category(val displayName: String, val icon: String) {
+        CURRENCY("Valuta", "💰"),
+        LENGTH("Lunghezza", "📏"),
+        MASS("Massa / Peso", "⚖️"),
+        TEMPERATURE("Temperatura", "🌡️"),
+        AREA("Area", "🗺️"),
+        VOLUME("Volume", "🧊"),
+        SPEED("Velocità", "🏎️"),
+        TIME("Tempo", "⏳"),
+        PRESSURE("Pressione", "🧭"),
+        ENERGY("Energia / Lavoro", "⚡"),
+        POWER("Potenza", "💡"),
+        DATA("Dati Digitali", "💾"),
+        ANGLE("Angolo", "📐"),
+        FUEL("Consumo Carburante", "⛽"),
+        COOKING("Cucina / Ricette", "🍳"),
+        TYPOGRAPHY("Tipografia", "🔤"),
+        FREQUENCY("Frequenza", "📻")
     }
 
     data class UnitDefinition(
