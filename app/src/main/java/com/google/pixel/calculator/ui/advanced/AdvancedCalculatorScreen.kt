@@ -79,7 +79,9 @@ fun AdvancedCalculatorScreen(
                             onReset = { viewModel.onResetGraph() },
                             onPointSelected = { viewModel.selectGraphPoint(it) },
                             onToggleFullscreen = { viewModel.setScreenViewMode(ScreenViewMode.SPLIT_SCREEN) },
-                            modifier = Modifier.padding(6.dp)
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(6.dp)
                         )
 
                         // Floating Action Pill per tornare alla tastiera
@@ -108,7 +110,7 @@ fun AdvancedCalculatorScreen(
                     }
                 }
 
-                // STATO A & B: CALCOLATORE STANDARD & ANTEPRIMA GRAFICO MINIMIZZATO
+                // STATO A & B: CALCOLATORE STANDARD & GRAFICO DIVISO
                 // Struttura a 2 sezioni per garantire che tutti i tasti siano SEMPRE visibili al 100%
                 else -> {
                     Column(
@@ -116,34 +118,29 @@ fun AdvancedCalculatorScreen(
                             .fillMaxSize()
                             .navigationBarsPadding()
                     ) {
-                        // 1. ZONA SUPERIORE: Display formule in alto + Tasto Grafico + Grafico Minimizzato
-                        // Scrollabile verticalmente in caso di display ridotto per non comprimere mai la tastiera
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                                .verticalScroll(rememberScrollState()),
-                            verticalArrangement = Arrangement.Top,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            // Finestra di testo in alto con dimensione auto-adattiva
-                            AdvancedFormulaDisplay(
-                                state = state,
-                                onSelectFormula = { viewModel.selectFormula(it) },
-                                onAddFormula = { viewModel.addFormula() },
-                                onRemoveFormula = { viewModel.removeFormula(it) },
-                                onCycleFormat = { viewModel.onCycleFormat() },
-                                onCycleColor = { viewModel.cycleEquationColor(it) },
-                                onToggleGraph = { viewModel.toggleGraphView() },
+                        if (state.screenViewMode == ScreenViewMode.SPLIT_SCREEN) {
+                            // Quando il grafico è mostrato, occupa TUTTO lo spazio disponibile sopra la tastiera
+                            Column(
                                 modifier = Modifier
+                                    .weight(1f)
                                     .fillMaxWidth()
-                                    .wrapContentHeight()
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
+                            ) {
+                                AdvancedFormulaDisplay(
+                                    state = state,
+                                    onSelectFormula = { viewModel.selectFormula(it) },
+                                    onAddFormula = { viewModel.addFormula() },
+                                    onRemoveFormula = { viewModel.removeFormula(it) },
+                                    onCycleFormat = { viewModel.onCycleFormat() },
+                                    onCycleColor = { viewModel.cycleEquationColor(it) },
+                                    onToggleGraph = { viewModel.toggleGraphView() },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .wrapContentHeight()
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
 
-                            // Versione minimizzata del grafico (espandibile a schermo intero)
-                            if (state.screenViewMode == ScreenViewMode.SPLIT_SCREEN) {
-                                Spacer(modifier = Modifier.height(4.dp))
+                                Spacer(modifier = Modifier.height(2.dp))
+
                                 MinimizedGraphCard(
                                     state = state,
                                     onTransform = { zoom, pan -> viewModel.onGraphTransform(zoom, pan) },
@@ -151,12 +148,37 @@ fun AdvancedCalculatorScreen(
                                     onPointSelected = { viewModel.selectGraphPoint(it) },
                                     onExpandFullscreen = { viewModel.setScreenViewMode(ScreenViewMode.FULLSCREEN_GRAPH) },
                                     modifier = Modifier
+                                        .weight(1f)
                                         .fillMaxWidth()
-                                        .padding(horizontal = 6.dp)
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+
+                                Spacer(modifier = Modifier.height(2.dp))
+                            }
+                        } else {
+                            // Modalità solo calcolatrice (grafico nascosto): scrollabile per formule multiple
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth()
+                                    .verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.Top,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                AdvancedFormulaDisplay(
+                                    state = state,
+                                    onSelectFormula = { viewModel.selectFormula(it) },
+                                    onAddFormula = { viewModel.addFormula() },
+                                    onRemoveFormula = { viewModel.removeFormula(it) },
+                                    onCycleFormat = { viewModel.onCycleFormat() },
+                                    onCycleColor = { viewModel.cycleEquationColor(it) },
+                                    onToggleGraph = { viewModel.toggleGraphView() },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .wrapContentHeight()
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
                             }
-
-                            Spacer(modifier = Modifier.height(4.dp))
                         }
 
                         // 2. ZONA INFERIORE: TASTIERA ANCORATA ALLA BASE - SEMPRE VISIBILE AL 100%
@@ -259,7 +281,6 @@ fun MinimizedGraphCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(170.dp)
             .border(1.dp, cardBorder, RoundedCornerShape(16.dp)),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = cardBg)
