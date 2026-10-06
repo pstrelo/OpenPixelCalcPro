@@ -132,9 +132,7 @@ fun AdvancedCalculatorScreen(
                 // Struttura a 2 sezioni per garantire che tutti i tasti siano SEMPRE visibili al 100%
                 else -> {
                     Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .navigationBarsPadding()
+                        modifier = Modifier.fillMaxSize()
                     ) {
                         if (state.screenViewMode == ScreenViewMode.SPLIT_SCREEN) {
                             // Quando il grafico è mostrato, occupa TUTTO lo spazio disponibile sopra la tastiera
@@ -217,9 +215,7 @@ fun AdvancedCalculatorScreen(
                                 isToolBarExpanded = false
                                 onNavigate(screen)
                             },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 2.dp)
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }
@@ -230,7 +226,7 @@ fun AdvancedCalculatorScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(bottom = 60.dp)
+                        .padding(bottom = 76.dp)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null

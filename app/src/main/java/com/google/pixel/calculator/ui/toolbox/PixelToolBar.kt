@@ -86,6 +86,58 @@ val AllToolDestinations: List<ToolDestination> = listOf(
 )
 
 /**
+ * Dimensioni unificate della Toolbar strumenti in modo da garantire
+ * la STESSA identica posizione (start = 16dp, bottom = 8dp) e la STESSA identica dimensione
+ * (altezza 68dp in portrait, larghezza del pulsante uguale alla prima colonna, pillola uguale alle rimanenti 3 colonne)
+ * su TUTTE le schermate (Calcolatrice standard, Avanzata, Convertitore, Livella, Bussola, Righello).
+ */
+data class ToolBarDimensions(
+    val height: Dp,
+    val btnWidth: Dp,
+    val pillWidth: Dp,
+    val horizontalPadding: Dp,
+    val bottomPadding: Dp,
+    val spacing: Dp
+)
+
+@Composable
+fun rememberToolBarDimensions(): ToolBarDimensions {
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    val screenWidth = configuration.screenWidthDp.dp
+
+    val hPadding = if (isLandscape) 10.dp else 16.dp
+    val bPadding = if (isLandscape) 2.dp else 8.dp
+    val spacing = if (isLandscape) 6.dp else 12.dp
+    val height = if (isLandscape) 40.dp else 68.dp
+
+    // Larghezza del primo tasto della calcolatrice principale (1 colonna su 4)
+    val btnWidth = if (isLandscape) {
+        height * 1.5f
+    } else {
+        ((screenWidth - (hPadding * 2) - (spacing * 3)) / 4).coerceAtLeast(68.dp)
+    }
+
+    // Larghezza della pillola (copre esattamente le 3 colonne rimanenti)
+    val pillWidth = if (isLandscape) {
+        280.dp
+    } else {
+        (screenWidth - (hPadding * 2) - btnWidth - spacing).coerceAtLeast(240.dp)
+    }
+
+    return remember(isLandscape, screenWidth) {
+        ToolBarDimensions(
+            height = height,
+            btnWidth = btnWidth,
+            pillWidth = pillWidth,
+            horizontalPadding = hPadding,
+            bottomPadding = bPadding,
+            spacing = spacing
+        )
+    }
+}
+
+/**
  * Pulsante di attivazione strumenti Material 3:
  * - Da chiuso: tondo (CircleShape), mostra l'icona dello strumento attualmente attivo.
  * - Da aperto: quadrato arrotondato (Squircle / RoundedCornerShape 18dp) con colore d'accento di sistema (primaryContainer).
@@ -94,7 +146,7 @@ val AllToolDestinations: List<ToolDestination> = listOf(
 fun PixelToolToggleButton(
     currentScreen: ActiveScreen,
     isExpanded: Boolean,
-    height: Dp = 56.dp,
+    height: Dp = rememberToolBarDimensions().height,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -150,7 +202,7 @@ fun PixelToolToggleButton(
                 imageVector = currentDestination.icon,
                 contentDescription = if (isExpanded) "Chiudi barra strumenti" else "Apri barra strumenti (${currentDestination.title})",
                 tint = contentColor,
-                modifier = Modifier.size(if (height <= 44.dp) 20.dp else 24.dp)
+                modifier = Modifier.size(if (height <= 48.dp) 20.dp else 26.dp)
             )
         }
     }
@@ -158,13 +210,14 @@ fun PixelToolToggleButton(
 
 /**
  * Pillola orizzontale Material 3 contenente le icone degli altri 5 strumenti selezionabili.
- * SEMPRE fluttuante con ombra/elevazione e della STESSA identica dimensione fissa (altezza 56dp, larghezza 252dp) in tutte le schermate.
+ * SEMPRE fluttuante con ombra/elevazione e con dimensione e altezza coordinate con la schermata principale.
  */
 @Composable
 fun PixelToolPillBar(
     currentScreen: ActiveScreen,
     onNavigate: (ActiveScreen) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    height: Dp = rememberToolBarDimensions().height
 ) {
     val haptic = LocalHapticFeedback.current
     val selectableDestinations = remember(currentScreen) {
@@ -185,8 +238,7 @@ fun PixelToolPillBar(
 
     Surface(
         modifier = modifier
-            .height(56.dp)
-            .width(252.dp)
+            .height(height)
             .shadow(6.dp, shape = CircleShape),
         shape = CircleShape,
         color = pillContainer,
@@ -197,7 +249,7 @@ fun PixelToolPillBar(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 8.dp),
+                .padding(horizontal = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
@@ -207,13 +259,13 @@ fun PixelToolPillBar(
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         onNavigate(destination.screen)
                     },
-                    modifier = Modifier.size(44.dp)
+                    modifier = Modifier.size(if (height <= 48.dp) 36.dp else 48.dp)
                 ) {
                     Icon(
                         imageVector = destination.icon,
                         contentDescription = destination.contentDescription,
                         tint = pillContent,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(if (height <= 48.dp) 20.dp else 26.dp)
                     )
                 }
             }
@@ -224,6 +276,7 @@ fun PixelToolPillBar(
 /**
  * Barra fluttuante ancorata in basso a sinistra per le schermate secondarie
  * (Livella, Bussola, Righello, Schermo intero grafico).
+ * Posizionata e dimensionata in modo IDENTICO alla schermata principale.
  */
 @Composable
 fun PixelFloatingToolBar(
@@ -232,6 +285,7 @@ fun PixelFloatingToolBar(
     modifier: Modifier = Modifier
 ) {
     var isExpanded by remember { mutableStateOf(false) }
+    val dims = rememberToolBarDimensions()
 
     if (isExpanded) {
         BackHandler { isExpanded = false }
@@ -251,22 +305,21 @@ fun PixelFloatingToolBar(
 
     Box(
         modifier = modifier
-            .navigationBarsPadding()
-            .padding(start = 16.dp, bottom = 16.dp)
+            .padding(start = dims.horizontalPadding, bottom = dims.bottomPadding)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(dims.spacing)
         ) {
             PixelToolToggleButton(
                 currentScreen = currentScreen,
                 isExpanded = isExpanded,
-                height = 56.dp,
+                height = dims.height,
                 onClick = { isExpanded = !isExpanded },
-                modifier = Modifier.size(56.dp)
+                modifier = Modifier.size(width = dims.btnWidth, height = dims.height)
             )
 
-            AnimatedVisibility(
+            androidx.compose.animation.AnimatedVisibility(
                 visible = isExpanded,
                 enter = fadeIn(tween(180)) + expandHorizontally(
                     expandFrom = Alignment.Start,
@@ -282,10 +335,12 @@ fun PixelFloatingToolBar(
             ) {
                 PixelToolPillBar(
                     currentScreen = currentScreen,
+                    height = dims.height,
                     onNavigate = { screen ->
                         isExpanded = false
                         onNavigate(screen)
-                    }
+                    },
+                    modifier = Modifier.size(width = dims.pillWidth, height = dims.height)
                 )
             }
         }
@@ -296,7 +351,7 @@ fun PixelFloatingToolBar(
  * Riga del tastierino contenente il tasto strumenti (Row 5 portrait o Row 4 numeri in landscape).
  * - SOLO il pulsante strumenti è integrato nella tastiera e si modifica da cerchio a quadrato quando cliccato.
  * - I tasti numerici rimangono sempre presenti nella tastiera.
- * - La pillola compare SEMPRE FLUTTUANTE sopra la tastiera con dimensione identica fissa (56dp x 252dp).
+ * - La pillola compare SEMPRE FLUTTUANTE sopra la tastiera con dimensione identica fissa.
  */
 @Composable
 fun PixelKeypadToolRow(
@@ -390,7 +445,11 @@ fun PixelKeypadToolRow(
             ) {
                 PixelToolPillBar(
                     currentScreen = currentScreen,
-                    onNavigate = onNavigate
+                    height = btnHeight,
+                    onNavigate = onNavigate,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(btnHeight)
                 )
             }
         }

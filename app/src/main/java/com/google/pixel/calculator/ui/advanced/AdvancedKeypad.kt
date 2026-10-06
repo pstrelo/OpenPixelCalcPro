@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import com.google.pixel.calculator.ui.ActiveScreen
 import com.google.pixel.calculator.ui.toolbox.PixelToolPillBar
 import com.google.pixel.calculator.ui.toolbox.PixelToolToggleButton
+import com.google.pixel.calculator.ui.toolbox.rememberToolBarDimensions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -69,9 +70,7 @@ fun AdvancedKeypad(
     val buttonHeight = if (isLandscape) 30.dp else if (isSplitScreen) 36.dp else 40.dp
 
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 6.dp, vertical = 2.dp),
+        modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         // 1. Barra orizzontale a 4 Tab tematiche (Algebra, Trigonometry, Calculus, Alphabet)
@@ -80,87 +79,89 @@ fun AdvancedKeypad(
             onTabSelected = { tab ->
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 onTabSelected(tab)
-            }
+            },
+            modifier = Modifier.padding(horizontal = 6.dp)
         )
 
         Spacer(modifier = Modifier.height(2.dp))
 
         // 2. Griglia tasti della Tab attiva
-        when (activeTab) {
-            MathSolverTab.ALGEBRA -> AlgebraKeypadGrid(
-                btnHeight = buttonHeight,
-                isRadians = isRadians,
-                onToggleRadians = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onToggleRadians()
-                },
-                onMoveCursorLeft = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onMoveCursorLeft()
-                },
-                onMoveCursorRight = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onMoveCursorRight()
-                },
-                onDeleteChar = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onDeleteChar()
-                },
-                onClearAll = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onClearAll()
-                },
-                onKey = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onInsertChar(it)
-                }
-            )
-            MathSolverTab.TRIGONOMETRY -> TrigonometryKeypadGrid(
-                btnHeight = buttonHeight,
-                onDeleteChar = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onDeleteChar()
-                },
-                onKey = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onInsertChar(it)
-                }
-            )
-            MathSolverTab.CALCULUS -> CalculusKeypadGrid(
-                btnHeight = buttonHeight,
-                onDeleteChar = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onDeleteChar()
-                },
-                onKey = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onInsertChar(it)
-                }
-            )
-            MathSolverTab.ALPHABET -> AlphabetKeypadGrid(
-                btnHeight = if (isSplitScreen) 32.dp else 36.dp,
-                onDeleteChar = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onDeleteChar()
-                },
-                onClearAll = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onClearAll()
-                },
-                onKey = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onInsertChar(it)
-                }
-            )
+        Box(modifier = Modifier.padding(horizontal = 6.dp)) {
+            when (activeTab) {
+                MathSolverTab.ALGEBRA -> AlgebraKeypadGrid(
+                    btnHeight = buttonHeight,
+                    isRadians = isRadians,
+                    onToggleRadians = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onToggleRadians()
+                    },
+                    onMoveCursorLeft = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onMoveCursorLeft()
+                    },
+                    onMoveCursorRight = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onMoveCursorRight()
+                    },
+                    onDeleteChar = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onDeleteChar()
+                    },
+                    onClearAll = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onClearAll()
+                    },
+                    onKey = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onInsertChar(it)
+                    }
+                )
+                MathSolverTab.TRIGONOMETRY -> TrigonometryKeypadGrid(
+                    btnHeight = buttonHeight,
+                    onDeleteChar = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onDeleteChar()
+                    },
+                    onKey = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onInsertChar(it)
+                    }
+                )
+                MathSolverTab.CALCULUS -> CalculusKeypadGrid(
+                    btnHeight = buttonHeight,
+                    onDeleteChar = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onDeleteChar()
+                    },
+                    onKey = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onInsertChar(it)
+                    }
+                )
+                MathSolverTab.ALPHABET -> AlphabetKeypadGrid(
+                    btnHeight = if (isSplitScreen) 32.dp else 36.dp,
+                    onDeleteChar = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onDeleteChar()
+                    },
+                    onClearAll = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onClearAll()
+                    },
+                    onKey = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onInsertChar(it)
+                    }
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(2.dp))
 
-        // 3. Barra persistente inferiore ([ FORMAT: DEC ], [ RISOLVI ➤ ])
+        // 3. Barra persistente inferiore ([ FORMAT: DEC ], [ RISOLVI ➤ ]) con spazio dedicato per il tasto strumenti
         PersistentBottomEditBar(
             activeTab = activeTab,
             activeFormatLabel = activeFormatLabel,
-            btnHeight = buttonHeight,
             onCycleFormat = {
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 onCycleFormat()
@@ -991,7 +992,7 @@ private fun AlphabetKeypadGrid(
 fun PersistentBottomEditBar(
     activeTab: MathSolverTab,
     activeFormatLabel: String,
-    btnHeight: Dp,
+    btnHeight: Dp? = null,
     onCycleFormat: () -> Unit,
     onExecute: () -> Unit,
     isToolBarExpanded: Boolean = false,
@@ -999,6 +1000,9 @@ fun PersistentBottomEditBar(
     onNavigate: (ActiveScreen) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val dims = rememberToolBarDimensions()
+    val barHeight = btnHeight ?: dims.height
+
     val executionBgColor by animateColorAsState(
         targetValue = activeTab.accentColor,
         animationSpec = tween(durationMillis = 250),
@@ -1011,17 +1015,24 @@ fun PersistentBottomEditBar(
     val formatSubtextColor = if (isDark) MathSolverTheme.tabUnselected else CalculatorTheme.colors.onSurfaceVariant
 
     Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(
+                start = dims.horizontalPadding,
+                end = dims.horizontalPadding,
+                bottom = dims.bottomPadding
+            ),
+        horizontalArrangement = Arrangement.spacedBy(dims.spacing),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Tasto Strumenti a sinistra (da tondo a quadrato M3)
+        // Stessa identica dimensione e posizione della calcolatrice principale
         PixelToolToggleButton(
             currentScreen = ActiveScreen.ADVANCED_CALCULATOR,
             isExpanded = isToolBarExpanded,
-            height = btnHeight,
+            height = barHeight,
             onClick = onToggleToolBar,
-            modifier = Modifier.size(btnHeight)
+            modifier = Modifier.size(width = dims.btnWidth, height = barHeight)
         )
 
         // Zona comandi con la pillola che fluttua sopra di essi alla stessa identica dimensione
@@ -1038,7 +1049,7 @@ fun PersistentBottomEditBar(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .height(btnHeight)
+                        .height(barHeight)
                         .clip(RoundedCornerShape(percent = 50))
                         .background(formatContainer)
                         .border(1.dp, formatBorder, RoundedCornerShape(percent = 50))
@@ -1068,7 +1079,7 @@ fun PersistentBottomEditBar(
                 Box(
                     modifier = Modifier
                         .weight(1.8f)
-                        .height(btnHeight)
+                        .height(barHeight)
                         .clip(RoundedCornerShape(percent = 50))
                         .background(executionBgColor)
                         .clickable { onExecute() },
@@ -1114,7 +1125,11 @@ fun PersistentBottomEditBar(
             ) {
                 PixelToolPillBar(
                     currentScreen = ActiveScreen.ADVANCED_CALCULATOR,
-                    onNavigate = onNavigate
+                    height = barHeight,
+                    onNavigate = onNavigate,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(barHeight)
                 )
             }
         }
