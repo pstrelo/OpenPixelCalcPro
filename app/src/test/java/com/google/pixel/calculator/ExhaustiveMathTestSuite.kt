@@ -26,7 +26,6 @@ object ExhaustiveMathTestSuite {
     private var testCounter = 1
 
     private val evaluator = MathEvaluator()
-    private val solver = EquationSolver()
     private val converter = UnitConverter()
 
     // Contesto sicuro che include esplicitamente le costanti matematiche standard
@@ -324,70 +323,7 @@ object ExhaustiveMathTestSuite {
         }
 
         // ---------------------------------------------------------
-        // GRUPPO 7: Equation Solver
-        // ---------------------------------------------------------
-        runTest("Equation Solver", "Equazione di 2° grado standard con radici distinte: x² - 5x + 6 = 0") {
-            val sol = solver.solveQuadratic(1.0, -5.0, 6.0)
-            check(sol is EquationSolver.Solution.QuadraticReal && sol.x1 == 3.0 && sol.x2 == 2.0 && sol.delta == 1.0,
-                expected = "QuadraticReal(x1=3.0, x2=2.0, delta=1.0)",
-                actual = sol.toString())
-        }
-
-        runTest("Equation Solver", "Equazione con radici coincidenti esatte: x² - 4x + 4 = 0 (delta = 0)") {
-            val sol = solver.solveQuadratic(1.0, -4.0, 4.0)
-            check(sol is EquationSolver.Solution.QuadraticReal && sol.x1 == 2.0 && sol.x2 == 2.0 && sol.delta == 0.0,
-                expected = "QuadraticReal(x1=2.0, x2=2.0, delta=0.0)",
-                actual = sol.toString())
-        }
-
-        runTest("Equation Solver", "Equazione con radice coincidente soggetta ad arrotondamento: x² - 2.2x + 1.21 = 0") {
-            val sol = solver.solveQuadratic(1.0, -2.2, 1.21)
-            val isCoincident = sol is EquationSolver.Solution.QuadraticReal && sol.x1 == sol.x2
-            check(isCoincident,
-                expected = "QuadraticReal con radici coincidenti x1 = x2 = 1.1 (abs(delta) < 1e-12)",
-                actual = sol.toString(),
-                bugNote = if (!isCoincident) "BUG: In EquationSolver.solveQuadratic, 'delta > 0' viene verificato PRIMA di 'abs(delta) < 1e-12'. Con delta = 8.88e-16 viene erroneamente classificata come 'Due soluzioni reali distinte' con x1 != x2!" else null)
-        }
-
-        runTest("Equation Solver", "Equazione a radici complesse coniugate: x² + 1 = 0 (delta < 0)") {
-            val sol = solver.solveQuadratic(1.0, 0.0, 1.0)
-            check(sol is EquationSolver.Solution.QuadraticComplex && abs(sol.realPart) < 1e-12 && sol.imagPart == 1.0 && sol.delta == -4.0,
-                expected = "QuadraticComplex(realPart=0.0, imagPart=1.0, delta=-4.0)",
-                actual = sol.toString())
-        }
-
-        runTest("Equation Solver", "Fallback lineare con coefficiente a = 0: 0x² + 2x - 4 = 0") {
-            val sol = solver.solveQuadratic(0.0, 2.0, -4.0)
-            check(sol is EquationSolver.Solution.Linear && sol.x == 2.0,
-                expected = "Linear(x=2.0)",
-                actual = sol.toString())
-        }
-
-        runTest("Equation Solver", "Equazione degenere impossibile: a = 0, b = 0, c = 5 (5 = 0)") {
-            val sol = solver.solveQuadratic(0.0, 0.0, 5.0)
-            check(sol is EquationSolver.Solution.NoSolution,
-                expected = "NoSolution(Impossibile)",
-                actual = sol.toString())
-        }
-
-        runTest("Equation Solver", "Equazione degenere indeterminata: a = 0, b = 0, c = 0 (0 = 0)") {
-            val sol = solver.solveQuadratic(0.0, 0.0, 0.0)
-            check(sol is EquationSolver.Solution.InfiniteSolutions,
-                expected = "InfiniteSolutions(Indeterminata)",
-                actual = sol.toString())
-        }
-
-        runTest("Equation Solver", "Solver numerico per equazione senza radici reali: x² + 1 = 0") {
-            val sol = solver.solveNumeric("x^2 + 1", initialGuess = 0.0, maxIter = 50)
-            val failedProperly = sol is EquationSolver.Solution.NoSolution || sol is EquationSolver.Solution.Error
-            check(failedProperly,
-                expected = "NoSolution o Error per mancata convergenza",
-                actual = sol.toString(),
-                bugNote = if (!failedProperly) "BUG: solveNumeric restituisce un falso NumericRoot se raggiunge maxIter senza convergere (|f(x)| > 0), anziché segnalare mancata convergenza!" else null)
-        }
-
-        // ---------------------------------------------------------
-        // GRUPPO 8: Unit Converter
+        // GRUPPO 7: Unit Converter
         // ---------------------------------------------------------
         runTest("Unit Converter", "0 °C convertito a °F e Kelvin") {
             val f = converter.convert(0.0, "C", "F", UnitConverter.Category.TEMPERATURE)
@@ -457,15 +393,6 @@ object ExhaustiveMathTestSuite {
                 expected = "Errore di sintassi",
                 actual = "success=${res.isSuccess}, formatted=${res.formattedResult}",
                 bugNote = if (!ok) "BUG: L'espressione '2 *' valuta a 0 perché popOperatorToOutput rimpiazza l'operando mancante con ZERO, invertendo inoltre l'ordine degli operandi (0 * 2 = 0)!" else null)
-        }
-
-        runTest("Equation Solver", "Extreme coefficient: b = 1e200 non deve essere troncato a Long.MAX_VALUE") {
-            val sol = solver.solveQuadratic(1.0, 1e200, 1.0)
-            val stepContainsMaxLong = sol is EquationSolver.Solution.QuadraticReal && sol.steps.any { it.contains("9223372036854775807") }
-            check(!stepContainsMaxLong,
-                expected = "Nessun troncamento a 9223372036854775807 (Long.MAX_VALUE)",
-                actual = if (stepContainsMaxLong) "Contiene 9223372036854775807" else "Formattazione corretta",
-                bugNote = if (stepContainsMaxLong) "BUG: formatCoeff usa v.toLong() quando v % 1.0 == 0.0, causando saturazione a Long.MAX_VALUE per numeri >= 9.22e18!" else null)
         }
 
         runTest("Unit Converter", "Controllo typo enum Category: LENGHT vs LENGTH") {

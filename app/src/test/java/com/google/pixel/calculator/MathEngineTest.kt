@@ -1,6 +1,5 @@
 package com.google.pixel.calculator
 
-import com.google.pixel.calculator.core.math.EquationSolver
 import com.google.pixel.calculator.core.math.EvaluationContext
 import com.google.pixel.calculator.core.math.MathEvaluator
 import com.google.pixel.calculator.core.utils.UnitConverter
@@ -11,7 +10,6 @@ import java.math.BigDecimal
 class MathEngineTest {
 
     private val evaluator = MathEvaluator()
-    private val solver = EquationSolver()
     private val converter = UnitConverter()
 
     @Test
@@ -48,17 +46,6 @@ class MathEngineTest {
         val res = evaluator.evaluate("frac(1,2) + frac(1,4)")
         assertTrue(res.isSuccess)
         assertEquals("0,75", res.formattedResult)
-    }
-
-    @Test
-    fun testQuadraticEquationSolver() {
-        // x² - 5x + 6 = 0 -> radici x1 = 3, x2 = 2
-        val solution = solver.solveQuadratic(1.0, -5.0, 6.0)
-        assertTrue(solution is EquationSolver.Solution.QuadraticReal)
-        val quad = solution as EquationSolver.Solution.QuadraticReal
-        assertEquals(1.0, quad.delta, 1e-9)
-        assertEquals(3.0, quad.x1, 1e-9)
-        assertEquals(2.0, quad.x2, 1e-9)
     }
 
     @Test

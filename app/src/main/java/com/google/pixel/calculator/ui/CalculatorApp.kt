@@ -17,8 +17,6 @@ import com.google.pixel.calculator.data.HistoryStorage
 import com.google.pixel.calculator.data.ThemePreferences
 import com.google.pixel.calculator.ui.advanced.AdvancedCalculatorScreen
 import com.google.pixel.calculator.ui.display.FormulaDisplay
-import com.google.pixel.calculator.ui.equations.EquationSolverScreen
-import com.google.pixel.calculator.ui.graph.Graph2DScreen
 import com.google.pixel.calculator.ui.history.PixelHistoryPanel
 import com.google.pixel.calculator.ui.keypad.BaseKeypad
 import com.google.pixel.calculator.ui.settings.ClearHistoryConfirmDialog
@@ -53,16 +51,8 @@ fun CalculatorApp(
             )
             return
         }
-        ActiveScreen.EQUATION_SOLVER -> {
-            EquationSolverScreen(onBack = { vm.navigateTo(ActiveScreen.TOOLBOX_MENU) })
-            return
-        }
         ActiveScreen.ADVANCED_CALCULATOR -> {
             AdvancedCalculatorScreen(onBack = { vm.navigateTo(ActiveScreen.TOOLBOX_MENU) })
-            return
-        }
-        ActiveScreen.GRAPH_2D -> {
-            Graph2DScreen(onBack = { vm.navigateTo(ActiveScreen.TOOLBOX_MENU) })
             return
         }
         ActiveScreen.TOOLBOX_CONVERTER -> {

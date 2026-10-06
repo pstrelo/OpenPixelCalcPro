@@ -82,30 +82,6 @@ fun ToolboxScreen(
                     iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
                     onClick = { onSelectTool(ActiveScreen.ADVANCED_CALCULATOR) }
                 )
-
-                // 2. Risolutore di Equazioni (Pill / Asymmetric Curvature: 20dp & 12dp)
-                ToolCard(
-                    icon = "📐",
-                    title = "Risolutore di Equazioni",
-                    description = "Equazioni di 1°, 2° grado e sistemi lineari a due incognite con passaggi",
-                    cardShape = RoundedCornerShape(topStart = 24.dp, topEnd = 14.dp, bottomEnd = 24.dp, bottomStart = 14.dp),
-                    iconContainerShape = CircleShape,
-                    iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
-                    iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
-                    onClick = { onSelectTool(ActiveScreen.EQUATION_SOLVER) }
-                )
-
-                // 3. Grafici 2D (Smooth Cut / Organic Pill: 14dp & 24dp)
-                ToolCard(
-                    icon = "📈",
-                    title = "Grafici 2D di Funzioni",
-                    description = "Grafico cartesiano interattivo con zoom, pan, tracciamento radici e massimi",
-                    cardShape = RoundedCornerShape(topStart = 14.dp, topEnd = 24.dp, bottomEnd = 14.dp, bottomStart = 24.dp),
-                    iconContainerShape = RoundedCornerShape(14.dp),
-                    iconBgColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    iconTint = MaterialTheme.colorScheme.onTertiaryContainer,
-                    onClick = { onSelectTool(ActiveScreen.GRAPH_2D) }
-                )
             }
 
             // SEZIONE 2: SENSORI E STRUMENTI FISICI PIXEL

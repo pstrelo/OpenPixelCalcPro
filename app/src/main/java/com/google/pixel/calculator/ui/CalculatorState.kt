@@ -13,8 +13,6 @@ enum class ActiveScreen {
     TOOLBOX_LEVEL,
     TOOLBOX_COMPASS,
     TOOLBOX_RULER,
-    EQUATION_SOLVER,
-    GRAPH_2D,
     ADVANCED_CALCULATOR
 }
 
