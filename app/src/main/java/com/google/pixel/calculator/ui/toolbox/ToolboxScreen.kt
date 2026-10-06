@@ -122,7 +122,7 @@ fun ToolboxScreen(
                 ToolCard(
                     icon = "⚖️",
                     title = "Convertitore di Unità",
-                    description = "Lunghezza, massa, temperatura, volume, velocità e archiviazione dati offline",
+                    description = "Valute, grandezze fisiche, dosaggi e oltre 17 categorie offline con calcolo in tempo reale",
                     cardShape = RoundedCornerShape(22.dp),
                     iconContainerShape = RoundedCornerShape(16.dp),
                     iconBgColor = MaterialTheme.colorScheme.secondaryContainer,

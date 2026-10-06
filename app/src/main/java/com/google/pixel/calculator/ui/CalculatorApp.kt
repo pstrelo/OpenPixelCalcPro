@@ -64,7 +64,7 @@ fun CalculatorApp(
             return
         }
         ActiveScreen.TOOLBOX_CONVERTER -> {
-            ConverterView(onBack = { vm.navigateTo(ActiveScreen.TOOLBOX_MENU) })
+            ConverterCalculatorView(onBack = { vm.navigateTo(ActiveScreen.TOOLBOX_MENU) })
             return
         }
         ActiveScreen.TOOLBOX_LEVEL -> {

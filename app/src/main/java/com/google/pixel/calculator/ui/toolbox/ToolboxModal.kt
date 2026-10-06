@@ -59,7 +59,7 @@ fun ToolboxModal(
             ToolboxItem(
                 icon = "⚖️",
                 title = "Convertitore di Unità",
-                description = "Lunghezza, peso, temperatura, volume, velocità e dati offline",
+                description = "Valute, grandezze fisiche, dosaggi e oltre 17 categorie offline",
                 itemShape = RoundedCornerShape(20.dp),
                 iconShape = RoundedCornerShape(14.dp),
                 iconBg = MaterialTheme.colorScheme.secondaryContainer,
