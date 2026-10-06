@@ -494,10 +494,10 @@ private fun AlgebraKeypadGrid(
             SquircleKey("-", opBg, opColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp) { onKey("-") }
         }
 
-        // Row 6: [ x ], [ y ], [ 0 ], [ . ], [ % ], [ + ]
+        // Row 6: [ x ], [ π ], [ 0 ], [ . ], [ % ], [ + ]
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("x", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("x") }
-            SquircleKey("y", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("y") }
+            SquircleKey("π", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("π") }
             SquircleKey("0", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey("0") }
             SquircleKey(".", numBg, numColor, btnHeight, Modifier.weight(1f), fontSize = 18.sp, isBold = true) { onKey(".") }
             SquircleKey("%", opBg, opColor, btnHeight, Modifier.weight(1f)) { onKey("%") }
@@ -577,7 +577,7 @@ private fun TrigonometryKeypadGrid(
         // Row 6: Variabili, Parentesi & Cancellazione
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("x", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("x") }
-            SquircleKey("y", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("y") }
+            SquircleKey("e", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("e") }
             SquircleKey("θ", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("x") }
             SquircleKey("(", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("(") }
             SquircleKey(")", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(")") }
@@ -864,7 +864,7 @@ private fun AlphabetKeypadGrid(
                 // Row 6: Variabili, Uguale & Cancellazione
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     SquircleKey("x", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("x") }
-                    SquircleKey("y", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("y") }
+                    SquircleKey("e", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("e") }
                     SquircleKey("=", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey(" = ") }
                     SquircleKey("DEL", delBg, delColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 11.sp) { onDeleteChar() }
                     SquircleKey("AC", clearBg, clearColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 12.sp) { onClearAll() }
@@ -937,7 +937,7 @@ private fun AlphabetKeypadGrid(
                 // Row 6: Variabili, Uguale & Cancellazione
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     SquircleKey("x", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("x") }
-                    SquircleKey("y", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("y") }
+                    SquircleKey("π", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("π") }
                     SquircleKey("=", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey(" = ") }
                     SquircleKey("DEL", delBg, delColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 11.sp) { onDeleteChar() }
                     SquircleKey("AC", clearBg, clearColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 12.sp) { onClearAll() }
