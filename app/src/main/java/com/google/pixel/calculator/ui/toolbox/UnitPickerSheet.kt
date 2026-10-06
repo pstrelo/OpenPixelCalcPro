@@ -4,7 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -30,7 +29,7 @@ enum class UnitPickerTarget {
 /**
  * ModalBottomSheet Material 3 Expressive per la selezione rapida delle unità di misura.
  * - Ricerca istantanea con filtro su tutte le grandezze.
- * - Barra orizzontale scorrevole con le 17 categorie.
+ * - Schede scorrevoli con le 17 categorie (senza emoji, design pulito Pixel).
  * - Evidenziazione dell'unità attualmente attiva con checkmark.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,7 +61,7 @@ fun UnitPickerSheet(
         ) {
             // Intestazione con titolo mirato
             Text(
-                text = if (target == UnitPickerTarget.FROM) "Unità da convertire" else "Converti in",
+                text = if (target == UnitPickerTarget.FROM) "Unità di misura" else "Converti in",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -102,7 +101,7 @@ fun UnitPickerSheet(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Se la barra di ricerca è vuota, mostra le tab delle categorie
+            // Se la barra di ricerca è vuota, mostra le tab delle categorie (senza emoji)
             if (searchQuery.isEmpty()) {
                 ScrollableTabRow(
                     selectedTabIndex = selectedCategory.ordinal,
@@ -125,17 +124,12 @@ fun UnitPickerSheet(
                             selected = isSelected,
                             onClick = { selectedCategory = cat },
                             text = {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Text(text = cat.icon, fontSize = 16.sp)
-                                    Text(
-                                        text = cat.displayName,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (isSelected) CalculatorTheme.colors.onSurface else CalculatorTheme.colors.onSurfaceVariant
-                                    )
-                                }
+                                Text(
+                                    text = cat.displayName,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    fontSize = 14.sp,
+                                    color = if (isSelected) CalculatorTheme.colors.onSurface else CalculatorTheme.colors.onSurfaceVariant
+                                )
                             }
                         )
                     }
@@ -208,36 +202,22 @@ fun UnitPickerSheet(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Surface(
-                                        shape = CircleShape,
-                                        color = MaterialTheme.colorScheme.surfaceContainerHighest ?: MaterialTheme.colorScheme.surfaceVariant,
-                                        modifier = Modifier.size(36.dp)
-                                    ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Text(text = unit.category.icon, fontSize = 18.sp)
-                                        }
-                                    }
-
-                                    Column {
-                                        Text(
-                                            text = unit.name,
-                                            fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.SemiBold,
-                                            fontSize = 15.sp,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                        if (searchQuery.isNotEmpty()) {
-                                            Text(
-                                                text = "${unit.category.displayName} • ${unit.symbol}",
-                                                fontSize = 12.sp,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = unit.name,
+                                        fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.SemiBold,
+                                        fontSize = 15.sp,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = if (searchQuery.isNotEmpty()) {
+                                            "${unit.category.displayName} • ${unit.symbol}"
+                                        } else {
+                                            unit.symbol
+                                        },
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 }
 
                                 Row(

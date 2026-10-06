@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -20,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -31,22 +33,31 @@ import com.google.pixel.calculator.ui.theme.CalculatorTheme
 import com.google.pixel.calculator.ui.theme.QuicksandFontFamily
 import com.google.pixel.calculator.ui.theme.SystemFontFamily
 
+enum class ActiveConverterField {
+    TOP,
+    BOTTOM
+}
+
 /**
- * Display a due righe in perfetto stile iPhone (iOS 18) per il convertitore di unità:
- * - Riga 1: Valore/Espressione digitata in input + Chip unità cliccabile (con icona frecce su/giù).
- * - Divisore con tasto Swap circolare arancione/accento Pixel (⇅).
- * - Riga 2: Risultato convertito calcolato in tempo reale + Chip unità di destinazione cliccabile.
+ * Display a due caselle interattive per il convertitore di unità:
+ * - Entrambe le caselle sono cliccabili.
+ * - La casella attiva (in cui si scrive) ha testo in colore normale ad alto contrasto e bordo attivo.
+ * - La casella passiva mostra il valore convertito con testo più sbiadito (faded/trasparente).
+ * - Cliccando una casella, se ne modifica il valore e l'altra mostra la conversione automatica.
+ * - Tasto Swap centrale (⇅) per scambiare le unità.
  */
 @Composable
 fun ConvertDisplay(
-    expression: String,
-    convertedValueStr: String,
-    fromUnit: UnitConverter.UnitDefinition,
-    toUnit: UnitConverter.UnitDefinition,
+    topValueStr: String,
+    bottomValueStr: String,
+    topUnit: UnitConverter.UnitDefinition,
+    bottomUnit: UnitConverter.UnitDefinition,
+    activeField: ActiveConverterField,
     isHapticEnabled: Boolean = true,
+    onFocusField: (ActiveConverterField) -> Unit,
     onSwap: () -> Unit,
-    onSelectFromUnit: () -> Unit,
-    onSelectToUnit: () -> Unit,
+    onSelectTopUnit: () -> Unit,
+    onSelectBottomUnit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
@@ -56,67 +67,37 @@ fun ConvertDisplay(
         }
     }
 
-    val inputScrollState = rememberScrollState()
-    val outputScrollState = rememberScrollState()
+    val topScrollState = rememberScrollState()
+    val bottomScrollState = rememberScrollState()
 
-    // Scorre alla fine del testo quando la cifra cambia
-    LaunchedEffect(expression) {
-        inputScrollState.animateScrollTo(inputScrollState.maxValue)
+    LaunchedEffect(topValueStr) {
+        topScrollState.animateScrollTo(topScrollState.maxValue)
     }
-    LaunchedEffect(convertedValueStr) {
-        outputScrollState.animateScrollTo(outputScrollState.maxValue)
+    LaunchedEffect(bottomValueStr) {
+        bottomScrollState.animateScrollTo(bottomScrollState.maxValue)
     }
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.Center
     ) {
-        // --- RIGA 1: VALORE INPUT + UNITA DA CONVERTIRE ---
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
-            horizontalArrangement = Arrangement.End,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Numero input con scroll orizzontale
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .horizontalScroll(inputScrollState),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                val inputFontSize = when {
-                    expression.length > 14 -> 28.sp
-                    expression.length > 10 -> 36.sp
-                    expression.length > 7 -> 44.sp
-                    else -> 52.sp
-                }
-
-                Text(
-                    text = if (expression.isEmpty()) "0" else expression,
-                    fontSize = inputFontSize,
-                    fontWeight = FontWeight.SemiBold,
-                    fontFamily = QuicksandFontFamily,
-                    color = CalculatorTheme.colors.onSurface,
-                    textAlign = TextAlign.End,
-                    maxLines = 1
-                )
+        // --- CASELLA SUPERIORE (TOP BOX) ---
+        ConverterBox(
+            valueStr = topValueStr,
+            unit = topUnit,
+            isActive = activeField == ActiveConverterField.TOP,
+            scrollState = topScrollState,
+            onBoxClick = {
+                triggerHaptic()
+                onFocusField(ActiveConverterField.TOP)
+            },
+            onUnitChipClick = {
+                triggerHaptic()
+                onSelectTopUnit()
             }
-
-            Spacer(modifier = Modifier.width(10.dp))
-
-            // Chip Unità Input (es. USD ↕)
-            UnitChip(
-                unit = fromUnit,
-                onClick = {
-                    triggerHaptic()
-                    onSelectFromUnit()
-                }
-            )
-        }
+        )
 
         // --- BARRA CENTRALE: DIVISORE E PULSANTE SWAP (⇅) ---
         Row(
@@ -125,7 +106,6 @@ fun ConvertDisplay(
                 .padding(vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Pulsante Swap in stile iPhone
             IconButton(
                 onClick = {
                     triggerHaptic()
@@ -134,19 +114,19 @@ fun ConvertDisplay(
                 modifier = Modifier
                     .size(40.dp)
                     .background(
-                        color = CalculatorTheme.colors.equalsContainer.copy(alpha = 0.18f),
+                        color = CalculatorTheme.colors.equalsContainer.copy(alpha = 0.20f),
                         shape = CircleShape
                     )
             ) {
                 Icon(
                     imageVector = Icons.Default.SwapVert,
-                    contentDescription = "Inverti unità di misura",
+                    contentDescription = "Inverti unità",
                     tint = CalculatorTheme.colors.equalsContainer,
                     modifier = Modifier.size(24.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(10.dp))
 
             HorizontalDivider(
                 color = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.15f),
@@ -155,39 +135,93 @@ fun ConvertDisplay(
             )
         }
 
-        // --- RIGA 2: RISULTATO CONVERTITO + UNITA DESTINAZIONE ---
+        // --- CASELLA INFERIORE (BOTTOM BOX) ---
+        ConverterBox(
+            valueStr = bottomValueStr,
+            unit = bottomUnit,
+            isActive = activeField == ActiveConverterField.BOTTOM,
+            scrollState = bottomScrollState,
+            onBoxClick = {
+                triggerHaptic()
+                onFocusField(ActiveConverterField.BOTTOM)
+            },
+            onUnitChipClick = {
+                triggerHaptic()
+                onSelectBottomUnit()
+            }
+        )
+    }
+}
+
+@Composable
+private fun ConverterBox(
+    valueStr: String,
+    unit: UnitConverter.UnitDefinition,
+    isActive: Boolean,
+    scrollState: androidx.compose.foundation.ScrollState,
+    onBoxClick: () -> Unit,
+    onUnitChipClick: () -> Unit
+) {
+    val containerShape = RoundedCornerShape(20.dp)
+    val containerBg = if (isActive) {
+        CalculatorTheme.colors.operatorContainer.copy(alpha = 0.28f)
+    } else {
+        Color.Transparent
+    }
+    val borderStroke = if (isActive) {
+        BorderStroke(1.5.dp, CalculatorTheme.colors.equalsContainer.copy(alpha = 0.70f))
+    } else {
+        BorderStroke(1.5.dp, Color.Transparent)
+    }
+
+    val textColor = if (isActive) {
+        CalculatorTheme.colors.onSurface
+    } else {
+        CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.45f) // Sbiadita quando non selezionata
+    }
+
+    Surface(
+        shape = containerShape,
+        color = containerBg,
+        border = borderStroke,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(containerShape)
+            .clickable { onBoxClick() }
+            .padding(horizontal = 4.dp, vertical = 2.dp)
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 4.dp),
+                .padding(horizontal = 12.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Risultato convertito con animazione morbida
+            // Numero con scorrimento orizzontale
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .horizontalScroll(outputScrollState),
+                    .horizontalScroll(scrollState),
                 contentAlignment = Alignment.CenterEnd
             ) {
-                val resultFontSize = when {
-                    convertedValueStr.length > 14 -> 28.sp
-                    convertedValueStr.length > 10 -> 36.sp
-                    convertedValueStr.length > 7 -> 44.sp
+                val fontSize = when {
+                    valueStr.length > 14 -> 28.sp
+                    valueStr.length > 10 -> 36.sp
+                    valueStr.length > 7 -> 44.sp
                     else -> 52.sp
                 }
 
                 AnimatedContent(
-                    targetState = convertedValueStr,
+                    targetState = valueStr,
                     transitionSpec = { fadeIn().togetherWith(fadeOut()) },
-                    label = "ConvertResultTransition"
-                ) { targetVal ->
+                    label = "ConverterBoxValueTransition"
+                ) { displayVal ->
                     Text(
-                        text = if (targetVal.isEmpty()) "0" else targetVal,
-                        fontSize = resultFontSize,
-                        fontWeight = FontWeight.Bold,
+                        text = if (displayVal.isEmpty()) "0" else displayVal,
+                        fontSize = fontSize,
+                        fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
                         fontFamily = QuicksandFontFamily,
-                        color = CalculatorTheme.colors.onSurface,
+                        color = textColor,
                         textAlign = TextAlign.End,
                         maxLines = 1
                     )
@@ -196,48 +230,34 @@ fun ConvertDisplay(
 
             Spacer(modifier = Modifier.width(10.dp))
 
-            // Chip Unità Risultato (es. EUR ↕)
-            UnitChip(
-                unit = toUnit,
-                onClick = {
-                    triggerHaptic()
-                    onSelectToUnit()
+            // Chip Unità (cliccabile per cambiare solo l'unità di questa casella)
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = CalculatorTheme.colors.operatorContainer.copy(alpha = if (isActive) 0.85f else 0.50f),
+                contentColor = if (isActive) CalculatorTheme.colors.onSurface else CalculatorTheme.colors.onSurfaceVariant,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable { onUnitChipClick() }
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = unit.code,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = SystemFontFamily
+                    )
+                    Icon(
+                        imageVector = Icons.Default.UnfoldMore,
+                        contentDescription = "Cambia unità",
+                        tint = CalculatorTheme.colors.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
-            )
-        }
-    }
-}
-
-@Composable
-private fun UnitChip(
-    unit: UnitConverter.UnitDefinition,
-    onClick: () -> Unit
-) {
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = CalculatorTheme.colors.operatorContainer.copy(alpha = 0.7f),
-        contentColor = CalculatorTheme.colors.onSurface,
-        modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .clickable { onClick() }
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Text(
-                text = unit.code,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = SystemFontFamily
-            )
-            Icon(
-                imageVector = Icons.Default.UnfoldMore,
-                contentDescription = "Cambia unità",
-                tint = CalculatorTheme.colors.onSurfaceVariant,
-                modifier = Modifier.size(16.dp)
-            )
+            }
         }
     }
 }

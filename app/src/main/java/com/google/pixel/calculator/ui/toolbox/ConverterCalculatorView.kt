@@ -23,17 +23,17 @@ import com.google.pixel.calculator.core.math.EvaluationContext
 import com.google.pixel.calculator.core.math.MathEvaluator
 import com.google.pixel.calculator.core.utils.CurrencyRateRepository
 import com.google.pixel.calculator.core.utils.UnitConverter
+import com.google.pixel.calculator.ui.display.ActiveConverterField
 import com.google.pixel.calculator.ui.display.ConvertDisplay
 import com.google.pixel.calculator.ui.keypad.BaseKeypad
 import com.google.pixel.calculator.ui.theme.CalculatorTheme
-import kotlinx.coroutines.launch
 
 /**
- * Schermata principale Convertitore di Unità in perfetto stile iPhone (iOS 18) per Calcolatrice-Pixel:
- * - Sostituisce la vecchia ConverterView.
- * - Utilizza il display a due righe ConvertDisplay con tasto Swap ⇅ e chip unità.
- * - Mantiene il tastierino nativo BaseKeypad per consentire calcoli aritmetici in tempo reale.
- * - Supporta 17 categorie offline con sincronizzazione tassi di cambio ultra-leggera (~2KB).
+ * Schermata Convertitore di Unità per Calcolatrice-Pixel:
+ * - Due caselle cliccabili: quella attiva ha testo in colore normale, l'altra è sbiadita.
+ * - Cliccando una casella se ne modifica il valore mentre l'altra mostra la conversione automatica.
+ * - Tasto swap che scambia le unità mantenendo il valore inserito nella casella attiva.
+ * - Nessuna emoji nelle scritte o nei menu.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,15 +50,17 @@ fun ConverterCalculatorView(
     // Raccoglie gli aggiornamenti tassi valuta
     val currencyRates by currencyRepo.rates.collectAsState()
     val isCurrencyUpdating by currencyRepo.isUpdating.collectAsState()
-    val lastUpdateTs by currencyRepo.lastUpdateTimestamp.collectAsState()
 
-    // Stato Unità di Conversione
-    var selectedCategory by remember { mutableStateOf(UnitConverter.Category.CURRENCY) }
-    var fromUnitCode by remember { mutableStateOf("USD") }
-    var toUnitCode by remember { mutableStateOf("EUR") }
+    // Stato Unità di Conversione (default: Massa kg e g, o Valuta USD ed EUR)
+    var selectedCategory by remember { mutableStateOf(UnitConverter.Category.MASS) }
+    var topUnitCode by remember { mutableStateOf("g") }
+    var bottomUnitCode by remember { mutableStateOf("kg") }
 
-    // Stato Calcolatrice / Espressione
-    var expression by remember { mutableStateOf("1000") }
+    // Stato Casella Attiva (TOP o BOTTOM)
+    var activeField by remember { mutableStateOf(ActiveConverterField.TOP) }
+    var expression by remember { mutableStateOf("100") }
+    var shouldClearOnNextDigit by remember { mutableStateOf(false) }
+
     var isProMode by remember { mutableStateOf(false) }
     var isShiftActive by remember { mutableStateOf(false) }
     var isRadians by remember { mutableStateOf(true) }
@@ -73,13 +75,12 @@ fun ConverterCalculatorView(
         currencyRepo.updateRatesIfNeeded(coroutineScope, force = false)
     }
 
-    // Calcolo numerico del valore in tempo reale
-    val inputNumericValue by remember(expression, isRadians) {
+    // Calcolo numerico del valore della casella attiva in tempo reale
+    val activeNumericValue by remember(expression, isRadians) {
         derivedStateOf {
             if (expression.isBlank()) {
                 0.0
             } else {
-                // Rimuovi eventuali operatori finali in corso di digitazione per calcolare il valore parziale
                 val cleanExpr = expression.trimEnd('+', '-', '×', '÷', '^', '(', ',')
                 if (cleanExpr.isEmpty()) {
                     0.0
@@ -88,7 +89,6 @@ fun ConverterCalculatorView(
                     if (evalResult.isSuccess && evalResult.rawValue != null) {
                         evalResult.rawValue.toDouble()
                     } else {
-                        // Fallback parsing diretto
                         cleanExpr.replace(",", ".").toDoubleOrNull() ?: 0.0
                     }
                 }
@@ -96,37 +96,54 @@ fun ConverterCalculatorView(
         }
     }
 
-    // Risultato convertito ricalcolato istantaneamente
-    val convertedValueStr by remember(inputNumericValue, fromUnitCode, toUnitCode, selectedCategory, currencyRates) {
+    // Risultato convertito per la casella passiva
+    val passiveConvertedValueStr by remember(activeNumericValue, topUnitCode, bottomUnitCode, activeField, selectedCategory, currencyRates) {
         derivedStateOf {
-            val convertedNum = converter.convert(inputNumericValue, fromUnitCode, toUnitCode, selectedCategory)
+            val fromCode = if (activeField == ActiveConverterField.TOP) topUnitCode else bottomUnitCode
+            val toCode = if (activeField == ActiveConverterField.TOP) bottomUnitCode else topUnitCode
+            val convertedNum = converter.convert(activeNumericValue, fromCode, toCode, selectedCategory)
             converter.formatValue(convertedNum)
         }
     }
 
-    val fromUnitDef = remember(fromUnitCode, selectedCategory) {
-        converter.findUnit(fromUnitCode, selectedCategory)
+    // Stringhe visualizzate per ciascuna casella
+    val topDisplayStr = if (activeField == ActiveConverterField.TOP) {
+        if (expression.isEmpty()) "0" else expression
+    } else {
+        passiveConvertedValueStr
+    }
+
+    val bottomDisplayStr = if (activeField == ActiveConverterField.BOTTOM) {
+        if (expression.isEmpty()) "0" else expression
+    } else {
+        passiveConvertedValueStr
+    }
+
+    val topUnitDef = remember(topUnitCode, selectedCategory) {
+        converter.findUnit(topUnitCode, selectedCategory)
             ?: converter.getUnitsForCategory(selectedCategory).first()
     }
 
-    val toUnitDef = remember(toUnitCode, selectedCategory) {
-        converter.findUnit(toUnitCode, selectedCategory)
+    val bottomUnitDef = remember(bottomUnitCode, selectedCategory) {
+        converter.findUnit(bottomUnitCode, selectedCategory)
             ?: converter.getUnitsForCategory(selectedCategory).getOrNull(1)
-            ?: fromUnitDef
+            ?: topUnitDef
     }
 
-    // Funzione di Swap intelligente: scambia le unità e trasforma il valore convertito nel nuovo input da convertire
+    // Funzione Swap: scambia le due unità mantenendo il valore nella casella attiva
     val onPerformSwap: () -> Unit = {
-        val oldFrom = fromUnitCode
-        val oldTo = toUnitCode
+        val oldTop = topUnitCode
+        val oldBottom = bottomUnitCode
+        topUnitCode = oldBottom
+        bottomUnitCode = oldTop
+        // Il valore inserito nella casella attiva rimane lo stesso, quindi la conversione
+        // viene immediatamente ricalcolata con le nuove unità invertite (es. 100g -> 100kg = x g)
+        shouldClearOnNextDigit = false
+    }
 
-        fromUnitCode = oldTo
-        toUnitCode = oldFrom
-
-        // Il risultato convertito diventa il nuovo valore da convertire
-        if (convertedValueStr.isNotEmpty() && convertedValueStr != "0") {
-            expression = convertedValueStr.replace(".", "").replace(",", ".")
-        }
+    // Funzione di pulizia formattazione per inserimento numerico
+    fun cleanNumberForInput(str: String): String {
+        return str.replace(".", "").replace(",", ".")
     }
 
     Scaffold(
@@ -158,7 +175,7 @@ fun ConverterCalculatorView(
                             )
                         } else {
                             Text(
-                                text = "${selectedCategory.icon} ${selectedCategory.displayName}",
+                                text = selectedCategory.displayName,
                                 fontSize = 12.sp,
                                 color = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.8f)
                             )
@@ -206,7 +223,7 @@ fun ConverterCalculatorView(
                 .padding(padding),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // AREA DISPLAY STILE IPHONE (A due righe con Swap ⇅ e Chip Unità)
+            // AREA DISPLAY CON DUE CASELLE CLICCABILI (Attiva normale, Inattiva sbiadita)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -214,17 +231,28 @@ fun ConverterCalculatorView(
                 contentAlignment = Alignment.Center
             ) {
                 ConvertDisplay(
-                    expression = expression,
-                    convertedValueStr = convertedValueStr,
-                    fromUnit = fromUnitDef,
-                    toUnit = toUnitDef,
+                    topValueStr = topDisplayStr,
+                    bottomValueStr = bottomDisplayStr,
+                    topUnit = topUnitDef,
+                    bottomUnit = bottomUnitDef,
+                    activeField = activeField,
                     isHapticEnabled = isHapticEnabled,
+                    onFocusField = { clickedField ->
+                        if (activeField != clickedField) {
+                            // Cambia casella attiva: imposta il valore corrente della casella
+                            // e abilita la sovrascrittura alla prima cifra digitata
+                            val currentPassiveStr = if (clickedField == ActiveConverterField.TOP) topDisplayStr else bottomDisplayStr
+                            activeField = clickedField
+                            expression = cleanNumberForInput(currentPassiveStr)
+                            shouldClearOnNextDigit = true
+                        }
+                    },
                     onSwap = onPerformSwap,
-                    onSelectFromUnit = {
+                    onSelectTopUnit = {
                         pickerTarget = UnitPickerTarget.FROM
                         showPicker = true
                     },
-                    onSelectToUnit = {
+                    onSelectBottomUnit = {
                         pickerTarget = UnitPickerTarget.TO
                         showPicker = true
                     },
@@ -240,6 +268,13 @@ fun ConverterCalculatorView(
                 isHapticEnabled = isHapticEnabled,
                 onDigit = { digit ->
                     val normalized = if (digit == ",") "." else digit
+
+                    if (shouldClearOnNextDigit) {
+                        expression = if (normalized == ".") "0." else normalized
+                        shouldClearOnNextDigit = false
+                        return@BaseKeypad
+                    }
+
                     if (normalized == ".") {
                         val lastTokens = expression.split(Regex("[+\\-×÷/*^() ]"))
                         val currentNum = lastTokens.lastOrNull() ?: ""
@@ -252,11 +287,11 @@ fun ConverterCalculatorView(
                             }
                         }
                     } else {
-                        // Se l'espressione era "0", sostituisci
                         expression = if (expression == "0") normalized else expression + normalized
                     }
                 },
                 onOperator = { op ->
+                    shouldClearOnNextDigit = false
                     if (expression.isEmpty() && op != "-") return@BaseKeypad
                     val lastChar = expression.lastOrNull()
                     expression = if (lastChar != null && lastChar in "+-×÷/*^") {
@@ -266,12 +301,23 @@ fun ConverterCalculatorView(
                     }
                 },
                 onFunction = { func ->
-                    expression = "$expression$func("
+                    if (shouldClearOnNextDigit) {
+                        expression = "$func("
+                        shouldClearOnNextDigit = false
+                    } else {
+                        expression = "$expression$func("
+                    }
                 },
                 onConstant = { const ->
-                    expression += const
+                    if (shouldClearOnNextDigit) {
+                        expression = const
+                        shouldClearOnNextDigit = false
+                    } else {
+                        expression += const
+                    }
                 },
                 onSmartParenthesis = {
+                    shouldClearOnNextDigit = false
                     val openCount = expression.count { it == '(' }
                     val closeCount = expression.count { it == ')' }
                     val lastChar = expression.lastOrNull()
@@ -281,19 +327,22 @@ fun ConverterCalculatorView(
                 },
                 onClear = {
                     expression = ""
+                    shouldClearOnNextDigit = false
                 },
                 onBackspace = {
+                    shouldClearOnNextDigit = false
                     if (expression.isNotEmpty()) {
                         expression = expression.dropLast(1)
                     }
                 },
                 onEquals = {
-                    // Risolve l'espressione matematica e imposta il valore calcolato nella riga di input
+                    // Risolve l'espressione matematica nella casella attiva
                     if (expression.isNotBlank()) {
                         val evalResult = evaluator.evaluate(expression, EvaluationContext(isRadians = isRadians))
                         if (evalResult.isSuccess && evalResult.rawValue != null) {
-                            val cleanVal = evalResult.formattedResult.replace(".", "").replace(",", ".")
+                            val cleanVal = cleanNumberForInput(evalResult.formattedResult)
                             expression = cleanVal
+                            shouldClearOnNextDigit = true
                         }
                     }
                 },
@@ -310,7 +359,7 @@ fun ConverterCalculatorView(
         UnitPickerSheet(
             converter = converter,
             initialCategory = selectedCategory,
-            currentUnitCode = if (pickerTarget == UnitPickerTarget.FROM) fromUnitCode else toUnitCode,
+            currentUnitCode = if (pickerTarget == UnitPickerTarget.FROM) topUnitCode else bottomUnitCode,
             target = pickerTarget,
             onDismiss = { showPicker = false },
             onSelectUnit = { category, unitCode ->
@@ -320,18 +369,18 @@ fun ConverterCalculatorView(
                     val units = converter.getUnitsForCategory(category)
                     val companion = units.firstOrNull { it.code != unitCode }?.code ?: unitCode
                     if (pickerTarget == UnitPickerTarget.FROM) {
-                        fromUnitCode = unitCode
-                        toUnitCode = companion
+                        topUnitCode = unitCode
+                        bottomUnitCode = companion
                     } else {
-                        toUnitCode = unitCode
-                        fromUnitCode = companion
+                        bottomUnitCode = unitCode
+                        topUnitCode = companion
                     }
                 } else {
                     // Stessa categoria
                     if (pickerTarget == UnitPickerTarget.FROM) {
-                        fromUnitCode = unitCode
+                        topUnitCode = unitCode
                     } else {
-                        toUnitCode = unitCode
+                        bottomUnitCode = unitCode
                     }
                 }
             }

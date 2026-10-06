@@ -150,4 +150,43 @@ class UnitConverterTest {
         assertNotNull(usd)
         assertEquals(UnitConverter.Category.CURRENCY, usd?.category)
     }
+
+    @Test
+    fun testUserSwapScenarioGramsAndKg() {
+        // Iniziale: 100g -> 0.1 kg
+        val initialConverted = converter.convert(100.0, "g", "kg", UnitConverter.Category.MASS)
+        assertEquals(0.1, initialConverted, 1e-4)
+        assertEquals("0,1", converter.formatValue(initialConverted))
+
+        // Al click di Swap: le unità si scambiano e il valore 100 inserito diventa 100 kg -> 100.000 g (x g)
+        val swappedConverted = converter.convert(100.0, "kg", "g", UnitConverter.Category.MASS)
+        assertEquals(100000.0, swappedConverted, 1e-4)
+        assertEquals("100.000", converter.formatValue(swappedConverted))
+    }
+
+    @Test
+    fun testUserSelectionScenarioEditingBottomValue() {
+        // Selezionando la casella dei kg e digitando 10: 10 kg -> 10.000 g
+        val convertedFromTenKg = converter.convert(10.0, "kg", "g", UnitConverter.Category.MASS)
+        assertEquals(10000.0, convertedFromTenKg, 1e-4)
+        assertEquals("10.000", converter.formatValue(convertedFromTenKg))
+    }
+
+    @Test
+    fun testNoEmojisInCategoriesAndUnits() {
+        // Verifica che non ci siano emoji nei nomi delle categorie
+        val emojiRegex = Regex("[\\p{So}\\p{Cn}\\uD83C-\\uDBFF\\uDC00-\\uDFFF]")
+        for (category in UnitConverter.Category.values()) {
+            assertFalse(
+                "La categoria ${category.name} non deve contenere emoji nel displayName: ${category.displayName}",
+                emojiRegex.containsMatchIn(category.displayName)
+            )
+            for (unit in converter.getUnitsForCategory(category)) {
+                assertFalse(
+                    "L'unità ${unit.name} non deve contenere emoji nel nome",
+                    emojiRegex.containsMatchIn(unit.name)
+                )
+            }
+        }
+    }
 }
