@@ -1,7 +1,10 @@
 package com.google.pixel.calculator.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -41,6 +44,7 @@ fun CalculatorApp(
     val historyList by storage.historyFlow.collectAsState()
 
     var showHistorySheet by rememberSaveable { mutableStateOf(false) }
+    var isToolBarExpanded by rememberSaveable { mutableStateOf(false) }
 
     // Routing schermate secondarie
     when (state.activeScreen) {
@@ -52,28 +56,47 @@ fun CalculatorApp(
             return
         }
         ActiveScreen.ADVANCED_CALCULATOR -> {
-            AdvancedCalculatorScreen(onBack = { vm.navigateTo(ActiveScreen.TOOLBOX_MENU) })
+            AdvancedCalculatorScreen(
+                onBack = { vm.navigateTo(ActiveScreen.MAIN_CALCULATOR) },
+                onNavigate = { vm.navigateTo(it) }
+            )
             return
         }
         ActiveScreen.TOOLBOX_CONVERTER -> {
-            ConverterCalculatorView(onBack = { vm.navigateTo(ActiveScreen.TOOLBOX_MENU) })
+            ConverterCalculatorView(
+                onBack = { vm.navigateTo(ActiveScreen.MAIN_CALCULATOR) },
+                onNavigate = { vm.navigateTo(it) }
+            )
             return
         }
         ActiveScreen.TOOLBOX_LEVEL -> {
-            LevelView(onBack = { vm.navigateTo(ActiveScreen.TOOLBOX_MENU) })
+            LevelView(
+                onBack = { vm.navigateTo(ActiveScreen.MAIN_CALCULATOR) },
+                onNavigate = { vm.navigateTo(it) }
+            )
             return
         }
         ActiveScreen.TOOLBOX_COMPASS -> {
-            CompassView(onBack = { vm.navigateTo(ActiveScreen.TOOLBOX_MENU) })
+            CompassView(
+                onBack = { vm.navigateTo(ActiveScreen.MAIN_CALCULATOR) },
+                onNavigate = { vm.navigateTo(it) }
+            )
             return
         }
         ActiveScreen.TOOLBOX_RULER -> {
-            RulerView(onBack = { vm.navigateTo(ActiveScreen.TOOLBOX_MENU) })
+            RulerView(
+                onBack = { vm.navigateTo(ActiveScreen.MAIN_CALCULATOR) },
+                onNavigate = { vm.navigateTo(it) }
+            )
             return
         }
         else -> {
             // Schermata Principale della Calcolatrice
         }
+    }
+
+    if (isToolBarExpanded) {
+        BackHandler { isToolBarExpanded = false }
     }
 
     Scaffold(
@@ -205,73 +228,99 @@ fun CalculatorApp(
             )
         }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
-            verticalArrangement = Arrangement.SpaceBetween
+                .padding(padding)
         ) {
-            // AREA DISPLAY / CRONOLOGIA (Transizione a discesa dall'alto verso il basso)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                AnimatedContent(
-                    targetState = showHistorySheet,
-                    transitionSpec = {
-                        if (targetState) {
-                            (slideInVertically { -it } + fadeIn()).togetherWith(slideOutVertically { -it } + fadeOut())
+                // AREA DISPLAY / CRONOLOGIA (Transizione a discesa dall'alto verso il basso)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    AnimatedContent(
+                        targetState = showHistorySheet,
+                        transitionSpec = {
+                            if (targetState) {
+                                (slideInVertically { -it } + fadeIn()).togetherWith(slideOutVertically { -it } + fadeOut())
+                            } else {
+                                (slideInVertically { -it } + fadeIn()).togetherWith(slideOutVertically { -it } + fadeOut())
+                            }
+                        },
+                        label = "HistoryDisplayTransition"
+                    ) { isHistoryOpen ->
+                        if (isHistoryOpen) {
+                            PixelHistoryPanel(
+                                historyList = historyList,
+                                currentExpression = state.expression,
+                                currentPreview = state.resultPreview,
+                                onSelectItem = { expr ->
+                                    vm.selectHistoryItem(expr)
+                                    showHistorySheet = false
+                                },
+                                onDismiss = { showHistorySheet = false },
+                                modifier = Modifier.fillMaxSize()
+                            )
                         } else {
-                            (slideInVertically { -it } + fadeIn()).togetherWith(slideOutVertically { -it } + fadeOut())
+                            FormulaDisplay(
+                                expression = state.expression,
+                                resultPreview = state.resultPreview,
+                                ast = state.ast,
+                                errorMessage = state.errorMessage,
+                                sessionHistory = state.sessionHistory,
+                                modifier = Modifier.fillMaxSize()
+                            )
                         }
-                    },
-                    label = "HistoryDisplayTransition"
-                ) { isHistoryOpen ->
-                    if (isHistoryOpen) {
-                        PixelHistoryPanel(
-                            historyList = historyList,
-                            currentExpression = state.expression,
-                            currentPreview = state.resultPreview,
-                            onSelectItem = { expr ->
-                                vm.selectHistoryItem(expr)
-                                showHistorySheet = false
-                            },
-                            onDismiss = { showHistorySheet = false },
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    } else {
-                        FormulaDisplay(
-                            expression = state.expression,
-                            resultPreview = state.resultPreview,
-                            ast = state.ast,
-                            errorMessage = state.errorMessage,
-                            sessionHistory = state.sessionHistory,
-                            modifier = Modifier.fillMaxSize()
-                        )
                     }
                 }
+
+                // TASTIERINO CON LEVA ESPANSIONE STILE PIXEL E TOOLBAR STRUMENTI M3
+                BaseKeypad(
+                    isProMode = state.isProMode,
+                    isShiftActive = state.isShiftActive,
+                    isRadians = state.isRadians,
+                    isHapticEnabled = state.isHapticEnabled,
+                    currentScreen = ActiveScreen.MAIN_CALCULATOR,
+                    isToolBarExpanded = isToolBarExpanded,
+                    onToggleToolBar = { isToolBarExpanded = !isToolBarExpanded },
+                    onSelectTool = {
+                        isToolBarExpanded = false
+                        vm.navigateTo(it)
+                    },
+                    onDigit = { vm.onDigit(it) },
+                    onOperator = { vm.onOperator(it) },
+                    onFunction = { vm.onFunction(it) },
+                    onConstant = { vm.onConstant(it) },
+                    onSmartParenthesis = { vm.onSmartParenthesis() },
+                    onClear = { vm.onClearAll() },
+                    onBackspace = { vm.onBackspace() },
+                    onEquals = { vm.onEquals() },
+                    onToggleProMode = { vm.toggleProMode() },
+                    onToggleShift = { vm.toggleShift() },
+                    onToggleAngleUnit = { vm.toggleAngleUnit() },
+                    onOpenToolbox = { vm.navigateTo(ActiveScreen.TOOLBOX_MENU) }
+                )
             }
 
-            // TASTIERINO CON LEVA ESPANSIONE STILE PIXEL
-            BaseKeypad(
-                isProMode = state.isProMode,
-                isShiftActive = state.isShiftActive,
-                isRadians = state.isRadians,
-                isHapticEnabled = state.isHapticEnabled,
-                onDigit = { vm.onDigit(it) },
-                onOperator = { vm.onOperator(it) },
-                onFunction = { vm.onFunction(it) },
-                onConstant = { vm.onConstant(it) },
-                onSmartParenthesis = { vm.onSmartParenthesis() },
-                onClear = { vm.onClearAll() },
-                onBackspace = { vm.onBackspace() },
-                onEquals = { vm.onEquals() },
-                onToggleProMode = { vm.toggleProMode() },
-                onToggleShift = { vm.toggleShift() },
-                onToggleAngleUnit = { vm.toggleAngleUnit() },
-                onOpenToolbox = { vm.navigateTo(ActiveScreen.TOOLBOX_MENU) }
-            )
+            // Overlay di dismiss al tocco fuori dalla toolbar quando aperta
+            if (isToolBarExpanded) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 76.dp)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            isToolBarExpanded = false
+                        }
+                )
+            }
         }
     }
 

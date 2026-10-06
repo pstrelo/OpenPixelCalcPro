@@ -19,13 +19,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.pixel.calculator.core.utils.RulerUtils
+import com.google.pixel.calculator.ui.ActiveScreen
+import com.google.pixel.calculator.ui.toolbox.PixelFloatingToolBar
 
 import androidx.compose.runtime.saveable.rememberSaveable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RulerView(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigate: (ActiveScreen) -> Unit = {}
 ) {
     val context = LocalContext.current
     val (xdpi, ydpi) = remember { RulerUtils.getScreenDpi(context) }
@@ -74,11 +77,14 @@ fun RulerView(
             )
         }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
             // Scheda valore misurato in cima con forma M3 Expressive
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
@@ -177,5 +183,13 @@ fun RulerView(
                 }
             }
         }
+
+        PixelFloatingToolBar(
+            currentScreen = ActiveScreen.TOOLBOX_RULER,
+            onNavigate = onNavigate,
+            modifier = Modifier.align(Alignment.BottomStart)
+        )
     }
 }
+}
+

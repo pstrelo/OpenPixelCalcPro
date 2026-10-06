@@ -1,12 +1,20 @@
 package com.google.pixel.calculator.ui.advanced
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.google.pixel.calculator.ui.ActiveScreen
+import com.google.pixel.calculator.ui.toolbox.PixelToolPillBar
+import com.google.pixel.calculator.ui.toolbox.PixelToolToggleButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -51,6 +59,9 @@ fun AdvancedKeypad(
     isRadians: Boolean = true,
     onToggleRadians: () -> Unit = {},
     onOpenCatalog: () -> Unit = {},
+    isToolBarExpanded: Boolean = false,
+    onToggleToolBar: () -> Unit = {},
+    onNavigate: (ActiveScreen) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
@@ -157,7 +168,10 @@ fun AdvancedKeypad(
             onExecute = {
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 onExecute()
-            }
+            },
+            isToolBarExpanded = isToolBarExpanded,
+            onToggleToolBar = onToggleToolBar,
+            onNavigate = onNavigate
         )
     }
 }
@@ -176,6 +190,9 @@ fun AdvancedKeypad(
     onExecute: () -> Unit,
     onToggleRadians: () -> Unit = {},
     onOpenCatalog: () -> Unit = {},
+    isToolBarExpanded: Boolean = false,
+    onToggleToolBar: () -> Unit = {},
+    onNavigate: (ActiveScreen) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val activeTab = state.activeTab
@@ -198,6 +215,9 @@ fun AdvancedKeypad(
         isRadians = isRadians,
         onToggleRadians = onToggleRadians,
         onOpenCatalog = onOpenCatalog,
+        isToolBarExpanded = isToolBarExpanded,
+        onToggleToolBar = onToggleToolBar,
+        onNavigate = onNavigate,
         modifier = modifier
     )
 }
@@ -974,6 +994,9 @@ fun PersistentBottomEditBar(
     btnHeight: Dp,
     onCycleFormat: () -> Unit,
     onExecute: () -> Unit,
+    isToolBarExpanded: Boolean = false,
+    onToggleToolBar: () -> Unit = {},
+    onNavigate: (ActiveScreen) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val executionBgColor by animateColorAsState(
@@ -992,62 +1015,98 @@ fun PersistentBottomEditBar(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // [ FORMAT ] Tasto per ciclare formato risultato (DEC, FRAC, ENG, DMS, POL)
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(btnHeight)
-                .clip(RoundedCornerShape(percent = 50))
-                .background(formatContainer)
-                .border(1.dp, formatBorder, RoundedCornerShape(percent = 50))
-                .clickable { onCycleFormat() },
-            contentAlignment = Alignment.Center
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+        // Tasto Strumenti a sinistra (da tondo a quadrato M3)
+        PixelToolToggleButton(
+            currentScreen = ActiveScreen.ADVANCED_CALCULATOR,
+            isExpanded = isToolBarExpanded,
+            height = btnHeight,
+            onClick = onToggleToolBar,
+            modifier = Modifier.size(btnHeight)
+        )
+
+        if (isToolBarExpanded) {
+            AnimatedVisibility(
+                visible = isToolBarExpanded,
+                enter = fadeIn(tween(180)) + expandHorizontally(
+                    expandFrom = Alignment.Start,
+                    animationSpec = androidx.compose.animation.core.spring(
+                        dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+                        stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow
+                    )
+                ),
+                exit = fadeOut(tween(140)) + shrinkHorizontally(
+                    shrinkTowards = Alignment.Start,
+                    animationSpec = androidx.compose.animation.core.spring(
+                        stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow
+                    )
+                ),
+                modifier = Modifier.weight(1f)
             ) {
-                Text(
-                    text = "FORMAT",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = formatSubtextColor
-                )
-                Text(
-                    text = activeFormatLabel,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = formatLabelColor
+                PixelToolPillBar(
+                    currentScreen = ActiveScreen.ADVANCED_CALCULATOR,
+                    height = btnHeight,
+                    onNavigate = onNavigate,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
-        }
-
-        // [ RISOLVI ➤ ] Pulsante pillola di esecuzione / calcolo prominente con accento della tab attiva
-        Box(
-            modifier = Modifier
-                .weight(1.8f)
-                .height(btnHeight)
-                .clip(RoundedCornerShape(percent = 50))
-                .background(executionBgColor)
-                .clickable { onExecute() },
-            contentAlignment = Alignment.Center
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+        } else {
+            // [ FORMAT ] Tasto per ciclare formato risultato (DEC, FRAC, ENG, DMS, POL)
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(btnHeight)
+                    .clip(RoundedCornerShape(percent = 50))
+                    .background(formatContainer)
+                    .border(1.dp, formatBorder, RoundedCornerShape(percent = 50))
+                    .clickable { onCycleFormat() },
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "RISOLVI",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Send,
-                    contentDescription = "Calcola ed Esegui",
-                    tint = Color.White,
-                    modifier = Modifier.size(17.dp)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "FORMAT",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = formatSubtextColor
+                    )
+                    Text(
+                        text = activeFormatLabel,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = formatLabelColor
+                    )
+                }
+            }
+
+            // [ RISOLVI ➤ ] Pulsante pillola di esecuzione / calcolo prominente con accento della tab attiva
+            Box(
+                modifier = Modifier
+                    .weight(1.8f)
+                    .height(btnHeight)
+                    .clip(RoundedCornerShape(percent = 50))
+                    .background(executionBgColor)
+                    .clickable { onExecute() },
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "RISOLVI",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Send,
+                        contentDescription = "Calcola ed Esegui",
+                        tint = Color.White,
+                        modifier = Modifier.size(17.dp)
+                    )
+                }
             }
         }
     }

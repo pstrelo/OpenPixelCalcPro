@@ -17,6 +17,9 @@ import androidx.compose.material.icons.filled.CloseFullscreen
 import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,16 +29,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.pixel.calculator.ui.ActiveScreen
 import com.google.pixel.calculator.ui.theme.CalculatorTheme
+import com.google.pixel.calculator.ui.toolbox.PixelFloatingToolBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdvancedCalculatorScreen(
     onBack: () -> Unit,
+    onNavigate: (ActiveScreen) -> Unit = {},
     viewModel: AdvancedCalculatorViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
     val isDark = CalculatorTheme.colors.isDark
+    var isToolBarExpanded by rememberSaveable { mutableStateOf(false) }
+
+    if (isToolBarExpanded) {
+        BackHandler { isToolBarExpanded = false }
+    }
 
     Scaffold(
         topBar = {
@@ -107,6 +118,13 @@ fun AdvancedCalculatorScreen(
                                 color = Color.White
                             )
                         }
+
+                        // Floating Toolbar in basso a sinistra nel grafico a tutto schermo
+                        PixelFloatingToolBar(
+                            currentScreen = ActiveScreen.ADVANCED_CALCULATOR,
+                            onNavigate = onNavigate,
+                            modifier = Modifier.align(Alignment.BottomStart)
+                        )
                     }
                 }
 
@@ -193,12 +211,33 @@ fun AdvancedCalculatorScreen(
                             onCycleFormat = { viewModel.onCycleFormat() },
                             onExecute = { viewModel.onExecute() },
                             onToggleRadians = { viewModel.toggleRadians() },
+                            isToolBarExpanded = isToolBarExpanded,
+                            onToggleToolBar = { isToolBarExpanded = !isToolBarExpanded },
+                            onNavigate = { screen ->
+                                isToolBarExpanded = false
+                                onNavigate(screen)
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 2.dp)
                         )
                     }
                 }
+            }
+
+            // Overlay di dismiss al tocco fuori dalla toolbar quando aperta in modalità tastiera
+            if (isToolBarExpanded && state.screenViewMode != ScreenViewMode.FULLSCREEN_GRAPH) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 60.dp)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            isToolBarExpanded = false
+                        }
+                )
             }
         }
     }

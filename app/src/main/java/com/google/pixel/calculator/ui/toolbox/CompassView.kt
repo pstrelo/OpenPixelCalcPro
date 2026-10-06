@@ -21,11 +21,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.pixel.calculator.core.sensors.CompassSensorManager
+import com.google.pixel.calculator.ui.ActiveScreen
+import com.google.pixel.calculator.ui.toolbox.PixelFloatingToolBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CompassView(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigate: (ActiveScreen) -> Unit = {}
 ) {
     val context = LocalContext.current
     val compassManager = remember { CompassSensorManager(context) }
@@ -57,15 +60,19 @@ fun CompassView(
     ) { padding ->
         val isLandscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
-        if (isLandscape) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 24.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            if (isLandscape) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 24.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
                 // Colonna sinistra: Scheda azimut e orientamento
                 Column(
                     modifier = Modifier
@@ -189,7 +196,6 @@ fun CompassView(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
                     .padding(horizontal = 24.dp, vertical = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
@@ -296,5 +302,13 @@ fun CompassView(
                 }
             }
         }
+
+        PixelFloatingToolBar(
+            currentScreen = ActiveScreen.TOOLBOX_COMPASS,
+            onNavigate = onNavigate,
+            modifier = Modifier.align(Alignment.BottomStart)
+        )
     }
 }
+}
+

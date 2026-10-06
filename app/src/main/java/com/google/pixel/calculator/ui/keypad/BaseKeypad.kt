@@ -27,11 +27,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.pixel.calculator.ui.ActiveScreen
 import com.google.pixel.calculator.ui.icons.SquareFoot
 import com.google.pixel.calculator.ui.theme.CalculatorTheme
 import com.google.pixel.calculator.ui.theme.QuicksandFontFamily
-
 import com.google.pixel.calculator.ui.theme.SystemFontFamily
+import com.google.pixel.calculator.ui.toolbox.PixelKeypadToolRow
 
 enum class PixelButtonType {
     NUMERIC,
@@ -48,6 +49,10 @@ fun BaseKeypad(
     isShiftActive: Boolean,
     isRadians: Boolean,
     isHapticEnabled: Boolean = true,
+    currentScreen: ActiveScreen = ActiveScreen.MAIN_CALCULATOR,
+    isToolBarExpanded: Boolean = false,
+    onToggleToolBar: () -> Unit = {},
+    onSelectTool: (ActiveScreen) -> Unit = {},
     onDigit: (String) -> Unit,
     onOperator: (String) -> Unit,
     onFunction: (String) -> Unit,
@@ -59,7 +64,7 @@ fun BaseKeypad(
     onToggleProMode: () -> Unit,
     onToggleShift: () -> Unit,
     onToggleAngleUnit: () -> Unit,
-    onOpenToolbox: () -> Unit,
+    onOpenToolbox: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
@@ -361,48 +366,18 @@ fun BaseKeypad(
             PixelButton(text = "-", type = PixelButtonType.OPERATOR, height = btnHeight, modifier = Modifier.weight(1f), onClick = { triggerHaptic(); onOperator("-") })
         }
 
-        // FILA 5 BASE: [📐 Selettore Strumenti] [0] [.] [=] (esattamente come nel disegno utente media_1790072717667.jpg)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(spacing)
-        ) {
-            PixelIconButton(
-                type = PixelButtonType.CONTROL,
-                height = btnHeight,
-                modifier = Modifier.weight(1f),
-                onClick = {
-                    triggerHaptic()
-                    onOpenToolbox()
-                }
-            ) {
-                Icon(
-                    imageVector = SquareFoot,
-                    contentDescription = "Selettore strumenti e funzioni",
-                    modifier = Modifier.size(if (isProMode) 22.dp else 26.dp)
-                )
-            }
-            PixelButton(
-                text = "0",
-                type = PixelButtonType.NUMERIC,
-                height = btnHeight,
-                modifier = Modifier.weight(1f),
-                onClick = { triggerHaptic(); onDigit("0") }
-            )
-            PixelButton(
-                text = ".",
-                type = PixelButtonType.NUMERIC,
-                height = btnHeight,
-                modifier = Modifier.weight(1f),
-                onClick = { triggerHaptic(); onDigit(".") }
-            )
-            PixelButton(
-                text = "=",
-                type = PixelButtonType.EQUALS,
-                height = btnHeight,
-                modifier = Modifier.weight(1f),
-                onClick = { triggerHaptic(); onEquals() }
-            )
-        }
+        // FILA 5 BASE: [ Selettore Strumenti ] [0] [.] [=]
+        PixelKeypadToolRow(
+            currentScreen = currentScreen,
+            isExpanded = isToolBarExpanded,
+            onToggleExpand = onToggleToolBar,
+            onNavigate = onSelectTool,
+            btnHeight = btnHeight,
+            spacing = spacing,
+            isLandscape = false,
+            onDigit = onDigit,
+            onEquals = onEquals
+        )
         } else {
             // ==================== MODALITÀ ORIZZONTALE (LANDSCAPE) ====================
             // Struttura orizzontale: [Simboli extra (se attivati)] [  numeri  ] [operatori matematici]
@@ -548,22 +523,16 @@ fun BaseKeypad(
                         PixelButton(text = "2", type = PixelButtonType.NUMERIC, height = btnHeight, modifier = Modifier.weight(1f), onClick = { triggerHaptic(); onDigit("2") })
                         PixelButton(text = "3", type = PixelButtonType.NUMERIC, height = btnHeight, modifier = Modifier.weight(1f), onClick = { triggerHaptic(); onDigit("3") })
                     }
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing)) {
-                        PixelIconButton(
-                            type = PixelButtonType.CONTROL,
-                            height = btnHeight,
-                            modifier = Modifier.weight(1f),
-                            onClick = { triggerHaptic(); onOpenToolbox() }
-                        ) {
-                            Icon(
-                                imageVector = SquareFoot,
-                                contentDescription = "Selettore strumenti e funzioni",
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        PixelButton(text = "0", type = PixelButtonType.NUMERIC, height = btnHeight, modifier = Modifier.weight(1f), onClick = { triggerHaptic(); onDigit("0") })
-                        PixelButton(text = ".", type = PixelButtonType.NUMERIC, height = btnHeight, modifier = Modifier.weight(1f), onClick = { triggerHaptic(); onDigit(".") })
-                    }
+                    PixelKeypadToolRow(
+                        currentScreen = currentScreen,
+                        isExpanded = isToolBarExpanded,
+                        onToggleExpand = onToggleToolBar,
+                        onNavigate = onSelectTool,
+                        btnHeight = btnHeight,
+                        spacing = spacing,
+                        isLandscape = true,
+                        onDigit = onDigit
+                    )
                 }
 
                 // 3. [operatori matematici] (2 Colonne x 4 Righe: AC ⌫ / % ÷ / × - / + =)

@@ -1,10 +1,13 @@
 package com.google.pixel.calculator.ui.toolbox
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -23,6 +26,7 @@ import com.google.pixel.calculator.core.math.EvaluationContext
 import com.google.pixel.calculator.core.math.MathEvaluator
 import com.google.pixel.calculator.core.utils.CurrencyRateRepository
 import com.google.pixel.calculator.core.utils.UnitConverter
+import com.google.pixel.calculator.ui.ActiveScreen
 import com.google.pixel.calculator.ui.display.ActiveConverterField
 import com.google.pixel.calculator.ui.display.ConvertDisplay
 import com.google.pixel.calculator.ui.keypad.BaseKeypad
@@ -38,10 +42,17 @@ import com.google.pixel.calculator.ui.theme.CalculatorTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConverterCalculatorView(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigate: (ActiveScreen) -> Unit = {}
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+
+    var isToolBarExpanded by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+
+    if (isToolBarExpanded) {
+        BackHandler { isToolBarExpanded = false }
+    }
 
     val currencyRepo = remember { CurrencyRateRepository(context) }
     val converter = remember(currencyRepo) { UnitConverter(currencyRepo) }
@@ -217,140 +228,166 @@ fun ConverterCalculatorView(
             )
         }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
-            verticalArrangement = Arrangement.SpaceBetween
+                .padding(padding)
         ) {
-            // AREA DISPLAY CON DUE CASELLE CLICCABILI (Attiva normale, Inattiva sbiadita)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                ConvertDisplay(
-                    topValueStr = topDisplayStr,
-                    bottomValueStr = bottomDisplayStr,
-                    topUnit = topUnitDef,
-                    bottomUnit = bottomUnitDef,
-                    activeField = activeField,
+                // AREA DISPLAY CON DUE CASELLE CLICCABILI (Attiva normale, Inattiva sbiadita)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    ConvertDisplay(
+                        topValueStr = topDisplayStr,
+                        bottomValueStr = bottomDisplayStr,
+                        topUnit = topUnitDef,
+                        bottomUnit = bottomUnitDef,
+                        activeField = activeField,
+                        isHapticEnabled = isHapticEnabled,
+                        onFocusField = { clickedField ->
+                            if (activeField != clickedField) {
+                                // Cambia casella attiva: imposta il valore corrente della casella
+                                // e abilita la sovrascrittura alla prima cifra digitata
+                                val currentPassiveStr = if (clickedField == ActiveConverterField.TOP) topDisplayStr else bottomDisplayStr
+                                activeField = clickedField
+                                expression = cleanNumberForInput(currentPassiveStr)
+                                shouldClearOnNextDigit = true
+                            }
+                        },
+                        onSwap = onPerformSwap,
+                        onSelectTopUnit = {
+                            pickerTarget = UnitPickerTarget.FROM
+                            showPicker = true
+                        },
+                        onSelectBottomUnit = {
+                            pickerTarget = UnitPickerTarget.TO
+                            showPicker = true
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                // TASTIERINO CALCOLATRICE COMPLETO (BaseKeypad)
+                BaseKeypad(
+                    isProMode = isProMode,
+                    isShiftActive = isShiftActive,
+                    isRadians = isRadians,
                     isHapticEnabled = isHapticEnabled,
-                    onFocusField = { clickedField ->
-                        if (activeField != clickedField) {
-                            // Cambia casella attiva: imposta il valore corrente della casella
-                            // e abilita la sovrascrittura alla prima cifra digitata
-                            val currentPassiveStr = if (clickedField == ActiveConverterField.TOP) topDisplayStr else bottomDisplayStr
-                            activeField = clickedField
-                            expression = cleanNumberForInput(currentPassiveStr)
-                            shouldClearOnNextDigit = true
+                    currentScreen = ActiveScreen.TOOLBOX_CONVERTER,
+                    isToolBarExpanded = isToolBarExpanded,
+                    onToggleToolBar = { isToolBarExpanded = !isToolBarExpanded },
+                    onSelectTool = { screen ->
+                        isToolBarExpanded = false
+                        onNavigate(screen)
+                    },
+                    onDigit = { digit ->
+                        val normalized = if (digit == ",") "." else digit
+
+                        if (shouldClearOnNextDigit) {
+                            expression = if (normalized == ".") "0." else normalized
+                            shouldClearOnNextDigit = false
+                            return@BaseKeypad
+                        }
+
+                        if (normalized == ".") {
+                            val lastTokens = expression.split(Regex("[+\\-×÷/*^() ]"))
+                            val currentNum = lastTokens.lastOrNull() ?: ""
+                            if ('.' !in currentNum) {
+                                val lastChar = expression.lastOrNull()
+                                expression = if (expression.isEmpty() || (lastChar != null && lastChar in "+-×÷/*^(")) {
+                                    "${expression}0."
+                                } else {
+                                    "$expression."
+                                }
+                            }
+                        } else {
+                            expression = if (expression == "0") normalized else expression + normalized
                         }
                     },
-                    onSwap = onPerformSwap,
-                    onSelectTopUnit = {
-                        pickerTarget = UnitPickerTarget.FROM
-                        showPicker = true
+                    onOperator = { op ->
+                        shouldClearOnNextDigit = false
+                        if (expression.isEmpty() && op != "-") return@BaseKeypad
+                        val lastChar = expression.lastOrNull()
+                        expression = if (lastChar != null && lastChar in "+-×÷/*^") {
+                            expression.dropLast(1) + op
+                        } else {
+                            expression + op
+                        }
                     },
-                    onSelectBottomUnit = {
-                        pickerTarget = UnitPickerTarget.TO
-                        showPicker = true
+                    onFunction = { func ->
+                        if (shouldClearOnNextDigit) {
+                            expression = "$func("
+                            shouldClearOnNextDigit = false
+                        } else {
+                            expression = "$expression$func("
+                        }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    onConstant = { const ->
+                        if (shouldClearOnNextDigit) {
+                            expression = const
+                            shouldClearOnNextDigit = false
+                        } else {
+                            expression += const
+                        }
+                    },
+                    onSmartParenthesis = {
+                        shouldClearOnNextDigit = false
+                        val openCount = expression.count { it == '(' }
+                        val closeCount = expression.count { it == ')' }
+                        val lastChar = expression.lastOrNull()
+                        val shouldClose = openCount > closeCount && lastChar != null &&
+                                (lastChar.isDigit() || lastChar == ')' || lastChar == 'π' || lastChar == 'e')
+                        expression = if (shouldClose) "$expression)" else "$expression("
+                    },
+                    onClear = {
+                        expression = ""
+                        shouldClearOnNextDigit = false
+                    },
+                    onBackspace = {
+                        shouldClearOnNextDigit = false
+                        if (expression.isNotEmpty()) {
+                            expression = expression.dropLast(1)
+                        }
+                    },
+                    onEquals = {
+                        // Risolve l'espressione matematica nella casella attiva
+                        if (expression.isNotBlank()) {
+                            val evalResult = evaluator.evaluate(expression, EvaluationContext(isRadians = isRadians))
+                            if (evalResult.isSuccess && evalResult.rawValue != null) {
+                                val cleanVal = cleanNumberForInput(evalResult.formattedResult)
+                                expression = cleanVal
+                                shouldClearOnNextDigit = true
+                            }
+                        }
+                    },
+                    onToggleProMode = { isProMode = !isProMode },
+                    onToggleShift = { isShiftActive = !isShiftActive },
+                    onToggleAngleUnit = { isRadians = !isRadians },
+                    onOpenToolbox = onBack
                 )
             }
 
-            // TASTIERINO CALCOLATRICE COMPLETO (BaseKeypad)
-            BaseKeypad(
-                isProMode = isProMode,
-                isShiftActive = isShiftActive,
-                isRadians = isRadians,
-                isHapticEnabled = isHapticEnabled,
-                onDigit = { digit ->
-                    val normalized = if (digit == ",") "." else digit
-
-                    if (shouldClearOnNextDigit) {
-                        expression = if (normalized == ".") "0." else normalized
-                        shouldClearOnNextDigit = false
-                        return@BaseKeypad
-                    }
-
-                    if (normalized == ".") {
-                        val lastTokens = expression.split(Regex("[+\\-×÷/*^() ]"))
-                        val currentNum = lastTokens.lastOrNull() ?: ""
-                        if ('.' !in currentNum) {
-                            val lastChar = expression.lastOrNull()
-                            expression = if (expression.isEmpty() || (lastChar != null && lastChar in "+-×÷/*^(")) {
-                                "${expression}0."
-                            } else {
-                                "$expression."
-                            }
+            // Dismiss al tocco esterno quando la toolbar è aperta
+            if (isToolBarExpanded) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 76.dp)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            isToolBarExpanded = false
                         }
-                    } else {
-                        expression = if (expression == "0") normalized else expression + normalized
-                    }
-                },
-                onOperator = { op ->
-                    shouldClearOnNextDigit = false
-                    if (expression.isEmpty() && op != "-") return@BaseKeypad
-                    val lastChar = expression.lastOrNull()
-                    expression = if (lastChar != null && lastChar in "+-×÷/*^") {
-                        expression.dropLast(1) + op
-                    } else {
-                        expression + op
-                    }
-                },
-                onFunction = { func ->
-                    if (shouldClearOnNextDigit) {
-                        expression = "$func("
-                        shouldClearOnNextDigit = false
-                    } else {
-                        expression = "$expression$func("
-                    }
-                },
-                onConstant = { const ->
-                    if (shouldClearOnNextDigit) {
-                        expression = const
-                        shouldClearOnNextDigit = false
-                    } else {
-                        expression += const
-                    }
-                },
-                onSmartParenthesis = {
-                    shouldClearOnNextDigit = false
-                    val openCount = expression.count { it == '(' }
-                    val closeCount = expression.count { it == ')' }
-                    val lastChar = expression.lastOrNull()
-                    val shouldClose = openCount > closeCount && lastChar != null &&
-                            (lastChar.isDigit() || lastChar == ')' || lastChar == 'π' || lastChar == 'e')
-                    expression = if (shouldClose) "$expression)" else "$expression("
-                },
-                onClear = {
-                    expression = ""
-                    shouldClearOnNextDigit = false
-                },
-                onBackspace = {
-                    shouldClearOnNextDigit = false
-                    if (expression.isNotEmpty()) {
-                        expression = expression.dropLast(1)
-                    }
-                },
-                onEquals = {
-                    // Risolve l'espressione matematica nella casella attiva
-                    if (expression.isNotBlank()) {
-                        val evalResult = evaluator.evaluate(expression, EvaluationContext(isRadians = isRadians))
-                        if (evalResult.isSuccess && evalResult.rawValue != null) {
-                            val cleanVal = cleanNumberForInput(evalResult.formattedResult)
-                            expression = cleanVal
-                            shouldClearOnNextDigit = true
-                        }
-                    }
-                },
-                onToggleProMode = { isProMode = !isProMode },
-                onToggleShift = { isShiftActive = !isShiftActive },
-                onToggleAngleUnit = { isRadians = !isRadians },
-                onOpenToolbox = onBack
-            )
+                )
+            }
         }
     }
 
