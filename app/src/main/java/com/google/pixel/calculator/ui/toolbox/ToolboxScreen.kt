@@ -53,94 +53,187 @@ fun ToolboxScreen(
             )
         }
     ) { padding ->
+        val isLandscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .padding(horizontal = if (isLandscape) 20.dp else 16.dp, vertical = if (isLandscape) 8.dp else 12.dp)
         ) {
-            // SEZIONE 1: CALCOLO AVANZATO
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    text = "Calcolo Avanzato",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = 4.dp)
-                )
+            if (isLandscape) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(20.dp)
+                ) {
+                    // SEZIONE 1: CALCOLO AVANZATO (Colonna Sinistra)
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text(
+                            text = "Calcolo Avanzato",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
 
-                // 1. Calcolatrice Avanzata & Grafica (Squircle Expressive Shape: 24dp, container accent)
-                ToolCard(
-                    icon = "🧮",
-                    title = "Calcolatrice Avanzata & Grafica",
-                    description = "Calcolo scientifico, equazioni, disequazioni, derivate, integrali e grafici 2D interattivi",
-                    cardShape = RoundedCornerShape(26.dp),
-                    iconContainerShape = RoundedCornerShape(18.dp),
-                    iconBgColor = MaterialTheme.colorScheme.primaryContainer,
-                    iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    onClick = { onSelectTool(ActiveScreen.ADVANCED_CALCULATOR) }
-                )
-            }
+                        ToolCard(
+                            icon = "🧮",
+                            title = "Calcolatrice Avanzata & Grafica",
+                            description = "Calcolo scientifico, equazioni, derivate, integrali e grafici 2D interattivi",
+                            cardShape = RoundedCornerShape(22.dp),
+                            iconContainerShape = RoundedCornerShape(16.dp),
+                            iconBgColor = MaterialTheme.colorScheme.primaryContainer,
+                            iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            onClick = { onSelectTool(ActiveScreen.ADVANCED_CALCULATOR) }
+                        )
+                    }
 
-            // SEZIONE 2: SENSORI E STRUMENTI FISICI PIXEL
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    text = "Utilità e Sensori Pixel",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = 4.dp)
-                )
+                    // SEZIONE 2: SENSORI E STRUMENTI FISICI PIXEL (Colonna Destra)
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text(
+                            text = "Utilità e Sensori Pixel",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
 
-                // 4. Convertitore di Unità (Pill rounded 22dp)
-                ToolCard(
-                    icon = "⚖️",
-                    title = "Convertitore di Unità",
-                    description = "Valute, grandezze fisiche, dosaggi e oltre 17 categorie offline con calcolo in tempo reale",
-                    cardShape = RoundedCornerShape(22.dp),
-                    iconContainerShape = RoundedCornerShape(16.dp),
-                    iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
-                    iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
-                    onClick = { onSelectTool(ActiveScreen.TOOLBOX_CONVERTER) }
-                )
+                        ToolCard(
+                            icon = "⚖️",
+                            title = "Convertitore di Unità",
+                            description = "Valute, grandezze fisiche, dosaggi e oltre 17 categorie offline con calcolo in tempo reale",
+                            cardShape = RoundedCornerShape(20.dp),
+                            iconContainerShape = RoundedCornerShape(14.dp),
+                            iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
+                            iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
+                            onClick = { onSelectTool(ActiveScreen.TOOLBOX_CONVERTER) }
+                        )
 
-                // 5. Livella a Bolla Digitale (Organic Curvature: topStart/bottomEnd 24dp, topEnd/bottomStart 16dp)
-                ToolCard(
-                    icon = "🟢",
-                    title = "Livella a Bolla Digitale",
-                    description = "Misurazione dell'inclinazione su due assi con feedback haptic e accelerometro",
-                    cardShape = RoundedCornerShape(topStart = 24.dp, topEnd = 16.dp, bottomEnd = 24.dp, bottomStart = 16.dp),
-                    iconContainerShape = CircleShape,
-                    iconBgColor = MaterialTheme.colorScheme.primaryContainer,
-                    iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    onClick = { onSelectTool(ActiveScreen.TOOLBOX_LEVEL) }
-                )
+                        ToolCard(
+                            icon = "🟢",
+                            title = "Livella a Bolla Digitale",
+                            description = "Misurazione dell'inclinazione su due assi con feedback haptic e accelerometro",
+                            cardShape = RoundedCornerShape(topStart = 20.dp, topEnd = 14.dp, bottomEnd = 20.dp, bottomStart = 14.dp),
+                            iconContainerShape = CircleShape,
+                            iconBgColor = MaterialTheme.colorScheme.primaryContainer,
+                            iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            onClick = { onSelectTool(ActiveScreen.TOOLBOX_LEVEL) }
+                        )
 
-                // 6. Bussola Digitale (Circle icon container & 22dp card)
-                ToolCard(
-                    icon = "🧭",
-                    title = "Bussola Digitale",
-                    description = "Orientamento magnetico 360°, calcolo azimut e indicazione punti cardinali",
-                    cardShape = RoundedCornerShape(22.dp),
-                    iconContainerShape = CircleShape,
-                    iconBgColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    iconTint = MaterialTheme.colorScheme.onTertiaryContainer,
-                    onClick = { onSelectTool(ActiveScreen.TOOLBOX_COMPASS) }
-                )
+                        ToolCard(
+                            icon = "🧭",
+                            title = "Bussola Digitale",
+                            description = "Orientamento magnetico 360°, calcolo azimut e indicazione punti cardinali",
+                            cardShape = RoundedCornerShape(20.dp),
+                            iconContainerShape = CircleShape,
+                            iconBgColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            iconTint = MaterialTheme.colorScheme.onTertiaryContainer,
+                            onClick = { onSelectTool(ActiveScreen.TOOLBOX_COMPASS) }
+                        )
 
-                // 7. Righello su Schermo (Asymmetric: topStart 16dp, topEnd 24dp, bottomEnd 16dp, bottomStart 24dp)
-                ToolCard(
-                    icon = "📏",
-                    title = "Righello su Schermo",
-                    description = "Scala millimetrica e pollici calibrata fisicamente sui display Pixel",
-                    cardShape = RoundedCornerShape(topStart = 16.dp, topEnd = 24.dp, bottomEnd = 16.dp, bottomStart = 24.dp),
-                    iconContainerShape = RoundedCornerShape(14.dp),
-                    iconBgColor = MaterialTheme.colorScheme.surfaceContainerHighest ?: MaterialTheme.colorScheme.surfaceVariant,
-                    iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    onClick = { onSelectTool(ActiveScreen.TOOLBOX_RULER) }
-                )
+                        ToolCard(
+                            icon = "📏",
+                            title = "Righello su Schermo",
+                            description = "Scala millimetrica e pollici calibrata fisicamente sui display Pixel",
+                            cardShape = RoundedCornerShape(topStart = 14.dp, topEnd = 20.dp, bottomEnd = 14.dp, bottomStart = 20.dp),
+                            iconContainerShape = RoundedCornerShape(14.dp),
+                            iconBgColor = MaterialTheme.colorScheme.surfaceContainerHighest ?: MaterialTheme.colorScheme.surfaceVariant,
+                            iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            onClick = { onSelectTool(ActiveScreen.TOOLBOX_RULER) }
+                        )
+                    }
+                }
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                    // SEZIONE 1: CALCOLO AVANZATO
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text(
+                            text = "Calcolo Avanzato",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+
+                        // 1. Calcolatrice Avanzata & Grafica (Squircle Expressive Shape: 24dp, container accent)
+                        ToolCard(
+                            icon = "🧮",
+                            title = "Calcolatrice Avanzata & Grafica",
+                            description = "Calcolo scientifico, equazioni, derivate, integrali e grafici 2D interattivi",
+                            cardShape = RoundedCornerShape(26.dp),
+                            iconContainerShape = RoundedCornerShape(18.dp),
+                            iconBgColor = MaterialTheme.colorScheme.primaryContainer,
+                            iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            onClick = { onSelectTool(ActiveScreen.ADVANCED_CALCULATOR) }
+                        )
+                    }
+
+                    // SEZIONE 2: SENSORI E STRUMENTI FISICI PIXEL
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text(
+                            text = "Utilità e Sensori Pixel",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+
+                        // 4. Convertitore di Unità (Pill rounded 22dp)
+                        ToolCard(
+                            icon = "⚖️",
+                            title = "Convertitore di Unità",
+                            description = "Valute, grandezze fisiche, dosaggi e oltre 17 categorie offline con calcolo in tempo reale",
+                            cardShape = RoundedCornerShape(22.dp),
+                            iconContainerShape = RoundedCornerShape(16.dp),
+                            iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
+                            iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
+                            onClick = { onSelectTool(ActiveScreen.TOOLBOX_CONVERTER) }
+                        )
+
+                        // 5. Livella a Bolla Digitale (Organic Curvature: topStart/bottomEnd 24dp, topEnd/bottomStart 16dp)
+                        ToolCard(
+                            icon = "🟢",
+                            title = "Livella a Bolla Digitale",
+                            description = "Misurazione dell'inclinazione su due assi con feedback haptic e accelerometro",
+                            cardShape = RoundedCornerShape(topStart = 24.dp, topEnd = 16.dp, bottomEnd = 24.dp, bottomStart = 16.dp),
+                            iconContainerShape = CircleShape,
+                            iconBgColor = MaterialTheme.colorScheme.primaryContainer,
+                            iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            onClick = { onSelectTool(ActiveScreen.TOOLBOX_LEVEL) }
+                        )
+
+                        // 6. Bussola Digitale (Circle icon container & 22dp card)
+                        ToolCard(
+                            icon = "🧭",
+                            title = "Bussola Digitale",
+                            description = "Orientamento magnetico 360°, calcolo azimut e indicazione punti cardinali",
+                            cardShape = RoundedCornerShape(22.dp),
+                            iconContainerShape = CircleShape,
+                            iconBgColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            iconTint = MaterialTheme.colorScheme.onTertiaryContainer,
+                            onClick = { onSelectTool(ActiveScreen.TOOLBOX_COMPASS) }
+                        )
+
+                        // 7. Righello su Schermo (Asymmetric: topStart 16dp, topEnd 24dp, bottomEnd 16dp, bottomStart 24dp)
+                        ToolCard(
+                            icon = "📏",
+                            title = "Righello su Schermo",
+                            description = "Scala millimetrica e pollici calibrata fisicamente sui display Pixel",
+                            cardShape = RoundedCornerShape(topStart = 16.dp, topEnd = 24.dp, bottomEnd = 16.dp, bottomStart = 24.dp),
+                            iconContainerShape = RoundedCornerShape(14.dp),
+                            iconBgColor = MaterialTheme.colorScheme.surfaceContainerHighest ?: MaterialTheme.colorScheme.surfaceVariant,
+                            iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            onClick = { onSelectTool(ActiveScreen.TOOLBOX_RULER) }
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(28.dp))

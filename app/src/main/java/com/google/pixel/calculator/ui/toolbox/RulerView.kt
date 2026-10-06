@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.pixel.calculator.core.utils.RulerUtils
 
+import androidx.compose.runtime.saveable.rememberSaveable
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RulerView(
@@ -28,8 +30,8 @@ fun RulerView(
     val context = LocalContext.current
     val (xdpi, ydpi) = remember { RulerUtils.getScreenDpi(context) }
 
-    var sliderY by remember { mutableStateOf(200f) }
-    var useInches by remember { mutableStateOf(false) }
+    var sliderY by rememberSaveable { mutableStateOf(200f) }
+    var useInches by rememberSaveable { mutableStateOf(false) }
 
     val measuredValue = remember(sliderY, ydpi, useInches) {
         if (useInches) {

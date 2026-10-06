@@ -168,6 +168,8 @@ private fun ConverterBox(
         CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.40f) // Sbiadita quando non selezionata
     }
 
+    val isLandscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = Color.Transparent,
@@ -176,12 +178,12 @@ private fun ConverterBox(
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .clickable { onBoxClick() }
-            .padding(horizontal = 4.dp, vertical = 4.dp)
+            .padding(horizontal = 4.dp, vertical = if (isLandscape) 1.dp else 4.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
+                .padding(horizontal = 12.dp, vertical = if (isLandscape) 4.dp else 10.dp),
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -192,11 +194,20 @@ private fun ConverterBox(
                     .horizontalScroll(scrollState),
                 contentAlignment = Alignment.CenterEnd
             ) {
-                val fontSize = when {
-                    valueStr.length > 14 -> 28.sp
-                    valueStr.length > 10 -> 36.sp
-                    valueStr.length > 7 -> 44.sp
-                    else -> 52.sp
+                val fontSize = if (isLandscape) {
+                    when {
+                        valueStr.length > 14 -> 20.sp
+                        valueStr.length > 10 -> 24.sp
+                        valueStr.length > 7 -> 28.sp
+                        else -> 32.sp
+                    }
+                } else {
+                    when {
+                        valueStr.length > 14 -> 28.sp
+                        valueStr.length > 10 -> 36.sp
+                        valueStr.length > 7 -> 44.sp
+                        else -> 52.sp
+                    }
                 }
 
                 AnimatedContent(

@@ -52,19 +52,19 @@ fun ConverterCalculatorView(
     val isCurrencyUpdating by currencyRepo.isUpdating.collectAsState()
 
     // Stato Unità di Conversione (default: Massa kg e g, o Valuta USD ed EUR)
-    var selectedCategory by remember { mutableStateOf(UnitConverter.Category.MASS) }
-    var topUnitCode by remember { mutableStateOf("g") }
-    var bottomUnitCode by remember { mutableStateOf("kg") }
+    var selectedCategory by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(UnitConverter.Category.MASS) }
+    var topUnitCode by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("g") }
+    var bottomUnitCode by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("kg") }
 
     // Stato Casella Attiva (TOP o BOTTOM)
-    var activeField by remember { mutableStateOf(ActiveConverterField.TOP) }
-    var expression by remember { mutableStateOf("100") }
-    var shouldClearOnNextDigit by remember { mutableStateOf(false) }
+    var activeField by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(ActiveConverterField.TOP) }
+    var expression by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("100") }
+    var shouldClearOnNextDigit by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
 
-    var isProMode by remember { mutableStateOf(false) }
-    var isShiftActive by remember { mutableStateOf(false) }
-    var isRadians by remember { mutableStateOf(true) }
-    var isHapticEnabled by remember { mutableStateOf(true) }
+    var isProMode by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    var isShiftActive by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    var isRadians by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(true) }
+    var isHapticEnabled by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(true) }
 
     // Stato Picker Bottom Sheet
     var showPicker by remember { mutableStateOf(false) }

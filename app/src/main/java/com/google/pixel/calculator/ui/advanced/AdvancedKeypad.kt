@@ -54,7 +54,8 @@ fun AdvancedKeypad(
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
-    val buttonHeight = if (isSplitScreen) 36.dp else 40.dp
+    val isLandscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    val buttonHeight = if (isLandscape) 30.dp else if (isSplitScreen) 36.dp else 40.dp
 
     Column(
         modifier = modifier
