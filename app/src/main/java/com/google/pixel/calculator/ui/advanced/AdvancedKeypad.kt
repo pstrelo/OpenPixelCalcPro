@@ -1024,8 +1024,78 @@ fun PersistentBottomEditBar(
             modifier = Modifier.size(btnHeight)
         )
 
-        if (isToolBarExpanded) {
-            AnimatedVisibility(
+        // Zona comandi con la pillola che fluttua sopra di essi alla stessa identica dimensione
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // [ FORMAT ] Tasto per ciclare formato risultato (DEC, FRAC, ENG, DMS, POL)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(btnHeight)
+                        .clip(RoundedCornerShape(percent = 50))
+                        .background(formatContainer)
+                        .border(1.dp, formatBorder, RoundedCornerShape(percent = 50))
+                        .clickable { onCycleFormat() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "FORMAT",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = formatSubtextColor
+                        )
+                        Text(
+                            text = activeFormatLabel,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = formatLabelColor
+                        )
+                    }
+                }
+
+                // [ RISOLVI ➤ ] Pulsante pillola di esecuzione / calcolo prominente con accento della tab attiva
+                Box(
+                    modifier = Modifier
+                        .weight(1.8f)
+                        .height(btnHeight)
+                        .clip(RoundedCornerShape(percent = 50))
+                        .background(executionBgColor)
+                        .clickable { onExecute() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "RISOLVI",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Send,
+                            contentDescription = "Calcola ed Esegui",
+                            tint = Color.White,
+                            modifier = Modifier.size(17.dp)
+                        )
+                    }
+                }
+            }
+
+            // Pillola fluttuante Material 3 SEMPRE fluttuante e della STESSA dimensione fissa
+            androidx.compose.animation.AnimatedVisibility(
                 visible = isToolBarExpanded,
                 enter = fadeIn(tween(180)) + expandHorizontally(
                     expandFrom = Alignment.Start,
@@ -1040,73 +1110,12 @@ fun PersistentBottomEditBar(
                         stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow
                     )
                 ),
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.align(Alignment.CenterStart)
             ) {
                 PixelToolPillBar(
                     currentScreen = ActiveScreen.ADVANCED_CALCULATOR,
-                    height = btnHeight,
-                    onNavigate = onNavigate,
-                    modifier = Modifier.fillMaxWidth()
+                    onNavigate = onNavigate
                 )
-            }
-        } else {
-            // [ FORMAT ] Tasto per ciclare formato risultato (DEC, FRAC, ENG, DMS, POL)
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(btnHeight)
-                    .clip(RoundedCornerShape(percent = 50))
-                    .background(formatContainer)
-                    .border(1.dp, formatBorder, RoundedCornerShape(percent = 50))
-                    .clickable { onCycleFormat() },
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(
-                        text = "FORMAT",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = formatSubtextColor
-                    )
-                    Text(
-                        text = activeFormatLabel,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = formatLabelColor
-                    )
-                }
-            }
-
-            // [ RISOLVI ➤ ] Pulsante pillola di esecuzione / calcolo prominente con accento della tab attiva
-            Box(
-                modifier = Modifier
-                    .weight(1.8f)
-                    .height(btnHeight)
-                    .clip(RoundedCornerShape(percent = 50))
-                    .background(executionBgColor)
-                    .clickable { onExecute() },
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = "RISOLVI",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Send,
-                        contentDescription = "Calcola ed Esegui",
-                        tint = Color.White,
-                        modifier = Modifier.size(17.dp)
-                    )
-                }
             }
         }
     }

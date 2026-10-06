@@ -203,9 +203,37 @@ fun PixelCalculatorTheme(
                 Pair(dynamicScheme, colors)
             } else {
                 if (isDark) {
-                    Pair(darkColorScheme(), PixelDarkCalculatorColors)
+                    Pair(
+                        darkColorScheme(
+                            primary = PixelDarkCalculatorColors.equalsContainer,
+                            onPrimary = PixelDarkCalculatorColors.equalsContent,
+                            primaryContainer = PixelDarkCalculatorColors.equalsContainer,
+                            onPrimaryContainer = PixelDarkCalculatorColors.equalsContent,
+                            secondaryContainer = PixelDarkCalculatorColors.operatorContainer,
+                            onSecondaryContainer = PixelDarkCalculatorColors.operatorContent,
+                            surface = PixelDarkCalculatorColors.surface,
+                            onSurface = PixelDarkCalculatorColors.onSurface,
+                            surfaceVariant = PixelDarkCalculatorColors.operatorContainer,
+                            onSurfaceVariant = PixelDarkCalculatorColors.onSurfaceVariant
+                        ),
+                        PixelDarkCalculatorColors
+                    )
                 } else {
-                    Pair(lightColorScheme(), PixelLightCalculatorColors)
+                    Pair(
+                        lightColorScheme(
+                            primary = PixelLightCalculatorColors.equalsContainer,
+                            onPrimary = PixelLightCalculatorColors.equalsContent,
+                            primaryContainer = Color(0xFFD3E3FD),
+                            onPrimaryContainer = Color(0xFF041E49),
+                            secondaryContainer = PixelLightCalculatorColors.operatorContainer,
+                            onSecondaryContainer = PixelLightCalculatorColors.operatorContent,
+                            surface = PixelLightCalculatorColors.surface,
+                            onSurface = PixelLightCalculatorColors.onSurface,
+                            surfaceVariant = PixelLightCalculatorColors.operatorContainer,
+                            onSurfaceVariant = PixelLightCalculatorColors.onSurfaceVariant
+                        ),
+                        PixelLightCalculatorColors
+                    )
                 }
             }
         }
@@ -213,8 +241,14 @@ fun PixelCalculatorTheme(
             lightColorScheme(
                 primary = PixelLightCalculatorColors.equalsContainer,
                 onPrimary = PixelLightCalculatorColors.equalsContent,
+                primaryContainer = Color(0xFFD3E3FD),
+                onPrimaryContainer = Color(0xFF041E49),
+                secondaryContainer = PixelLightCalculatorColors.operatorContainer,
+                onSecondaryContainer = PixelLightCalculatorColors.operatorContent,
                 surface = PixelLightCalculatorColors.surface,
-                onSurface = PixelLightCalculatorColors.onSurface
+                onSurface = PixelLightCalculatorColors.onSurface,
+                surfaceVariant = PixelLightCalculatorColors.operatorContainer,
+                onSurfaceVariant = PixelLightCalculatorColors.onSurfaceVariant
             ),
             PixelLightCalculatorColors
         )
@@ -222,8 +256,14 @@ fun PixelCalculatorTheme(
             darkColorScheme(
                 primary = PixelDarkCalculatorColors.equalsContainer,
                 onPrimary = PixelDarkCalculatorColors.equalsContent,
+                primaryContainer = PixelDarkCalculatorColors.equalsContainer,
+                onPrimaryContainer = PixelDarkCalculatorColors.equalsContent,
+                secondaryContainer = PixelDarkCalculatorColors.operatorContainer,
+                onSecondaryContainer = PixelDarkCalculatorColors.operatorContent,
                 surface = PixelDarkCalculatorColors.surface,
-                onSurface = PixelDarkCalculatorColors.onSurface
+                onSurface = PixelDarkCalculatorColors.onSurface,
+                surfaceVariant = PixelDarkCalculatorColors.operatorContainer,
+                onSurfaceVariant = PixelDarkCalculatorColors.onSurfaceVariant
             ),
             PixelDarkCalculatorColors
         )
@@ -231,8 +271,14 @@ fun PixelCalculatorTheme(
             lightColorScheme(
                 primary = CandyPopCalculatorColors.equalsContainer,
                 onPrimary = CandyPopCalculatorColors.equalsContent,
+                primaryContainer = CandyPopCalculatorColors.equalsContainer,
+                onPrimaryContainer = CandyPopCalculatorColors.equalsContent,
+                secondaryContainer = CandyPopCalculatorColors.operatorContainer,
+                onSecondaryContainer = CandyPopCalculatorColors.operatorContent,
                 surface = CandyPopCalculatorColors.surface,
-                onSurface = CandyPopCalculatorColors.onSurface
+                onSurface = CandyPopCalculatorColors.onSurface,
+                surfaceVariant = CandyPopCalculatorColors.operatorContainer,
+                onSurfaceVariant = CandyPopCalculatorColors.onSurfaceVariant
             ),
             CandyPopCalculatorColors
         )
@@ -240,8 +286,14 @@ fun PixelCalculatorTheme(
             darkColorScheme(
                 primary = RetroCyberCalculatorColors.equalsContainer,
                 onPrimary = RetroCyberCalculatorColors.equalsContent,
+                primaryContainer = RetroCyberCalculatorColors.equalsContainer,
+                onPrimaryContainer = RetroCyberCalculatorColors.equalsContent,
+                secondaryContainer = RetroCyberCalculatorColors.operatorContainer,
+                onSecondaryContainer = RetroCyberCalculatorColors.operatorContent,
                 surface = RetroCyberCalculatorColors.surface,
-                onSurface = RetroCyberCalculatorColors.onSurface
+                onSurface = RetroCyberCalculatorColors.onSurface,
+                surfaceVariant = RetroCyberCalculatorColors.operatorContainer,
+                onSurfaceVariant = RetroCyberCalculatorColors.onSurfaceVariant
             ),
             RetroCyberCalculatorColors
         )

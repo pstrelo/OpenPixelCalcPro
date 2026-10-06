@@ -26,6 +26,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -87,7 +88,7 @@ val AllToolDestinations: List<ToolDestination> = listOf(
 /**
  * Pulsante di attivazione strumenti Material 3:
  * - Da chiuso: tondo (CircleShape), mostra l'icona dello strumento attualmente attivo.
- * - Da aperto: quadrato arrotondato (Squircle / RoundedCornerShape 18dp) con colore d'accento tertiary/secondary.
+ * - Da aperto: quadrato arrotondato (Squircle / RoundedCornerShape 18dp) con colore d'accento di sistema (primaryContainer).
  */
 @Composable
 fun PixelToolToggleButton(
@@ -111,23 +112,21 @@ fun PixelToolToggleButton(
         label = "ToolButtonCornerAnimation"
     )
 
-    // Colori adattati al tema dell'applicazione M3
+    // Colori rigorosamente legati al tema di sistema / tema calcolatrice (nessun rosa arbitrario)
+    val isDark = CalculatorTheme.colors.isDark
+    val activeContainer = MaterialTheme.colorScheme.primaryContainer.takeIf { it != Color.Unspecified }
+        ?: if (isDark) CalculatorTheme.colors.equalsContainer else CalculatorTheme.colors.operatorContainer
+    val activeContent = MaterialTheme.colorScheme.onPrimaryContainer.takeIf { it != Color.Unspecified }
+        ?: if (isDark) CalculatorTheme.colors.equalsContent else CalculatorTheme.colors.operatorContent
+
     val containerColor by animateColorAsState(
-        targetValue = if (isExpanded) {
-            MaterialTheme.colorScheme.tertiaryContainer
-        } else {
-            CalculatorTheme.colors.controlContainer
-        },
+        targetValue = if (isExpanded) activeContainer else CalculatorTheme.colors.controlContainer,
         animationSpec = tween(durationMillis = 200),
         label = "ToolButtonContainerColor"
     )
 
     val contentColor by animateColorAsState(
-        targetValue = if (isExpanded) {
-            MaterialTheme.colorScheme.onTertiaryContainer
-        } else {
-            CalculatorTheme.colors.controlContent
-        },
+        targetValue = if (isExpanded) activeContent else CalculatorTheme.colors.controlContent,
         animationSpec = tween(durationMillis = 200),
         label = "ToolButtonContentColor"
     )
@@ -141,7 +140,7 @@ fun PixelToolToggleButton(
         shape = RoundedCornerShape(cornerRadius),
         color = containerColor,
         contentColor = contentColor,
-        shadowElevation = if (isExpanded) 3.dp else 0.dp
+        shadowElevation = if (isExpanded) 4.dp else 0.dp
     ) {
         Box(
             contentAlignment = Alignment.Center,
@@ -159,11 +158,11 @@ fun PixelToolToggleButton(
 
 /**
  * Pillola orizzontale Material 3 contenente le icone degli altri 5 strumenti selezionabili.
+ * SEMPRE fluttuante con ombra/elevazione e della STESSA identica dimensione fissa (altezza 56dp, larghezza 252dp) in tutte le schermate.
  */
 @Composable
 fun PixelToolPillBar(
     currentScreen: ActiveScreen,
-    height: Dp = 56.dp,
     onNavigate: (ActiveScreen) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -172,18 +171,33 @@ fun PixelToolPillBar(
         AllToolDestinations.filter { it.screen != currentScreen }
     }
 
+    val isDark = CalculatorTheme.colors.isDark
+    val pillContainer = if (isDark) {
+        MaterialTheme.colorScheme.surfaceContainerHigh.takeIf { it != Color.Unspecified }
+            ?: Color(0xFF282A30)
+    } else {
+        MaterialTheme.colorScheme.surfaceContainerHigh.takeIf { it != Color.Unspecified }
+            ?: Color(0xFFEEF0F6)
+    }
+
+    val pillContent = MaterialTheme.colorScheme.onSurfaceVariant.takeIf { it != Color.Unspecified }
+        ?: CalculatorTheme.colors.onSurfaceVariant
+
     Surface(
         modifier = modifier
-            .height(height)
-            .shadow(3.dp, shape = CircleShape),
+            .height(56.dp)
+            .width(252.dp)
+            .shadow(6.dp, shape = CircleShape),
         shape = CircleShape,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+        color = pillContainer,
+        contentColor = pillContent,
+        tonalElevation = 6.dp,
+        shadowElevation = 6.dp
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = if (height <= 44.dp) 6.dp else 10.dp)
-                .fillMaxHeight(),
+                .fillMaxSize()
+                .padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
@@ -193,15 +207,13 @@ fun PixelToolPillBar(
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         onNavigate(destination.screen)
                     },
-                    modifier = Modifier
-                        .weight(1f)
-                        .size(if (height <= 44.dp) 32.dp else height - 12.dp)
+                    modifier = Modifier.size(44.dp)
                 ) {
                     Icon(
                         imageVector = destination.icon,
                         contentDescription = destination.contentDescription,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(if (height <= 44.dp) 18.dp else 22.dp)
+                        tint = pillContent,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
@@ -211,7 +223,7 @@ fun PixelToolPillBar(
 
 /**
  * Barra fluttuante ancorata in basso a sinistra per le schermate secondarie
- * (Livella, Bussola, Righello, Calcolatrice Avanzata).
+ * (Livella, Bussola, Righello, Schermo intero grafico).
  */
 @Composable
 fun PixelFloatingToolBar(
@@ -270,12 +282,10 @@ fun PixelFloatingToolBar(
             ) {
                 PixelToolPillBar(
                     currentScreen = currentScreen,
-                    height = 56.dp,
                     onNavigate = { screen ->
                         isExpanded = false
                         onNavigate(screen)
-                    },
-                    modifier = Modifier.width(240.dp)
+                    }
                 )
             }
         }
@@ -284,7 +294,9 @@ fun PixelFloatingToolBar(
 
 /**
  * Riga del tastierino contenente il tasto strumenti (Row 5 portrait o Row 4 numeri in landscape).
- * Quando isExpanded è true, la pillola copre fluidamente i tasti adiacenti della riga.
+ * - SOLO il pulsante strumenti è integrato nella tastiera e si modifica da cerchio a quadrato quando cliccato.
+ * - I tasti numerici rimangono sempre presenti nella tastiera.
+ * - La pillola compare SEMPRE FLUTTUANTE sopra la tastiera con dimensione identica fissa (56dp x 252dp).
  */
 @Composable
 fun PixelKeypadToolRow(
@@ -306,7 +318,7 @@ fun PixelKeypadToolRow(
         horizontalArrangement = Arrangement.spacedBy(spacing),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Tasto 1 (in basso a sinistra): Strumento attivo (da tondo a quadrato)
+        // Tasto 1 (in basso a sinistra): SOLO questo pulsante è integrato nella tastiera
         PixelToolToggleButton(
             currentScreen = currentScreen,
             isExpanded = isExpanded,
@@ -315,12 +327,53 @@ fun PixelKeypadToolRow(
             modifier = Modifier.weight(1f)
         )
 
-        val remainingWeight = if (isLandscape) 2f else 3f
+        // Colonne rimanenti: tasti numerici della tastiera + pillola fluttuante sovrapposta ad essi
+        Box(
+            modifier = Modifier.weight(if (isLandscape) 2f else 3f),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            // Tasti numerici normali della tastiera (sempre renderizzati e stabili)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(spacing),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                PixelButton(
+                    text = "0",
+                    type = PixelButtonType.NUMERIC,
+                    height = btnHeight,
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onDigit("0")
+                    }
+                )
+                PixelButton(
+                    text = ".",
+                    type = PixelButtonType.NUMERIC,
+                    height = btnHeight,
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onDigit(".")
+                    }
+                )
+                if (!isLandscape && onEquals != null) {
+                    PixelButton(
+                        text = "=",
+                        type = PixelButtonType.EQUALS,
+                        height = btnHeight,
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onEquals()
+                        }
+                    )
+                }
+            }
 
-        // Se espanso: mostra la pillola che occupa le rimanenti colonne.
-        // Se chiuso: mostra i normali tasti numerici [0] [.] [=]
-        if (isExpanded) {
-            AnimatedVisibility(
+            // Pillola fluttuante: fluttua sopra i tasti alla STESSA dimensione fissa
+            androidx.compose.animation.AnimatedVisibility(
                 visible = isExpanded,
                 enter = fadeIn(tween(180)) + expandHorizontally(
                     expandFrom = Alignment.Start,
@@ -333,46 +386,11 @@ fun PixelKeypadToolRow(
                     shrinkTowards = Alignment.Start,
                     animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
                 ),
-                modifier = Modifier.weight(remainingWeight)
+                modifier = Modifier.align(Alignment.CenterStart)
             ) {
                 PixelToolPillBar(
                     currentScreen = currentScreen,
-                    height = btnHeight,
-                    onNavigate = onNavigate,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        } else {
-            PixelButton(
-                text = "0",
-                type = PixelButtonType.NUMERIC,
-                height = btnHeight,
-                modifier = Modifier.weight(1f),
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onDigit("0")
-                }
-            )
-            PixelButton(
-                text = ".",
-                type = PixelButtonType.NUMERIC,
-                height = btnHeight,
-                modifier = Modifier.weight(1f),
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onDigit(".")
-                }
-            )
-            if (!isLandscape && onEquals != null) {
-                PixelButton(
-                    text = "=",
-                    type = PixelButtonType.EQUALS,
-                    height = btnHeight,
-                    modifier = Modifier.weight(1f),
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onEquals()
-                    }
+                    onNavigate = onNavigate
                 )
             }
         }
