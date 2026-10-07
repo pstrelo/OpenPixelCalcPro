@@ -328,7 +328,7 @@ fun BaseKeypad(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Backspace,
                     contentDescription = "Cancella cifra",
-                    modifier = Modifier.size(if (isProMode) 20.dp else 24.dp)
+                    modifier = Modifier.size(if (isProMode) 24.dp else 28.dp)
                 )
             }
         }
@@ -407,7 +407,7 @@ fun BaseKeypad(
                                 Icon(
                                     imageVector = Icons.Default.ArrowUpward,
                                     contentDescription = "Shift",
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(22.dp)
                                 )
                             }
                             PixelButton(
@@ -551,7 +551,7 @@ fun BaseKeypad(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.Backspace,
                                 contentDescription = "Cancella cifra",
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(22.dp)
                             )
                         }
                     }
