@@ -7,6 +7,8 @@ import com.google.pixel.calculator.core.math.MathEvaluator
 import com.google.pixel.calculator.data.AppThemeMode
 import com.google.pixel.calculator.data.HistoryStorage
 import com.google.pixel.calculator.data.ThemePreferences
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +17,8 @@ import kotlinx.coroutines.launch
 
 class CalculatorViewModel(
     historyStorage: HistoryStorage? = null,
-    private val themePreferences: ThemePreferences? = null
+    private val themePreferences: ThemePreferences? = null,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Default
 ) : ViewModel() {
 
     private val activeHistoryStorage: HistoryStorage? =
@@ -44,22 +47,22 @@ class CalculatorViewModel(
         }
 
         themePreferences?.let { prefs ->
-            viewModelScope.launch {
+            viewModelScope.launch(dispatcher) {
                 prefs.themeMode.collect { mode ->
                     _uiState.update { it.copy(themeMode = mode) }
                 }
             }
-            viewModelScope.launch {
+            viewModelScope.launch(dispatcher) {
                 prefs.appIconMode.collect { iconMode ->
                     _uiState.update { it.copy(appIconMode = iconMode) }
                 }
             }
-            viewModelScope.launch {
+            viewModelScope.launch(dispatcher) {
                 prefs.syncIconWithTheme.collect { sync ->
                     _uiState.update { it.copy(syncIconWithTheme = sync) }
                 }
             }
-            viewModelScope.launch {
+            viewModelScope.launch(dispatcher) {
                 prefs.isHapticEnabled.collect { haptic ->
                     _uiState.update { it.copy(isHapticEnabled = haptic) }
                 }
@@ -281,7 +284,7 @@ class CalculatorViewModel(
                 )
             }
             // Salva nella cronologia persistente
-            viewModelScope.launch {
+            viewModelScope.launch(dispatcher) {
                 activeHistoryStorage?.addItem(closedExpr, evalResult.formattedResult)
             }
         } else {
@@ -298,7 +301,7 @@ class CalculatorViewModel(
     }
 
     fun deleteHistoryItem(id: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             activeHistoryStorage?.deleteItem(id)
         }
     }
@@ -310,7 +313,7 @@ class CalculatorViewModel(
                 lastEvaluatedExpression = null
             )
         }
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             activeHistoryStorage?.clearHistory()
         }
     }

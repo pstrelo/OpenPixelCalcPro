@@ -610,7 +610,7 @@ fun PixelButton(
             onClick()
         },
         modifier = modifier.height(height),
-        shape = RoundedCornerShape(18.dp),
+        shape = CircleShape,
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor
@@ -671,7 +671,7 @@ fun PixelIconButton(
             onClick()
         },
         modifier = modifier.height(height),
-        shape = RoundedCornerShape(18.dp),
+        shape = CircleShape,
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor
