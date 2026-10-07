@@ -604,34 +604,35 @@ fun PixelButton(
 
     val view = LocalView.current
 
-    Button(
+    Surface(
         onClick = {
             view.playSoundEffect(android.view.SoundEffectConstants.CLICK)
             onClick()
         },
         modifier = modifier.height(height),
-        shape = CircleShape,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = containerColor,
-            contentColor = contentColor
-        ),
-        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 1.dp),
-        contentPadding = PaddingValues(0.dp)
+        shape = RoundedCornerShape(height / 2),
+        color = containerColor,
+        contentColor = contentColor
     ) {
-        val fontSize = when {
-            type == PixelButtonType.SCIENTIFIC -> if (text.length > 3) 15.sp else if (height <= 48.dp) 15.sp else 18.sp
-            type == PixelButtonType.NUMERIC -> if (height <= 48.dp) 22.sp else if (height < 65.dp) 28.sp else 33.sp
-            type == PixelButtonType.OPERATOR || type == PixelButtonType.EQUALS -> if (height <= 48.dp) 24.sp else if (height < 65.dp) 30.sp else 35.sp
-            else -> if (text.length > 2) 18.sp else if (height <= 48.dp) 20.sp else 25.sp
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            val fontSize = when {
+                type == PixelButtonType.SCIENTIFIC -> if (text.length > 3) 15.sp else if (height <= 48.dp) 15.sp else 18.sp
+                type == PixelButtonType.NUMERIC -> if (height <= 48.dp) 22.sp else if (height < 65.dp) 28.sp else 33.sp
+                type == PixelButtonType.OPERATOR || type == PixelButtonType.EQUALS -> if (height <= 48.dp) 24.sp else if (height < 65.dp) 30.sp else 35.sp
+                else -> if (text.length > 2) 18.sp else if (height <= 48.dp) 20.sp else 25.sp
+            }
+            val isNumeric = type == PixelButtonType.NUMERIC || text.all { it.isDigit() || it == '.' || it == ',' }
+            val isOperator = type == PixelButtonType.OPERATOR
+            Text(
+                text = text,
+                fontSize = fontSize,
+                fontFamily = if (isNumeric) QuicksandFontFamily else if (isOperator) QuicksandFontFamily else SystemFontFamily,
+                fontWeight = if (isNumeric) FontWeight.SemiBold else FontWeight.Medium
+            )
         }
-        val isNumeric = type == PixelButtonType.NUMERIC || text.all { it.isDigit() || it == '.' || it == ',' }
-        val isOperator = type == PixelButtonType.OPERATOR
-        Text(
-            text = text,
-            fontSize = fontSize,
-            fontFamily = if (isNumeric) QuicksandFontFamily else if( isOperator) QuicksandFontFamily else SystemFontFamily,
-            fontWeight = if (isNumeric) FontWeight.SemiBold else FontWeight.Medium
-        )
     }
 }
 
@@ -665,20 +666,21 @@ fun PixelIconButton(
 
     val view = LocalView.current
 
-    Button(
+    Surface(
         onClick = {
             view.playSoundEffect(android.view.SoundEffectConstants.CLICK)
             onClick()
         },
         modifier = modifier.height(height),
-        shape = CircleShape,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = containerColor,
-            contentColor = contentColor
-        ),
-        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 1.dp),
-        contentPadding = PaddingValues(0.dp)
+        shape = RoundedCornerShape(height / 2),
+        color = containerColor,
+        contentColor = contentColor
     ) {
-        icon()
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            icon()
+        }
     }
 }

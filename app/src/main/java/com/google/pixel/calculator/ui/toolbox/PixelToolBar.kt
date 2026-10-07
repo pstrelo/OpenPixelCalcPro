@@ -420,66 +420,64 @@ fun PixelKeypadToolRow(
 ) {
     val haptic = LocalHapticFeedback.current
 
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(spacing),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Tasto 1 (in basso a sinistra): SOLO questo pulsante è integrato nella tastiera
-        PixelToolToggleButton(
-            currentScreen = currentScreen,
-            isExpanded = isExpanded,
-            height = btnHeight,
-            onClick = onToggleExpand,
-            modifier = Modifier.weight(1f)
-        )
-
-        // Colonne rimanenti: tasti numerici della tastiera + pillola fluttuante sovrapposta ad essi
-        Box(
-            modifier = Modifier.weight(if (isLandscape) 2f else 3f),
-            contentAlignment = Alignment.CenterStart
+    Box(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(spacing),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Tasti numerici normali della tastiera (sempre renderizzati e stabili)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(spacing),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                PixelButton(
-                    text = "0",
-                    type = PixelButtonType.NUMERIC,
-                    height = btnHeight,
-                    modifier = Modifier.weight(1f),
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onDigit("0")
-                    }
-                )
-                PixelButton(
-                    text = ".",
-                    type = PixelButtonType.NUMERIC,
-                    height = btnHeight,
-                    modifier = Modifier.weight(1f),
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onDigit(".")
-                    }
-                )
-                if (!isLandscape && onEquals != null) {
-                    PixelButton(
-                        text = "=",
-                        type = PixelButtonType.EQUALS,
-                        height = btnHeight,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            onEquals()
-                        }
-                    )
-                }
-            }
+            // Tasto 1 (in basso a sinistra): il pulsante strumenti
+            PixelToolToggleButton(
+                currentScreen = currentScreen,
+                isExpanded = isExpanded,
+                height = btnHeight,
+                onClick = onToggleExpand,
+                modifier = Modifier.weight(1f)
+            )
 
-            // Pillola fluttuante: fluttua sopra i tasti alla STESSA dimensione fissa
+            // Tasti numerici normali della tastiera
+            PixelButton(
+                text = "0",
+                type = PixelButtonType.NUMERIC,
+                height = btnHeight,
+                modifier = Modifier.weight(1f),
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onDigit("0")
+                }
+            )
+            PixelButton(
+                text = ".",
+                type = PixelButtonType.NUMERIC,
+                height = btnHeight,
+                modifier = Modifier.weight(1f),
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onDigit(".")
+                }
+            )
+            if (!isLandscape && onEquals != null) {
+                PixelButton(
+                    text = "=",
+                    type = PixelButtonType.EQUALS,
+                    height = btnHeight,
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onEquals()
+                    }
+                )
+            }
+        }
+
+        // Pillola fluttuante in overlay sopra le colonne rimanenti
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(spacing),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Spacer(modifier = Modifier.weight(1f))
+
             androidx.compose.animation.AnimatedVisibility(
                 visible = isExpanded,
                 enter = fadeIn(tween(180)) + scaleIn(
@@ -496,7 +494,7 @@ fun PixelKeypadToolRow(
                     ),
                     transformOrigin = TransformOrigin(0f, 0.5f)
                 ),
-                modifier = Modifier.align(Alignment.CenterStart)
+                modifier = Modifier.weight(if (!isLandscape && onEquals != null) 3f else 2f)
             ) {
                 PixelToolPillBar(
                     currentScreen = currentScreen,
