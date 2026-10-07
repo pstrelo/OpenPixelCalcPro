@@ -215,7 +215,7 @@ class AdvancedMathEngineTest {
         assertEquals(5.0, assign.value, 1e-6)
         assertEquals("a = 5", assign.formattedText)
 
-        // Risoluzione con variabile definita custom: 5ax = 0 con a = 5 -> 25x = 0 -> root x = 0
+        // Solving with custom defined variable: 5ax = 0 with a = 5 -> 25x = 0 -> root x = 0
         val customVars = mapOf("a" to java.math.BigDecimal("5"))
         val solveRes = engine.solve("5ax", isRadians = true, customVariables = customVars)
         assertTrue("5ax with a=5 should find root x=0", solveRes is AdvancedMathEngine.SolveResult.EquationRoots)
@@ -223,7 +223,7 @@ class AdvancedMathEngineTest {
         assertEquals(1, roots.size)
         assertEquals(0.0, roots[0], 1e-4)
 
-        // Equazione lineare con parametro: a * x = 20 con a = 5 -> x = 4
+        // Linear equation with parameter: a * x = 20 with a = 5 -> x = 4
         val eqParamRes = engine.solve("a*x = 20", isRadians = true, customVariables = customVars)
         assertTrue(eqParamRes is AdvancedMathEngine.SolveResult.EquationRoots)
         val eqRoots = (eqParamRes as AdvancedMathEngine.SolveResult.EquationRoots).roots

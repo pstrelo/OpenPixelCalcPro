@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.dp
 private var _bubbleLevel: ImageVector? = null
 
 /**
- * Icona Material Symbols personalizzata rappresentante una livella a bolla (tubo con bolla centrale e tacche).
+ * Custom Material Symbols icon representing a spirit / bubble level (vial with central bubble and indicator marks).
  */
 val BubbleLevel: ImageVector
     get() {
@@ -63,7 +63,7 @@ val BubbleLevel: ImageVector
                 curveTo(10.2f, 11f, 11f, 10.2f, 12f, 10.2f)
                 close()
             }
-            // Tacche di riferimento per la bolla
+            // Reference indicator tick marks for the bubble
             path(
                 stroke = SolidColor(Color.Black),
                 strokeLineWidth = 1.2f,

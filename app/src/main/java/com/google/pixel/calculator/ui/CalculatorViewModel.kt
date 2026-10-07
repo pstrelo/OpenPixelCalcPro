@@ -89,7 +89,7 @@ class CalculatorViewModel(
         val state = _uiState.value
         val current = state.expression
 
-        // Gestisci virgola / punto decimale
+        // Handle comma / decimal dot
         val normalizedDigit = if (digit == ",") "." else digit
 
         if (state.isAwaitingRootIndex) {
@@ -108,7 +108,7 @@ class CalculatorViewModel(
             }
         }
 
-        // Evita doppi punti decimali nello stesso numero corrente
+        // Avoid double decimal dots in current number
         if (normalizedDigit == ".") {
             val lastTokens = current.split(Regex("[+\\-×÷/*^() ]"))
             val currentNumber = lastTokens.lastOrNull() ?: ""
@@ -134,13 +134,13 @@ class CalculatorViewModel(
         if (current.isEmpty() && op != "-" && op != "10^") return
 
         val updated = if (op == "%" || op == "!") {
-            // Operatori postfissi: si attaccano all'operando precedente
+            // Postfix operators: attach to previous operand
             if (current.isEmpty() || current.last() in "+-×÷/*^(") current else current + op
         } else if (op == "10^") {
             "$current 10^("
         } else {
             val lastChar = current.lastOrNull()
-            // Sostituisci solo se l'ultimo carattere era un operatore binario classico (+, -, ×, ÷, ^, /)
+            // Replace only if last char was a classic binary operator (+, -, ×, ÷, ^, /)
             if (lastChar != null && lastChar in "+-×÷/*^") {
                 current.dropLast(1) + op
             } else {
@@ -216,7 +216,7 @@ class CalculatorViewModel(
             }
         }
 
-        // Se termina con un blocco radice come ³√( o √(
+        // If ending with a root block such as ³√( or √(
         val rootPrefixRegex = Regex("([⁰¹²³⁴⁵⁶⁷⁸⁹]*)√\\($")
         val rootMatch = rootPrefixRegex.find(current)
         if (rootMatch != null) {
@@ -224,7 +224,7 @@ class CalculatorViewModel(
             return
         }
 
-        // Se termina con funzioni a più lettere
+        // If ending with multi-letter function
         for (fn in listOf("asin(", "acos(", "atan(", "sin(", "cos(", "tan(", "ln(", "log(", "10^(")) {
             if (current.endsWith(fn)) {
                 updateExpression(current.removeSuffix(fn))
@@ -283,7 +283,7 @@ class CalculatorViewModel(
                     lastEvaluatedExpression = closedExpr
                 )
             }
-            // Salva nella cronologia persistente
+            // Save to persistent history
             viewModelScope.launch(dispatcher) {
                 activeHistoryStorage?.addItem(closedExpr, evalResult.formattedResult)
             }

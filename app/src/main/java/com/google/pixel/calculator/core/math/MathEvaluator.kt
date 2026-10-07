@@ -7,9 +7,9 @@ import java.text.DecimalFormatSymbols
 import java.util.Locale
 
 /**
- * Motore di calcolo principale della calcolatrice Pixel.
- * Fornisce valutazione di stringhe, anteprima del risultato in tempo reale
- * e formattazione con separatori di migliaia e notazione scientifica automatica.
+ * Main calculation engine of the Pixel Calculator.
+ * Provides string evaluation, real-time result preview,
+ * and formatting with thousands separators and automatic scientific notation.
  */
 class MathEvaluator(
     private val parser: ExpressionParser = ExpressionParser()
@@ -32,7 +32,7 @@ class MathEvaluator(
 
         if (openCount > closeCount) {
             val lastChar = trimmed.last()
-            // Se termina con un operatore incompleto o con '(', non chiudiamo ancora
+            // If it ends with an incomplete operator or '(', do not close yet
             if (lastChar == '(' || lastChar in "+-×÷/*^,ʸ√") {
                 return trimmed
             }
@@ -74,12 +74,12 @@ class MathEvaluator(
     }
 
     /**
-     * Formattazione del risultato ad alta leggibilità:
-     * - Rimuove zeri decimali superflui
-     * - Passa a notazione scientifica se il numero supera 12 cifre intere o è infinitesimo
+     * Highly readable result formatting:
+     * - Strips superfluous trailing decimal zeros
+     * - Switches to scientific notation if number exceeds 12 integer digits or is infinitesimal
      */
     fun formatResult(value: BigDecimal, maxDecimals: Int = 10): String {
-        // Se il valore è un intero o con zeri finali, stripTrailingZeros
+        // If the value is an integer or has trailing zeros, stripTrailingZeros
         val stripped = try {
             value.stripTrailingZeros()
         } catch (e: Exception) {
@@ -89,14 +89,14 @@ class MathEvaluator(
         val absVal = stripped.abs()
         val plain = stripped.toPlainString()
 
-        // Se è troppo grande o troppo vicino a zero, usa notazione scientifica
+        // If too large or too close to zero, use scientific notation
         if (absVal > BigDecimal("1e12") || (absVal < BigDecimal("1e-6") && absVal > BigDecimal.ZERO)) {
             val symbols = DecimalFormatSymbols(Locale.ITALY)
             val df = DecimalFormat("0.######E0", symbols)
             return df.format(stripped)
         }
 
-        // Altrimenti formattazione decimale classica con separatori di migliaia
+        // Otherwise classic decimal formatting with thousands separators
         val parts = plain.split(".")
         val integerPart = parts[0]
         val decimalPart = if (parts.size > 1) parts[1] else null

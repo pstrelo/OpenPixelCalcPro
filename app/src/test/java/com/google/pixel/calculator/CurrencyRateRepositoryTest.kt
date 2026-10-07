@@ -11,7 +11,7 @@ class CurrencyRateRepositoryTest {
 
     @Before
     fun setup() {
-        // Senza context per testare il fallback offline predefinito
+        // Without context to test default offline fallback
         repository = CurrencyRateRepository(null)
     }
 

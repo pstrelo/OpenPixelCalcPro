@@ -21,18 +21,20 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.google.pixel.calculator.R
 import com.google.pixel.calculator.core.sensors.CompassSensorManager
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.sin
 
 /**
- * Tracciatore di movimento a 3 assi per calcolare il progresso della calibrazione ad 8.
+ * 3-axis motion tracker to calculate figure-8 calibration progress.
  */
 private class CalibrationTracker(initialYaw: Float) {
     var minRoll: Float = 0f
@@ -74,9 +76,8 @@ private class CalibrationTracker(initialYaw: Float) {
 }
 
 /**
- * Dialog di Ricalibrazione della Bussola in stile Google Pixel / Material 3.
- * Istruisce l'utente al movimento a figura di 8 (movimento a infinito ∞) e
- * traccia in tempo reale la copertura angolare multi-asse e l'accuratezza del sensore.
+ * Compass Recalibration Dialog in Material 3 / Pixel style.
+ * Guides the user through the figure-8 motion and tracks angular coverage in real-time.
  */
 @Composable
 fun CompassCalibrationDialog(
@@ -115,7 +116,7 @@ fun CompassCalibrationDialog(
         }
     }
 
-    // Animazione dell'indicatore che percorre il percorso a figura di 8
+    // Indicator animating along the figure-8 path
     val infiniteTransition = rememberInfiniteTransition(label = "Figure8Loop")
     val t by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -142,7 +143,7 @@ fun CompassCalibrationDialog(
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Intestazione con icona Google M3
+                // Header badge
                 Box(
                     modifier = Modifier
                         .size(48.dp)
@@ -164,7 +165,7 @@ fun CompassCalibrationDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = if (isCalibrated) "Calibrazione Completata" else "Ricalibra Bussola",
+                    text = if (isCalibrated) stringResource(R.string.calibration_completed) else stringResource(R.string.calibration_recalibrate),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -175,9 +176,9 @@ fun CompassCalibrationDialog(
 
                 Text(
                     text = if (isCalibrated) {
-                        "Il sensore magnetico ora fornisce orientamento e azimut ad alta precisione."
+                        stringResource(R.string.calibration_success_desc)
                     } else {
-                        "Muovi il telefono disegnando un movimento a forma di 8 (∞) nell'aria, ruotandolo delicatamente su tutti i lati."
+                        stringResource(R.string.calibration_instruction)
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -187,7 +188,7 @@ fun CompassCalibrationDialog(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Canvas animato che traccia visivamente la figura ad 8 (Lemniscata)
+                // Canvas rendering figure-8 lemniscata animation
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -209,7 +210,6 @@ fun CompassCalibrationDialog(
                         val a = (w * 0.38f)
                         val b = (h * 0.42f)
 
-                        // Disegno del tracciato della lemniscata ∞
                         val numSteps = 120
                         val figure8Path = Path()
                         for (i in 0..numSteps) {
@@ -226,7 +226,6 @@ fun CompassCalibrationDialog(
                             style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
                         )
 
-                        // Posizione corrente dell'indicatore animato lungo la figura 8
                         val indicatorX = cx + a * sin(t)
                         val indicatorY = cy + b * sin(2f * t) / 2f
 
@@ -245,7 +244,7 @@ fun CompassCalibrationDialog(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Barra di avanzamento e percentuale
+                // Progress bar and percentage
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -256,7 +255,7 @@ fun CompassCalibrationDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Avanzamento calibrazione",
+                            text = stringResource(R.string.calibration_progress),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -283,12 +282,12 @@ fun CompassCalibrationDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Badge dello stato dei sensori
+                // Sensor accuracy badge
                 val accuracyLabel = when (compassData.accuracy) {
-                    SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> "Accuratezza Sensore: Alta"
-                    SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> "Accuratezza Sensore: Media"
-                    SensorManager.SENSOR_STATUS_ACCURACY_LOW -> "Accuratezza Sensore: Bassa"
-                    else -> "Sensore non calibrato"
+                    SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> stringResource(R.string.sensor_accuracy_high)
+                    SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> stringResource(R.string.sensor_accuracy_medium)
+                    SensorManager.SENSOR_STATUS_ACCURACY_LOW -> stringResource(R.string.sensor_accuracy_low)
+                    else -> stringResource(R.string.sensor_uncalibrated)
                 }
 
                 val accuracyColor = when (compassData.accuracy) {
@@ -323,7 +322,7 @@ fun CompassCalibrationDialog(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Pulsante di conferma Material 3
+                // Action button
                 Button(
                     onClick = onDismiss,
                     modifier = Modifier
@@ -336,7 +335,7 @@ fun CompassCalibrationDialog(
                     )
                 ) {
                     Text(
-                        text = if (isCalibrated) "Fatto" else "Chiudi",
+                        text = if (isCalibrated) stringResource(R.string.done) else stringResource(R.string.close),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold
                     )

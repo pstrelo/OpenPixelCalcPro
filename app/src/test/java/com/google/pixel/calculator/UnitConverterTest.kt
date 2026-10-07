@@ -21,7 +21,7 @@ class UnitConverterTest {
         for (category in UnitConverter.Category.values()) {
             val units = converter.getUnitsForCategory(category)
             assertTrue("La categoria $category deve avere almeno 2 unità", units.size >= 2)
-            // Verifica che ogni unità abbia codice, nome e simbolo non vuoti
+            // Verify each unit has non-empty code, name, and symbol
             units.forEach { unit ->
                 assertTrue("Codice unità non vuoto in $category", unit.code.isNotEmpty())
                 assertTrue("Nome unità non vuoto in $category", unit.name.isNotEmpty())
@@ -91,7 +91,7 @@ class UnitConverterTest {
 
     @Test
     fun testCurrencyOfflineConversion() {
-        // Con i tassi offline di base: EUR = 1.0, USD = 1.085
+        // With basic offline rates: EUR = 1.0, USD = 1.085
         // 100 EUR -> 108.5 USD
         val usd = converter.convert(100.0, "EUR", "USD", UnitConverter.Category.CURRENCY)
         assertEquals(108.5, usd, 1e-2)
@@ -107,23 +107,23 @@ class UnitConverterTest {
 
     @Test
     fun testExtraCategories() {
-        // Cucina: 1 tazza (cup = 240 mL) in cucchiai (tbsp = 15 mL) -> 16 cucchiai
+        // Kitchen: 1 cup (240 mL) to tablespoons (tbsp = 15 mL) -> 16 tablespoons
         val tbsp = converter.convert(1.0, "cup", "tbsp", UnitConverter.Category.COOKING)
         assertEquals(16.0, tbsp, 1e-2)
 
-        // Tipografia: 72 pt = 1 pollice = 25.4 mm
+        // Typography: 72 pt = 1 inch = 25.4 mm
         val mm = converter.convert(72.0, "pt", "mm_t", UnitConverter.Category.TYPOGRAPHY)
         assertEquals(25.4, mm, 1e-1)
 
-        // Frequenza: 60 RPM = 1 Hz
+        // Frequency: 60 RPM = 1 Hz
         val hz = converter.convert(60.0, "rpm", "hz", UnitConverter.Category.FREQUENCY)
         assertEquals(1.0, hz, 1e-4)
 
-        // Pressione: 1 bar = 100000 Pa = 1000 hPa
+        // Pressure: 1 bar = 100000 Pa = 1000 hPa
         val hpa = converter.convert(1.0, "bar", "hpa", UnitConverter.Category.PRESSURE)
         assertEquals(1000.0, hpa, 1e-2)
 
-        // Dati Digitali: 1 GB = 1024 MB
+        // Digital Data: 1 GB = 1024 MB
         val mb = converter.convert(1.0, "gb", "mb", UnitConverter.Category.DATA)
         assertEquals(1024.0, mb, 1e-4)
     }
@@ -135,7 +135,7 @@ class UnitConverterTest {
         assertEquals("12,5", converter.formatValue(12.5))
         assertEquals("0,123456", converter.formatValue(0.123456))
 
-        // Notazione scientifica per numeri astronomici
+        // Scientific notation for large astronomical numbers
         val formattedHuge = converter.formatValue(1e12)
         assertTrue("Dovrebbe contenere notazione scientifica", formattedHuge.contains("10^") || formattedHuge.contains("E"))
     }
@@ -153,12 +153,12 @@ class UnitConverterTest {
 
     @Test
     fun testUserSwapScenarioGramsAndKg() {
-        // Iniziale: 100g -> 0.1 kg
+        // Initial: 100g -> 0.1 kg
         val initialConverted = converter.convert(100.0, "g", "kg", UnitConverter.Category.MASS)
         assertEquals(0.1, initialConverted, 1e-4)
         assertEquals("0,1", converter.formatValue(initialConverted))
 
-        // Al click di Swap: le unità si scambiano e il valore 100 inserito diventa 100 kg -> 100.000 g (x g)
+        // Upon Swap click: units swap and entered value 100 becomes 100 kg -> 100,000 g (x g)
         val swappedConverted = converter.convert(100.0, "kg", "g", UnitConverter.Category.MASS)
         assertEquals(100000.0, swappedConverted, 1e-4)
         assertEquals("100.000", converter.formatValue(swappedConverted))
@@ -166,7 +166,7 @@ class UnitConverterTest {
 
     @Test
     fun testUserSelectionScenarioEditingBottomValue() {
-        // Selezionando la casella dei kg e digitando 10: 10 kg -> 10.000 g
+        // Selecting kg box and typing 10: 10 kg -> 10,000 g
         val convertedFromTenKg = converter.convert(10.0, "kg", "g", UnitConverter.Category.MASS)
         assertEquals(10000.0, convertedFromTenKg, 1e-4)
         assertEquals("10.000", converter.formatValue(convertedFromTenKg))
@@ -174,7 +174,7 @@ class UnitConverterTest {
 
     @Test
     fun testNoEmojisInCategoriesAndUnits() {
-        // Verifica che non ci siano emoji nei nomi delle categorie
+        // Verify no emojis in category names
         val emojiRegex = Regex("[\\p{So}\\p{Cn}\\uD83C-\\uDBFF\\uDC00-\\uDFFF]")
         for (category in UnitConverter.Category.values()) {
             assertFalse(

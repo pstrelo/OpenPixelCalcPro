@@ -13,8 +13,8 @@ import org.json.JSONObject
 import java.util.UUID
 
 /**
- * Storage snello, thread-safe e reattivo per la cronologia con limite a 200 elementi.
- * Utilizza Mutex per prevenire race conditions e parsing difensivo per record corrotti.
+ * Lean, thread-safe, and reactive storage for history with a 200 items limit.
+ * Uses Mutex to prevent race conditions and defensive parsing for corrupt records.
  */
 class HistoryStorage(context: Context) {
 
@@ -59,10 +59,10 @@ class HistoryStorage(context: Context) {
 
         mutex.withLock {
             val currentList = _historyFlow.value.toMutableList()
-            // Inserisci in cima con ID univoco
+            // Insert at top with unique ID
             currentList.add(0, HistoryItem(id = UUID.randomUUID().toString(), expression = safeExpr, result = safeResult))
 
-            // Mantieni massimo 200 elementi
+            // Keep maximum 200 items
             val trimmed = currentList.take(maxItems)
             saveList(trimmed)
             _historyFlow.value = trimmed

@@ -3,8 +3,8 @@ package com.google.pixel.calculator.data
 import java.util.UUID
 
 /**
- * Rappresenta un calcolo archiviato nella cronologia.
- * Utilizza UUID come chiave univoca per evitare conflitti di rendering in LazyColumn.
+ * Represents a calculation stored in history.
+ * Uses UUID as unique key to prevent rendering conflicts in LazyColumn.
  */
 data class HistoryItem(
     val id: String = UUID.randomUUID().toString(),

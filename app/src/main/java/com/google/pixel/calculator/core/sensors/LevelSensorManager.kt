@@ -16,15 +16,15 @@ import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 enum class LevelOrientationMode {
-    HORIZONTAL_SURFACE, // Telefono in piano su una superficie (es. tavolo)
-    VERTICAL_WALL       // Telefono verticale (in piedi su un bordo o appoggiato su una parete)
+    HORIZONTAL_SURFACE, // Phone resting flat on a surface (e.g. table)
+    VERTICAL_WALL       // Phone vertical (standing on an edge or resting against a wall)
 }
 
 /**
- * Modello dati per la Livella Digitale in stile Samsung One UI:
- * - Supporta la modalità orizzontale di superficie (inclinazione testa-fondo e destra-sinistra)
- * - Supporta la modalità verticale (inclinazione laterale destra-sinistra e frontale testa-fondo)
- * - Transizione fluida automatica basata sulla posizione nello spazio
+ * Data model for the Samsung One UI-style Digital Level:
+ * - Supports horizontal surface mode (head-to-tail and left-to-right tilt)
+ * - Supports vertical wall mode (lateral left-to-right tilt and frontal head-to-tail pitch)
+ * - Smooth automatic transition based on spatial pose
  */
 data class LevelData(
     val roll: Float = 0f,
@@ -32,19 +32,19 @@ data class LevelData(
     val isLevel: Boolean = true,
     val isSensorAvailable: Boolean = true,
     val mode: LevelOrientationMode = LevelOrientationMode.HORIZONTAL_SURFACE,
-    val pitchHeadTail: Float = 0f,        // Inclinazione asse Y testa-fondo (-90° a +90°)
-    val rollLeftRight: Float = 0f,        // Inclinazione asse X destra-sinistra (-90° a +90°)
-    val surfaceTotalAngle: Float = 0f,    // Gradi totali di scostamento dal piano orizzontale
-    val verticalLateralAngle: Float = 0f, // Inclinazione destra-sinistra rispetto all'orizzonte (-90° a +90°)
-    val verticalFrontalAngle: Float = 0f, // Riferimento altro asse: inclinazione testa-fondo parete (-90° a +90°)
-    val primaryDisplayAngle: Int = 0,     // Grado primario intero visualizzato a schermo (es. -12°, 0°, -26°)
-    val inclinationFromHorizontal: Float = 0f // Inclinazione rispetto al tavolo (0° = piatto, 90° = dritto in piedi)
+    val pitchHeadTail: Float = 0f,        // Y-axis head-to-tail tilt (-90° to +90°)
+    val rollLeftRight: Float = 0f,        // X-axis left-to-right tilt (-90° to +90°)
+    val surfaceTotalAngle: Float = 0f,    // Total deviation angle from horizontal plane
+    val verticalLateralAngle: Float = 0f, // Left-to-right tilt relative to horizon (-90° to +90°)
+    val verticalFrontalAngle: Float = 0f, // Secondary axis reference: wall face pitch (-90° to +90°)
+    val primaryDisplayAngle: Int = 0,     // Primary integer angle displayed on screen (e.g. -12°, 0°, -26°)
+    val inclinationFromHorizontal: Float = 0f // Tilt relative to table (0° = flat, 90° = standing upright)
 )
 
 /**
- * Gestore dell'accelerometro per la Livella Digitale.
- * Applica filtraggio passa-basso stabile e calcola con precisione trigonometrica
- * gli assi e il passaggio automatico con isteresi tra piano e parete.
+ * Accelerometer manager for the Digital Level.
+ * Applies stable low-pass filtering and computes axes with trigonometric accuracy,
+ * handling automatic hysteresis transitions between surface and wall modes.
  */
 class LevelSensorManager(context: Context) {
 
@@ -74,7 +74,7 @@ class LevelSensorManager(context: Context) {
         }
 
         val listener = object : SensorEventListener {
-            // Filtro passa-basso per smorzare il rumore del sensore garantendo reattività fluida
+            // Low-pass filter to damp sensor noise while preserving fluid responsiveness
             private var smoothedX = 0f
             private var smoothedY = 0f
             private var smoothedZ = 9.8f
@@ -100,17 +100,17 @@ class LevelSensorManager(context: Context) {
                 val ny = (smoothedY / gTotal).coerceIn(-1f, 1f)
                 val nz = (smoothedZ / gTotal).coerceIn(-1f, 1f)
 
-                // Angolo di inclinazione del display rispetto al piano orizzontale (0° = piatto su tavolo, 90° = dritto in piedi)
+                // Display tilt angle relative to horizontal plane (0° = flat on table, 90° = standing upright)
                 val inclinationFromHorizontal = Math.toDegrees(acos(abs(nz).coerceIn(0f, 1f).toDouble())).toFloat()
 
-                // Transizione automatica con isteresi (38° / 46°) per evitare oscillazioni o sfarfallii
+                // Automatic transition with hysteresis (38° / 46°) to prevent flapping and jitter
                 currentMode = computeOrientationMode(currentMode, inclinationFromHorizontal)
 
-                // 1. Modalità Orizzontale (Superficie / Tavolo)
+                // 1. Horizontal Mode (Surface / Table)
                 val (pitchHeadTail, rollLeftRight) = computeSurfaceAngles(nx, ny)
                 val isSurfaceLevel = abs(pitchHeadTail) < 0.6f && abs(rollLeftRight) < 0.6f
 
-                // 2. Modalità Verticale (Parete / In piedi sul bordo)
+                // 2. Vertical Mode (Wall / Standing on edge)
                 val (verticalLateralAngle, verticalFrontalAngle) = computeVerticalAngles(nx, ny, nz)
                 val isVerticalLevel = abs(verticalLateralAngle) < 0.6f
 
@@ -158,8 +158,8 @@ class LevelSensorManager(context: Context) {
 
     companion object {
         /**
-         * Calcola la modalità di orientamento tra superficie e parete con isteresi
-         * per evitare sfarfallii intorno all'angolo di transizione.
+         * Computes orientation mode between surface and wall with hysteresis
+         * to avoid flickering around the transition threshold.
          */
         fun computeOrientationMode(
             currentMode: LevelOrientationMode,
@@ -175,7 +175,7 @@ class LevelSensorManager(context: Context) {
         }
 
         /**
-         * Calcola gli angoli di superficie (testa-fondo e destra-sinistra) in gradi.
+         * Computes surface angles (head-to-tail and left-to-right) in degrees.
          */
         fun computeSurfaceAngles(nx: Float, ny: Float): Pair<Float, Float> {
             val pitchHeadTail = Math.toDegrees(asin(ny.coerceIn(-1f, 1f).toDouble())).toFloat()
@@ -184,7 +184,7 @@ class LevelSensorManager(context: Context) {
         }
 
         /**
-         * Calcola gli angoli di parete (inclinazione laterale destra-sinistra e planarità frontale).
+         * Computes wall angles (lateral left-to-right tilt and frontal planarity).
          */
         fun computeVerticalAngles(nx: Float, ny: Float, nz: Float): Pair<Float, Float> {
             val isLandscapeEdge = abs(nx) > abs(ny)
@@ -206,7 +206,7 @@ class LevelSensorManager(context: Context) {
         }
 
         /**
-         * Calcola il grado primario intero visualizzato al centro (es. -12°, 0°, -26°).
+         * Computes primary integer degree displayed in the center (e.g. -12°, 0°, -26°).
          */
         fun computePrimaryDisplayAngle(
             mode: LevelOrientationMode,

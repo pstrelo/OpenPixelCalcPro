@@ -8,7 +8,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.google.pixel.calculator.R
 
-// Font Quicksand caricato da risorsa TTF valida
+// Quicksand font loaded from valid TTF resource
 val QuicksandFontFamily = FontFamily(
     Font(R.font.quicksand_regular, FontWeight.Normal),
     Font(R.font.quicksand_medium, FontWeight.Medium),
@@ -16,10 +16,10 @@ val QuicksandFontFamily = FontFamily(
     Font(R.font.quicksand_bold, FontWeight.Bold)
 )
 
-// Font predefinito di sistema per l'applicazione
+// Default system font family for the application
 val SystemFontFamily = FontFamily.Default
 
-// Tipografia generale dell'app che utilizza il font di sistema
+// General app typography utilizing system font
 val PixelTypography = Typography(
     displayLarge = TextStyle(
         fontFamily = SystemFontFamily,

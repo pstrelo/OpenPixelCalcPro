@@ -16,7 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.google.pixel.calculator.R
 import com.google.pixel.calculator.data.HistoryStorage
 import com.google.pixel.calculator.data.ThemePreferences
 import com.google.pixel.calculator.ui.advanced.AdvancedCalculatorScreen
@@ -28,9 +30,7 @@ import com.google.pixel.calculator.ui.settings.ThemeSelectionDialog
 import com.google.pixel.calculator.ui.theme.CalculatorTheme
 import com.google.pixel.calculator.ui.toolbox.*
 import com.google.pixel.calculator.ui.easteregg.EasterEggScreen
-
 import androidx.compose.runtime.saveable.rememberSaveable
-
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.shape.RoundedCornerShape
 
@@ -51,7 +51,7 @@ fun CalculatorApp(
     var showHistorySheet by rememberSaveable { mutableStateOf(false) }
     var isToolBarExpanded by rememberSaveable { mutableStateOf(false) }
 
-    // Navigazione animata tra le schermate degli strumenti e la calcolatrice principale
+    // Animated transitions between utility tools screens and main calculator
     AnimatedContent(
         targetState = state.activeScreen,
         transitionSpec = {
@@ -118,7 +118,7 @@ fun CalculatorApp(
                                 scrolledContainerColor = Color.Transparent
                             ),
                             navigationIcon = {
-                                // Tasto Cronologia in alto a sinistra (con sfondo attivo quando la cronologia è aperta)
+                                // History toggle button top-left
                                 IconButton(
                                     onClick = { showHistorySheet = !showHistorySheet },
                                     modifier = Modifier
@@ -134,26 +134,25 @@ fun CalculatorApp(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.History,
-                                        contentDescription = "Cronologia calcoli",
+                                        contentDescription = stringResource(R.string.calc_history_desc),
                                         tint = CalculatorTheme.colors.onSurface
                                     )
                                 }
                             },
                             title = {
-                                // Spazio vuoto minimalista senza titolo testuale (stile identico a Google Pixel)
+                                // Minimalist header without text title (Pixel style)
                             },
                             actions = {
-                                // Menu a tre puntini in alto a destra ancorato vicino all'icona
+                                // 3-dot menu button top-right
                                 Box {
                                     IconButton(onClick = { vm.toggleSettingsDropdown(true) }) {
                                         Icon(
                                             imageVector = Icons.Default.MoreVert,
-                                            contentDescription = "Opzioni e impostazioni",
+                                            contentDescription = stringResource(R.string.options_settings_desc),
                                             tint = CalculatorTheme.colors.onSurface
                                         )
                                     }
 
-                                    // DropdownMenu ancorato direttamente al pulsante a 3 puntini con stile stondato Material 3
                                     MaterialTheme(
                                         shapes = MaterialTheme.shapes.copy(
                                             extraSmall = RoundedCornerShape(20.dp)
@@ -165,7 +164,7 @@ fun CalculatorApp(
                                             modifier = Modifier.clip(RoundedCornerShape(20.dp))
                                         ) {
                                             DropdownMenuItem(
-                                                text = { Text("Cancella cronologia") },
+                                                text = { Text(stringResource(R.string.clear_history)) },
                                                 onClick = {
                                                     vm.toggleSettingsDropdown(false)
                                                     vm.toggleClearHistoryDialog(true)
@@ -179,55 +178,67 @@ fun CalculatorApp(
                                                 }
                                             )
 
-                                        DropdownMenuItem(
-                                            text = { Text("Scegli tema") },
-                                            onClick = {
-                                                vm.toggleSettingsDropdown(false)
-                                                vm.toggleThemeDialog(true)
-                                            },
-                                            leadingIcon = {
-                                                Icon(
-                                                    imageVector = Icons.Default.Palette,
-                                                    contentDescription = null
-                                                )
-                                            }
-                                        )
+                                            DropdownMenuItem(
+                                                text = { Text(stringResource(R.string.choose_theme)) },
+                                                onClick = {
+                                                    vm.toggleSettingsDropdown(false)
+                                                    vm.toggleThemeDialog(true)
+                                                },
+                                                leadingIcon = {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Palette,
+                                                        contentDescription = null
+                                                    )
+                                                }
+                                            )
 
-                                        DropdownMenuItem(
-                                            text = {
-                                                Text(if (state.isHapticEnabled) "Disattiva vibrazione" else "Attiva vibrazione")
-                                            },
-                                            onClick = {
-                                                vm.toggleHaptic()
-                                            },
-                                            leadingIcon = {
-                                                Icon(
-                                                    imageVector = Icons.Default.Vibration,
-                                                    contentDescription = null
-                                                )
-                                            }
-                                        )
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(
+                                                        if (state.isHapticEnabled) {
+                                                            stringResource(R.string.disable_vibration)
+                                                        } else {
+                                                            stringResource(R.string.enable_vibration)
+                                                        }
+                                                    )
+                                                },
+                                                onClick = {
+                                                    vm.toggleHaptic()
+                                                },
+                                                leadingIcon = {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Vibration,
+                                                        contentDescription = null
+                                                    )
+                                                }
+                                            )
 
-                                        DropdownMenuItem(
-                                            text = {
-                                                Text(if (state.isRadians) "Usa Gradi (DEG)" else "Usa Radianti (RAD)")
-                                            },
-                                            onClick = {
-                                                vm.toggleAngleUnit()
-                                            },
-                                            leadingIcon = {
-                                                Icon(
-                                                    imageVector = Icons.Default.Tune,
-                                                    contentDescription = null
-                                                )
-                                            }
-                                        )
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(
+                                                        if (state.isRadians) {
+                                                            stringResource(R.string.use_degrees)
+                                                        } else {
+                                                            stringResource(R.string.use_radians)
+                                                        }
+                                                    )
+                                                },
+                                                onClick = {
+                                                    vm.toggleAngleUnit()
+                                                },
+                                                leadingIcon = {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Tune,
+                                                        contentDescription = null
+                                                    )
+                                                }
+                                            )
+                                        }
                                     }
                                 }
                             }
-                        }
-                    )
-                }
+                        )
+                    }
                 ) { padding ->
                     Box(
                         modifier = Modifier
@@ -238,7 +249,7 @@ fun CalculatorApp(
                             modifier = Modifier.fillMaxSize(),
                             verticalArrangement = Arrangement.SpaceBetween
                         ) {
-                            // AREA DISPLAY / CRONOLOGIA (Transizione a discesa dall'alto verso il basso)
+                            // Display and history slide panel
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -277,7 +288,7 @@ fun CalculatorApp(
                                 }
                             }
 
-                            // TASTIERINO CON LEVA ESPANSIONE STILE PIXEL E TOOLBAR STRUMENTI M3
+                            // Calculator keypad with expand lever and M3 toolbar
                             BaseKeypad(
                                 isProMode = state.isProMode,
                                 isShiftActive = state.isShiftActive,
@@ -304,7 +315,7 @@ fun CalculatorApp(
                             )
                         }
 
-                        // Overlay di dismiss al tocco fuori dalla toolbar quando aperta
+                        // Dismiss overlay when toolbar is open
                         if (isToolBarExpanded) {
                             Box(
                                 modifier = Modifier
@@ -324,7 +335,7 @@ fun CalculatorApp(
         }
     }
 
-    // DIALOG SELEZIONE TEMA E ICONA APPLICAZIONE
+    // Theme and icon selection dialog
     if (state.showThemeDialog) {
         ThemeSelectionDialog(
             currentTheme = state.themeMode,
@@ -343,7 +354,7 @@ fun CalculatorApp(
         )
     }
 
-    // DIALOG CONFERMA CANCELLAZIONE CRONOLOGIA
+    // Clear history confirmation dialog
     if (state.showClearHistoryDialog) {
         ClearHistoryConfirmDialog(
             onConfirm = {

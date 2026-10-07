@@ -42,11 +42,13 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.pixel.calculator.R
 import com.google.pixel.calculator.core.sensors.CompassLocationData
 import com.google.pixel.calculator.core.sensors.CompassLocationManager
 import com.google.pixel.calculator.core.sensors.CompassSensorManager
@@ -56,11 +58,11 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * Schermata della Bussola Digitale Google Pixel in Material 3 Expressive.
- * - Stile grafico fedele con quadrante ad alta precisione, tacche a 360°, ago sfaccettato 3D bicolore.
- * - Coordinate GPS (Latitudine, Longitudine) e Altitudine in basso con formattazione DMS / Decimale.
- * - Menu con 3 punti in alto con avvio della modalità di ricalibrazione a figura di 8.
- * - Barra di navigazione strumenti unificata M3.
+ * Google Pixel Digital Compass screen in Material 3 Expressive.
+ * - High-precision dial with 360° tick marks and 3D faceted bicolored needle.
+ * - GPS coordinates (Latitude, Longitude) and Altitude with DMS / Decimal formatting.
+ * - Top 3-dot menu with figure-8 recalibration trigger.
+ * - Unified M3 tool navigation bar.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,7 +75,7 @@ fun CompassView(
     val clipboardManager = LocalClipboardManager.current
     val density = LocalDensity.current
 
-    // Gestori Sensori e Posizione
+    // Sensor and Location managers
     val compassManager = remember { CompassSensorManager(context) }
     val locationManager = remember { CompassLocationManager(context) }
 
@@ -82,7 +84,7 @@ fun CompassView(
     )
     val locationData by locationManager.locationFlow.collectAsState()
 
-    // Permessi Posizione
+    // Location permissions launcher
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -93,7 +95,7 @@ fun CompassView(
         }
     }
 
-    // Avvio ascolto sensori posizione con richiesta automatica permessi
+    // Start location updates on launch with permission check
     LaunchedEffect(Unit) {
         if (!locationManager.hasPermission()) {
             locationPermissionLauncher.launch(
@@ -116,12 +118,12 @@ fun CompassView(
         }
     }
 
-    // Stati UI
+    // UI state
     var showMenu by remember { mutableStateOf(false) }
     var showCalibrationDialog by remember { mutableStateOf(false) }
     var useDecimalFormat by remember { mutableStateOf(false) }
 
-    // Calcolo dell'azimut continuo per rotazione fluida a 360° senza scatti al passaggio da 359° a 0°
+    // Continuous azimuth calculation for smooth 360° rotation across 359°-0° boundary
     var continuousAzimuth by remember { mutableFloatStateOf(compassData.azimuthDegrees) }
 
     LaunchedEffect(compassData.azimuthDegrees) {
@@ -141,7 +143,7 @@ fun CompassView(
         label = "CompassSmoothRotation"
     )
 
-    // Dialog di Ricalibrazione a Figura di 8
+    // Figure-8 recalibration dialog
     if (showCalibrationDialog) {
         CompassCalibrationDialog(
             compassData = compassData,
@@ -161,24 +163,23 @@ fun CompassView(
         topBar = {
             TopAppBar(
                 title = {
-                    // Intestazione minimalista con solo icona indietro e menu a 3 puntini
+                    // Minimalist top bar with back navigation and 3-dot menu
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Torna alla calcolatrice",
+                            contentDescription = stringResource(R.string.back_to_calculator),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 },
                 actions = {
-                    // Menu con 3 punti in alto
                     Box {
                         IconButton(onClick = { showMenu = true }) {
                             Icon(
                                 imageVector = Icons.Default.MoreVert,
-                                contentDescription = "Opzioni bussola",
+                                contentDescription = stringResource(R.string.compass_options),
                                 tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
@@ -188,7 +189,7 @@ fun CompassView(
                             onDismissRequest = { showMenu = false }
                         ) {
                             DropdownMenuItem(
-                                text = { Text("Ricalibra bussola") },
+                                text = { Text(stringResource(R.string.recalibrate_compass)) },
                                 onClick = {
                                     showMenu = false
                                     showCalibrationDialog = true
@@ -201,7 +202,13 @@ fun CompassView(
 
                             DropdownMenuItem(
                                 text = {
-                                    Text(if (locationData.hasPermission) "Aggiorna posizione GPS" else "Attiva posizione GPS")
+                                    Text(
+                                        if (locationData.hasPermission) {
+                                            stringResource(R.string.update_gps_location)
+                                        } else {
+                                            stringResource(R.string.enable_gps_location)
+                                        }
+                                    )
                                 },
                                 onClick = {
                                     showMenu = false
@@ -224,7 +231,13 @@ fun CompassView(
 
                             DropdownMenuItem(
                                 text = {
-                                    Text(if (useDecimalFormat) "Usa formato DMS (G°M'S\")" else "Usa formato decimale")
+                                    Text(
+                                        if (useDecimalFormat) {
+                                            stringResource(R.string.use_dms_format)
+                                        } else {
+                                            stringResource(R.string.use_decimal_format)
+                                        }
+                                    )
                                 },
                                 onClick = {
                                     showMenu = false
@@ -239,7 +252,7 @@ fun CompassView(
                             HorizontalDivider()
 
                             DropdownMenuItem(
-                                text = { Text("Copia coordinate") },
+                                text = { Text(stringResource(R.string.copy_coordinates)) },
                                 onClick = {
                                     showMenu = false
                                     val coordsText = "${locationData.latitudeDms} ${locationData.latitudeCardinal}, ${locationData.longitudeDms} ${locationData.longitudeCardinal} - ${locationData.altitudeFormatted}"
@@ -266,7 +279,7 @@ fun CompassView(
                 .padding(padding)
         ) {
             if (isLandscape) {
-                // Layout Orizzontale (Landscape): Bussola a SINISTRA, tutte le scritte a DESTRA
+                // Landscape layout: Compass on LEFT, Info/Cards on RIGHT
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
@@ -274,7 +287,6 @@ fun CompassView(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    // Colonna Sinistra: Quadrante Bussola
                     Box(
                         modifier = Modifier
                             .weight(1f)
@@ -288,7 +300,6 @@ fun CompassView(
                         )
                     }
 
-                    // Colonna Destra: Tutte le scritte (Località, Angolo e Schede Coordinate)
                     Column(
                         modifier = Modifier
                             .weight(1.15f)
@@ -326,7 +337,7 @@ fun CompassView(
                     }
                 }
             } else {
-                // Layout Verticale (Portrait)
+                // Portrait layout
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -334,7 +345,6 @@ fun CompassView(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // In Alto: Località + Azimut 0°N
                     CompassHeader(
                         locationName = locationData.locationName,
                         hasPermission = locationData.hasPermission,
@@ -350,7 +360,6 @@ fun CompassView(
                         }
                     )
 
-                    // Al Centro: Quadrante della Bussola Google Pixel
                     Box(
                         modifier = Modifier
                             .weight(1f)
@@ -364,7 +373,7 @@ fun CompassView(
                         )
                     }
 
-                    // Suggerimento di allineamento se il telefono è troppo inclinato
+                    // Flat alignment hint when device is significantly tilted
                     AnimatedVisibility(
                         visible = !compassData.isLevel,
                         enter = fadeIn(),
@@ -376,7 +385,7 @@ fun CompassView(
                             modifier = Modifier.padding(bottom = 8.dp)
                         ) {
                             Text(
-                                text = "Tieni il telefono in piano per la massima precisione",
+                                text = stringResource(R.string.compass_flat_hint),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
@@ -384,7 +393,6 @@ fun CompassView(
                         }
                     }
 
-                    // In Basso: Schede Coordinate e Altitudine
                     CompassCoordinateCards(
                         locationData = locationData,
                         useDecimalFormat = useDecimalFormat,
@@ -398,7 +406,6 @@ fun CompassView(
                 }
             }
 
-            // Barra strumenti fluttuante Material 3 coerente con il resto dell'app
             PixelFloatingToolBar(
                 currentScreen = ActiveScreen.TOOLBOX_COMPASS,
                 onNavigate = onNavigate,
@@ -409,7 +416,7 @@ fun CompassView(
 }
 
 /**
- * Sezione di Intestazione con località e grande lettura dei gradi e direzione cardinale (es. 0°N).
+ * Header section with location and large numeric degrees + cardinal readout.
  */
 @Composable
 private fun CompassHeader(
@@ -424,7 +431,6 @@ private fun CompassHeader(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Riga Località con Pin (cliccabile per richiedere il permesso se non presente)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
@@ -452,7 +458,6 @@ private fun CompassHeader(
 
         Spacer(modifier = Modifier.height(2.dp))
 
-        // Grande visualizzazione numerica dei gradi e direzione (es. 0°N)
         val normalizedDeg = ((azimuthDegrees % 360f) + 360f) % 360f
         val currentCardinal = CompassSensorManager.getCardinal(normalizedDeg)
         val headingText = "${normalizedDeg.toInt()}°$currentCardinal"
@@ -467,12 +472,12 @@ private fun CompassHeader(
 }
 
 /**
- * Quadrante della Bussola fedele allo stile Google Pixel dell'immagine:
- * - Lunetta circolare ad alta definizione con tacche ogni 2°, 10°, 30°.
- * - Indicatore triangolare rosso in alto (0° orientamento dispositivo).
- * - Rotazione coordinata con azimut magnetico.
- * - Numeri dei gradi e punti cardinali N, E, S, W.
- * - Ago magnetico bicolore (Nord Rosso con sfaccettatura 3D, Sud Blu con sfaccettatura 3D, perno centrale).
+ * Pixel Compass Dial:
+ * - High-definition circular bezel with ticks every 2°, 10°, 30°.
+ * - Fixed top red triangular marker (0° device heading).
+ * - Coordinated azimuth rotation.
+ * - Cardinal labels N, E, S, W and degree angles.
+ * - 3D faceted bicolored needle (Red North, Blue South).
  */
 @Composable
 private fun PixelCompassDial(
@@ -502,7 +507,7 @@ private fun PixelCompassDial(
             val center = Offset(size.width / 2f, size.height / 2f)
             val radius = size.width / 2f - 12.dp.toPx()
 
-            // 1. Lunetta esterna
+            // Outer bezel
             drawCircle(
                 color = outerRingColor,
                 radius = radius,
@@ -510,7 +515,7 @@ private fun PixelCompassDial(
                 style = Stroke(width = 2.dp.toPx())
             )
 
-            // Anello interno sottile di precisione
+            // Precision inner thin ring
             drawCircle(
                 color = outerRingColor.copy(alpha = 0.5f),
                 radius = radius * 0.76f,
@@ -518,9 +523,8 @@ private fun PixelCompassDial(
                 style = Stroke(width = 1.dp.toPx())
             )
 
-            // 2. Elementi che ruotano con l'azimut inverso (-azimuth)
+            // Elements rotating with negative azimuth
             rotate(-azimuth, pivot = center) {
-                // Tacche perimetrali ogni 2 gradi
                 for (deg in 0 until 360 step 2) {
                     val isCardinal = deg % 90 == 0
                     val isMajor = deg % 30 == 0
@@ -558,14 +562,12 @@ private fun PixelCompassDial(
                     }
                 }
 
-                // Disegno etichette con canvas nativo per rendering ad altissime prestazioni
                 drawIntoCanvas { canvas ->
                     val nativePaint = Paint().apply {
                         isAntiAlias = true
                         textAlign = Paint.Align.CENTER
                     }
 
-                    // Punti Cardinali (N, E, S, W)
                     val cardinals = listOf(
                         Pair(0, "N"),
                         Pair(90, "E"),
@@ -586,7 +588,6 @@ private fun PixelCompassDial(
                         canvas.nativeCanvas.drawText(label, lx, baseline, nativePaint)
                     }
 
-                    // Numeri dei gradi (30, 60, 120, 150, 210, 240, 300, 330)
                     nativePaint.textSize = 10.sp.toPx()
                     nativePaint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
                     nativePaint.color = subTextColorArgb
@@ -602,16 +603,14 @@ private fun PixelCompassDial(
                     }
                 }
 
-                // 3. Ago Magnetico Bicolore Sfaccettato (3D Diamond Needle)
+                // 3D Diamond needle
                 val needleLength = radius * 0.72f
                 val needleHalfWidth = 13.dp.toPx()
 
-                // Punta Nord (Rosso Material)
                 val northTip = Offset(center.x, center.y - needleLength)
                 val leftWaist = Offset(center.x - needleHalfWidth, center.y)
                 val rightWaist = Offset(center.x + needleHalfWidth, center.y)
 
-                // Sfaccettatura sinistra Nord (colore vivido)
                 val northLeftFacet = Path().apply {
                     moveTo(center.x, center.y)
                     lineTo(leftWaist.x, leftWaist.y)
@@ -620,7 +619,6 @@ private fun PixelCompassDial(
                 }
                 drawPath(northLeftFacet, color = redAccent)
 
-                // Sfaccettatura destra Nord (colore ombreggiato)
                 val northRightFacet = Path().apply {
                     moveTo(center.x, center.y)
                     lineTo(rightWaist.x, rightWaist.y)
@@ -629,10 +627,8 @@ private fun PixelCompassDial(
                 }
                 drawPath(northRightFacet, color = redDarkAccent)
 
-                // Punta Sud (Blu Material)
                 val southTip = Offset(center.x, center.y + needleLength)
 
-                // Sfaccettatura sinistra Sud (colore vivido)
                 val southLeftFacet = Path().apply {
                     moveTo(center.x, center.y)
                     lineTo(leftWaist.x, leftWaist.y)
@@ -641,7 +637,6 @@ private fun PixelCompassDial(
                 }
                 drawPath(southLeftFacet, color = blueAccent)
 
-                // Sfaccettatura destra Sud (colore ombreggiato)
                 val southRightFacet = Path().apply {
                     moveTo(center.x, center.y)
                     lineTo(rightWaist.x, rightWaist.y)
@@ -650,7 +645,7 @@ private fun PixelCompassDial(
                 }
                 drawPath(southRightFacet, color = blueDarkAccent)
 
-                // 4. Perno centrale (Hub dell'ago)
+                // Needle hub
                 val hubOuterRadius = 14.dp.toPx()
                 val hubInnerRadius = 8.dp.toPx()
                 val hubCoreRadius = 4.dp.toPx()
@@ -673,7 +668,7 @@ private fun PixelCompassDial(
                 )
             }
 
-            // 5. Indicatore triangolare fisso in alto a 0° (Marker di mira sul telaio)
+            // Fixed top red triangular indicator (0° device heading marker)
             val topPointerLength = 9.dp.toPx()
             val topPointerWidth = 8.dp.toPx()
             val topPointer = Path().apply {
@@ -688,9 +683,7 @@ private fun PixelCompassDial(
 }
 
 /**
- * Sezione informativa in basso:
- * - Coordinate (Latitudine e Longitudine) disposte entrambe sullo STESSO livello orizzontale.
- * - Altitudine posizionata al di sotto delle coordinate in una scheda/badge dedicato.
+ * Bottom coordinate and altitude information section.
  */
 @Composable
 private fun CompassCoordinateCards(
@@ -709,13 +702,11 @@ private fun CompassCoordinateCards(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 1. Riga Coordinate sullo STESSO livello (Latitudine e Longitudine affiancate)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Scheda Sinistra: Latitudine (es. 40°5'35" NL)
             Card(
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(
@@ -747,7 +738,6 @@ private fun CompassCoordinateCards(
                 }
             }
 
-            // Scheda Destra: Longitudine (es. 120°2'1" EL) sullo stesso identico livello
             Card(
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(
@@ -780,7 +770,6 @@ private fun CompassCoordinateCards(
             }
         }
 
-        // 2. Elemento SOTTO: Altitudine (es. ↓ 991m • ALT)
         Surface(
             shape = RoundedCornerShape(percent = 50),
             color = MaterialTheme.colorScheme.surfaceContainer,
@@ -793,7 +782,7 @@ private fun CompassCoordinateCards(
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowDownward,
-                    contentDescription = "Altitudine",
+                    contentDescription = stringResource(R.string.altitude),
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(16.dp)
                 )

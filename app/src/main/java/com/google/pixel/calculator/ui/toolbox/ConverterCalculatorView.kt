@@ -19,9 +19,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.pixel.calculator.R
 import com.google.pixel.calculator.core.math.EvaluationContext
 import com.google.pixel.calculator.core.math.MathEvaluator
 import com.google.pixel.calculator.core.utils.CurrencyRateRepository
@@ -33,11 +35,11 @@ import com.google.pixel.calculator.ui.keypad.BaseKeypad
 import com.google.pixel.calculator.ui.theme.CalculatorTheme
 
 /**
- * Schermata Convertitore di Unità per Calcolatrice-Pixel:
- * - Due caselle cliccabili: quella attiva ha testo in colore normale, l'altra è sbiadita.
- * - Cliccando una casella se ne modifica il valore mentre l'altra mostra la conversione automatica.
- * - Tasto swap che scambia le unità mantenendo il valore inserito nella casella attiva.
- * - Nessuna emoji nelle scritte o nei menu.
+ * Unit Converter Screen for Pixel Calculator:
+ * - Two clickable boxes: active box has high-contrast regular text, passive box is faded.
+ * - Clicking a box focuses it for input while the other box computes real-time conversion.
+ * - Swap button exchanges units while preserving the entered numerical value in the active box.
+ * - Clean typographic design without emojis in titles or menus.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,16 +64,16 @@ fun ConverterCalculatorView(
     val converter = remember(currencyRepo) { UnitConverter(currencyRepo) }
     val evaluator = remember { MathEvaluator() }
 
-    // Raccoglie gli aggiornamenti tassi valuta
+    // Collect currency rate updates
     val currencyRates by currencyRepo.rates.collectAsState()
     val isCurrencyUpdating by currencyRepo.isUpdating.collectAsState()
 
-    // Stato Unità di Conversione (default: Massa kg e g, o Valuta USD ed EUR)
+    // Unit conversion state (default: Mass kg and g, or Currency USD and EUR)
     var selectedCategory by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(UnitConverter.Category.MASS) }
     var topUnitCode by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("g") }
     var bottomUnitCode by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("kg") }
 
-    // Stato Casella Attiva (TOP o BOTTOM)
+    // Active field state (TOP or BOTTOM)
     var activeField by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(ActiveConverterField.TOP) }
     var expression by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("100") }
     var shouldClearOnNextDigit by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
@@ -81,16 +83,16 @@ fun ConverterCalculatorView(
     var isRadians by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(true) }
     var isHapticEnabled by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(true) }
 
-    // Stato Picker Bottom Sheet
+    // Unit picker bottom sheet state
     var showPicker by remember { mutableStateOf(false) }
     var pickerTarget by remember { mutableStateOf(UnitPickerTarget.FROM) }
 
-    // All'avvio se è valuta, controlla se aggiornare i tassi (> 24h)
+    // Check on launch if rates need refreshing (> 24h)
     LaunchedEffect(Unit) {
         currencyRepo.updateRatesIfNeeded(coroutineScope, force = false)
     }
 
-    // Calcolo numerico del valore della casella attiva in tempo reale
+    // Real-time evaluation of active expression
     val activeNumericValue by remember(expression, isRadians) {
         derivedStateOf {
             if (expression.isBlank()) {
@@ -111,7 +113,7 @@ fun ConverterCalculatorView(
         }
     }
 
-    // Risultato convertito per la casella passiva
+    // Converted value for the passive box
     val passiveConvertedValueStr by remember(activeNumericValue, topUnitCode, bottomUnitCode, activeField, selectedCategory, currencyRates) {
         derivedStateOf {
             val fromCode = if (activeField == ActiveConverterField.TOP) topUnitCode else bottomUnitCode
@@ -121,7 +123,7 @@ fun ConverterCalculatorView(
         }
     }
 
-    // Stringhe visualizzate per ciascuna casella
+    // Strings displayed for each box
     val topDisplayStr = if (activeField == ActiveConverterField.TOP) {
         if (expression.isEmpty()) "0" else expression
     } else {
@@ -145,18 +147,16 @@ fun ConverterCalculatorView(
             ?: topUnitDef
     }
 
-    // Funzione Swap: scambia le due unità mantenendo il valore nella casella attiva
+    // Swap action: swaps units while keeping current input value in active box
     val onPerformSwap: () -> Unit = {
         val oldTop = topUnitCode
         val oldBottom = bottomUnitCode
         topUnitCode = oldBottom
         bottomUnitCode = oldTop
-        // Il valore inserito nella casella attiva rimane lo stesso, quindi la conversione
-        // viene immediatamente ricalcolata con le nuove unità invertite (es. 100g -> 100kg = x g)
         shouldClearOnNextDigit = false
     }
 
-    // Funzione di pulizia formattazione per inserimento numerico
+    // Cleans formatted string for numeric input
     fun cleanNumberForInput(str: String): String {
         return str.replace(".", "").replace(",", ".")
     }
@@ -169,7 +169,7 @@ fun ConverterCalculatorView(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Torna indietro",
+                            contentDescription = stringResource(R.string.back),
                             tint = CalculatorTheme.colors.onSurface
                         )
                     }
@@ -177,20 +177,20 @@ fun ConverterCalculatorView(
                 title = {
                     Column {
                         Text(
-                            text = "Convertitore",
+                            text = stringResource(R.string.tool_converter),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = CalculatorTheme.colors.onSurface
                         )
                         if (selectedCategory == UnitConverter.Category.CURRENCY) {
                             Text(
-                                text = currencyRepo.getLastUpdateText(),
+                                text = currencyRepo.getLastUpdateText(context),
                                 fontSize = 11.sp,
                                 color = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.8f)
                             )
                         } else {
                             Text(
-                                text = selectedCategory.displayName,
+                                text = if (selectedCategory.nameRes != 0) stringResource(selectedCategory.nameRes) else selectedCategory.displayName,
                                 fontSize = 12.sp,
                                 color = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.8f)
                             )
@@ -198,7 +198,7 @@ fun ConverterCalculatorView(
                     }
                 },
                 actions = {
-                    // Pulsante sincronizzazione ultra-leggera tassi se in modalità valuta
+                    // Refresh button for currency exchange rates
                     if (selectedCategory == UnitConverter.Category.CURRENCY) {
                         val infiniteTransition = rememberInfiniteTransition(label = "SyncRotation")
                         val angle by infiniteTransition.animateFloat(
@@ -218,7 +218,7 @@ fun ConverterCalculatorView(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Refresh,
-                                contentDescription = "Aggiorna tassi di cambio",
+                                contentDescription = stringResource(R.string.update_exchange_rates),
                                 tint = CalculatorTheme.colors.onSurface,
                                 modifier = if (isCurrencyUpdating) Modifier.rotate(angle) else Modifier
                             )
@@ -241,7 +241,7 @@ fun ConverterCalculatorView(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // AREA DISPLAY CON DUE CASELLE CLICCABILI (Attiva normale, Inattiva sbiadita)
+                // Two clickable display boxes (active is high contrast, passive is faded)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -257,8 +257,6 @@ fun ConverterCalculatorView(
                         isHapticEnabled = isHapticEnabled,
                         onFocusField = { clickedField ->
                             if (activeField != clickedField) {
-                                // Cambia casella attiva: imposta il valore corrente della casella
-                                // e abilita la sovrascrittura alla prima cifra digitata
                                 val currentPassiveStr = if (clickedField == ActiveConverterField.TOP) topDisplayStr else bottomDisplayStr
                                 activeField = clickedField
                                 expression = cleanNumberForInput(currentPassiveStr)
@@ -278,7 +276,7 @@ fun ConverterCalculatorView(
                     )
                 }
 
-                // TASTIERINO CALCOLATRICE COMPLETO (BaseKeypad)
+                // Full calculator keypad (BaseKeypad)
                 BaseKeypad(
                     isProMode = isProMode,
                     isShiftActive = isShiftActive,
@@ -361,7 +359,6 @@ fun ConverterCalculatorView(
                         }
                     },
                     onEquals = {
-                        // Risolve l'espressione matematica nella casella attiva
                         if (expression.isNotBlank()) {
                             val evalResult = evaluator.evaluate(expression, EvaluationContext(isRadians = isRadians))
                             if (evalResult.isSuccess && evalResult.rawValue != null) {
@@ -377,7 +374,7 @@ fun ConverterCalculatorView(
                 )
             }
 
-            // Dismiss al tocco esterno quando la toolbar è aperta
+            // Outside dismiss when toolbar is open
             if (isToolBarExpanded) {
                 Box(
                     modifier = Modifier
@@ -394,7 +391,7 @@ fun ConverterCalculatorView(
         }
     }
 
-    // MODAL BOTTOM SHEET SELETTORE UNITA'
+    // Modal Bottom Sheet unit picker
     if (showPicker) {
         UnitPickerSheet(
             converter = converter,
@@ -404,7 +401,6 @@ fun ConverterCalculatorView(
             onDismiss = { showPicker = false },
             onSelectUnit = { category, unitCode ->
                 if (category != selectedCategory) {
-                    // Cambio categoria intelligente: adatta automaticamente anche l'altra unità
                     selectedCategory = category
                     val units = converter.getUnitsForCategory(category)
                     val companion = units.firstOrNull { it.code != unitCode }?.code ?: unitCode
@@ -416,7 +412,6 @@ fun ConverterCalculatorView(
                         topUnitCode = companion
                     }
                 } else {
-                    // Stessa categoria
                     if (pickerTarget == UnitPickerTarget.FROM) {
                         topUnitCode = unitCode
                     } else {

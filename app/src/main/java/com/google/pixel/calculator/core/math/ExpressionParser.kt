@@ -4,13 +4,13 @@ import java.math.BigDecimal
 import java.util.Stack
 
 /**
- * Parser matematico ad alte prestazioni basato su Shunting-Yard di Dijkstra.
- * Converte stringhe di espressioni in un albero sintattico (MathNode).
- * Supporta:
- * - Moltiplicazione implicita (es: 2x, 2(3), (4)sin(30))
- * - Notazione 2D a frazione: frac(num, den) o num/den
- * - Operatori unari negativi e positivi
- * - Costanti e funzioni estese
+ * High-performance mathematical parser based on Dijkstra's Shunting-Yard algorithm.
+ * Converts expression strings into an Abstract Syntax Tree (MathNode).
+ * Supports:
+ * - Implicit multiplication (e.g. 2x, 2(3), (4)sin(30))
+ * - 2D fraction notation: frac(num, den) or num/den
+ * - Unary positive and negative operators
+ * - Extended constants and functions
  */
 class ExpressionParser {
 
@@ -73,7 +73,7 @@ class ExpressionParser {
         )
         s = s.map { subscriptMap[it] ?: it }.joinToString("")
 
-        // Gestione |expr| -> abs(expr)
+        // Handle |expr| -> abs(expr)
         var absIdx = s.indexOf('|')
         while (absIdx != -1) {
             val nextAbsIdx = s.indexOf('|', absIdx + 1)
@@ -125,7 +125,7 @@ class ExpressionParser {
 
             when {
                 c.isDigit() || c == '.' -> {
-                    // Controlla moltiplicazione implicita prima di un numero: es. (2)3 -> (2)*3 o 5% 3 -> 5% * 3
+                    // Check implicit multiplication before a number: e.g. (2)3 -> (2)*3 or 5% 3 -> 5% * 3
                     if (tokens.isNotEmpty() && (tokens.last() is Token.CloseParen || (tokens.last() is Token.Operator && (tokens.last() as Token.Operator).symbol in listOf("!", "%")))) {
                         tokens.add(Token.Operator("*", 2))
                     }
@@ -143,7 +143,7 @@ class ExpressionParser {
                     continue
                 }
                 c == '(' -> {
-                    // Controlla moltiplicazione implicita prima di '(': es. 2(3) -> 2*(3)
+                    // Check implicit multiplication before '(': e.g. 2(3) -> 2*(3)
                     if (tokens.isNotEmpty() && shouldInsertImplicitMul(tokens.last())) {
                         tokens.add(Token.Operator("*", 2))
                     }
@@ -159,7 +159,7 @@ class ExpressionParser {
                     i++
                 }
                 c == '%' || c == '!' -> {
-                    // Operatori unari postfissi (percentuale e fattoriale) ad alta precedenza
+                    // High-precedence postfix unary operators (percentage and factorial)
                     tokens.add(Token.Operator(c.toString(), 4, isRightAssociative = false))
                     i++
                 }
@@ -203,7 +203,7 @@ class ExpressionParser {
                 c.isLetter() || c == 'π' || c in "αβγδεζηθικλμνξοπρστυφχψωΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ" -> {
                     val remaining = expr.substring(i)
 
-                    // 1. Match funzioni note multi-carattere (es. sin, cos, binom, ecc.)
+                    // 1. Match known multi-character functions (e.g. sin, cos, binom, etc.)
                     val matchedFn = KNOWN_FUNCTIONS.firstOrNull { remaining.startsWith(it, ignoreCase = true) }
                     if (matchedFn != null) {
                         if (tokens.isNotEmpty() && shouldInsertImplicitMul(tokens.last())) {
@@ -214,7 +214,7 @@ class ExpressionParser {
                         continue
                     }
 
-                    // 2. Match costanti note multi-carattere (es. pi, phi, hbar, eps0, ecc.)
+                    // 2. Match known multi-character constants (e.g. pi, phi, hbar, eps0, etc.)
                     val matchedConst = KNOWN_CONSTANTS.firstOrNull { remaining.startsWith(it, ignoreCase = true) }
                     if (matchedConst != null) {
                         if (tokens.isNotEmpty() && shouldInsertImplicitMul(tokens.last())) {
@@ -225,7 +225,7 @@ class ExpressionParser {
                         continue
                     }
 
-                    // 3. Singola lettera / variabile algebrica (es. a, b, c, x, y, z) con supporto a pedici (es. v_0, a_1)
+                    // 3. Single letter / algebraic variable (e.g. a, b, c, x, y, z) with subscript support (e.g. v_0, a_1)
                     val sb = StringBuilder()
                     sb.append(c)
                     i++
@@ -367,7 +367,7 @@ class ExpressionParser {
                 val right = outputStack.pop()
                 val left = outputStack.pop()
                 
-                // Se è una divisione, possiamo rappresentarla anche come frazione AST per rendering 2D
+                // If it is a division, we can also represent it as an AST fraction for 2D rendering
                 if (opToken.symbol == "/") {
                     outputStack.push(MathNode.Fraction(left, right))
                 } else {

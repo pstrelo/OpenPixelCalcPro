@@ -6,9 +6,9 @@ import android.util.DisplayMetrics
 import android.view.WindowManager
 
 /**
- * Utilità di calibrazione fisica dello schermo per il Righello Pixel.
- * Converte pixel reali in millimetri, centimetri e pollici precisi sfruttando xdpi/ydpi del pannello OLED.
- * Include calibrazione persistente per garantire che le dimensioni effettive su schermo siano esatte al 100%.
+ * Physical screen calibration utility for Pixel Ruler.
+ * Converts real pixels into accurate millimeters, centimeters, and inches leveraging OLED panel xdpi/ydpi.
+ * Includes persistent calibration to guarantee on-screen dimensions are 100% exact.
  */
 object RulerUtils {
 
@@ -18,11 +18,11 @@ object RulerUtils {
     private const val PREFS_NAME = "pixel_ruler_prefs"
     private const val KEY_CALIBRATION_FACTOR = "calibration_factor"
 
-    // Riferimenti fisici standard per la calibrazione reale
+    // Standard physical references for real calibration
     const val CREDIT_CARD_WIDTH_MM = 85.60f // Standard ISO/IEC 7810 ID-1
     const val CREDIT_CARD_HEIGHT_MM = 53.98f
-    const val EURO_2_COIN_MM = 25.75f       // Moneta 2 Euro
-    const val EURO_1_COIN_MM = 23.25f       // Moneta 1 Euro
+    const val EURO_2_COIN_MM = 25.75f       // 2 Euro coin
+    const val EURO_1_COIN_MM = 23.25f       // 1 Euro coin
 
     fun getCalibrationFactor(context: Context): Float {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -70,7 +70,7 @@ object RulerUtils {
     }
 
     /**
-     * Rileva i DPI grezzi fisici del pannello senza applicare il fattore di calibrazione.
+     * Detects raw physical panel DPI without applying calibration factor.
      */
     @Suppress("DEPRECATION")
     fun getRawScreenDpi(context: Context): Pair<Float, Float> {
@@ -105,7 +105,7 @@ object RulerUtils {
     }
 
     /**
-     * Rileva i DPI calibrati del display (DPI grezzi moltiplicati per il fattore di calibrazione).
+     * Detects calibrated display DPI (raw DPI multiplied by calibration factor).
      */
     fun getScreenDpi(context: Context): Pair<Float, Float> {
         val (rawXdpi, rawYdpi) = getRawScreenDpi(context)

@@ -20,9 +20,9 @@ class AppIconManagerTest {
             res
         }
 
-        // Tutti i 7 temi devono avere una risorsa drawable assegnata
+        // All 7 themes must have an assigned drawable resource
         assertEquals(7, foregrounds.size)
-        // I 7 foreground devono essere distinti per rappresentare ciascun tema
+        // All 7 foregrounds must be distinct to represent each theme
         assertEquals(7, foregrounds.distinct().size)
     }
 
@@ -49,14 +49,14 @@ class AppIconManagerTest {
     fun testViewModelIconStateUpdates() {
         val viewModel = CalculatorViewModel()
         
-        // Verifica default
+        // Verify default
         assertEquals(AppThemeMode.SYSTEM_AUTO, viewModel.uiState.value.appIconMode)
         
-        // Aggiorna a Candy Pop
+        // Update to Candy Pop
         viewModel.setAppIconMode(AppThemeMode.CANDY_POP)
         assertEquals(AppThemeMode.CANDY_POP, viewModel.uiState.value.appIconMode)
 
-        // Aggiorna a Retro Cyber
+        // Update to Retro Cyber
         viewModel.setAppIconMode(AppThemeMode.RETRO_CYBER)
         assertEquals(AppThemeMode.RETRO_CYBER, viewModel.uiState.value.appIconMode)
 

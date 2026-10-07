@@ -11,18 +11,18 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlin.math.abs
 
 /**
- * Gestore sensori unificato per la Bussola digitale in stile Google Pixel.
- * Supporta contemporaneamente:
- * 1. Sensor.TYPE_ROTATION_VECTOR (Moderno vettore di rotazione con fusione hardware, supportato nativamente dall'emulatore Android per "Device Pose" / "Compass" e dai dispositivi fisici a 120Hz).
- * 2. Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR (Vettore geomagnetico a basso consumo).
- * 3. Sensor.TYPE_ORIENTATION (Compatibilità legacy con simulatori e vecchi dispositivi).
- * 4. Sensor.TYPE_ACCELEROMETER + Sensor.TYPE_MAGNETIC_FIELD (Fusione matriciale grezza di fallback).
+ * Unified sensor manager for the Google Pixel-style digital compass.
+ * Concurrently supports:
+ * 1. Sensor.TYPE_ROTATION_VECTOR (Modern hardware-fused rotation vector, natively supported by Android emulator for "Device Pose" / "Compass" and physical 120Hz devices).
+ * 2. Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR (Low-power geomagnetic rotation vector).
+ * 3. Sensor.TYPE_ORIENTATION (Legacy compatibility with simulators and older devices).
+ * 4. Sensor.TYPE_ACCELEROMETER + Sensor.TYPE_MAGNETIC_FIELD (Raw fallback matrix sensor fusion).
  */
 class CompassSensorManager(context: Context) {
 
     private val sensorManager = context.applicationContext.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
 
-    // Sensori di orientamento e fusione
+    // Orientation and sensor fusion sensors
     private val rotationVector = sensorManager?.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
     private val geomagneticVector = sensorManager?.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR)
     private val orientationSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_ORIENTATION)
@@ -150,7 +150,7 @@ class CompassSensorManager(context: Context) {
             }
         }
 
-        // Registrazione prioritaria del sensore migliore per evitare crosstalk e tremolii tra pipeline concorrenti
+        // Prioritized registration of the best available sensor to avoid crosstalk and jitter across concurrent pipelines
         when {
             rotationVector != null -> {
                 sm.registerListener(listener, rotationVector, SensorManager.SENSOR_DELAY_UI)
@@ -175,11 +175,11 @@ class CompassSensorManager(context: Context) {
 
     companion object {
         /**
-         * Calcola l'azimut in gradi (0° = Nord, 90° = Est, 180° = Sud, 270° = Ovest).
-         * Utilizza una proiezione continua 3D:
-         * - In orizzontale (cosTilt = 1, sinTilt = 0): orientato lungo il lato superiore (+Y, componenti R[1] e R[4]).
-         * - In verticale (cosTilt = 0, sinTilt = 1): orientato lungo la linea di vista della fotocamera posteriore (-Z, componenti -R[2] e -R[5]).
-         * Garantisce che la bussola non sballi né salti passando dall'uso in piano a quello in verticale.
+         * Calculates azimuth in degrees (0° = North, 90° = East, 180° = South, 270° = West).
+         * Uses a continuous 3D projection:
+         * - Flat / horizontal (cosTilt = 1, sinTilt = 0): aligned along top edge (+Y, components R[1] and R[4]).
+         * - Upright / vertical (cosTilt = 0, sinTilt = 1): aligned along rear camera line-of-sight (-Z, components -R[2] and -R[5]).
+         * Ensures smooth transition without jumping or flipping between flat and vertical usage.
          */
         fun calculateAzimuth(rMatrix: FloatArray): Float {
             val cosTilt = rMatrix[8].coerceIn(0f, 1f)
@@ -193,9 +193,9 @@ class CompassSensorManager(context: Context) {
         }
 
         /**
-         * Filtro anti-tremolio con deadband e smoothing adattivo:
-         * - Deadband: ignora micro-vibrazioni del sensore (< 0.25°) quando il telefono è fermo.
-         * - Smoothing adattivo: fluido per micro-movimenti, reattivo per rotazioni decise.
+         * Anti-jitter filter with deadband and adaptive smoothing:
+         * - Deadband: ignores sensor micro-vibrations (< 0.25°) when device is stationary.
+         * - Adaptive smoothing: ultra-smooth for micro-movements, snappy and responsive for active rotations.
          */
         fun smoothAngle(current: Float, target: Float, alpha: Float? = null): Float {
             var diff = target - current

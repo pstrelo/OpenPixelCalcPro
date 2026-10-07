@@ -139,7 +139,7 @@ fun getThemeIconColors(themeMode: AppThemeMode): ThemeIconColors {
 }
 
 /**
- * Anteprima grafica dell'icona dell'applicazione per un dato tema.
+ * Graphical preview of the application icon for a given theme.
  */
 @Composable
 fun PixelAppIconPreview(

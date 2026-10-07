@@ -22,22 +22,22 @@ object AppIconManager {
     )
 
     /**
-     * Applica l'icona dell'applicazione corrispondente al tema scelto.
-     * Abilita l'activity-alias desiderato e disabilita tutti gli altri.
+     * Applies the application icon matching the selected theme.
+     * Enables the desired activity-alias and disables all others.
      */
     fun setAppIcon(context: Context, themeMode: AppThemeMode): Boolean {
         return try {
             val packageManager = context.packageManager
             val targetAlias = ALIAS_MAP[themeMode] ?: ALIAS_MAP[AppThemeMode.SYSTEM_AUTO]!!
 
-            // Abilita l'alias selezionato
+            // Enable selected alias
             packageManager.setComponentEnabledSetting(
                 ComponentName(context, targetAlias),
                 PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
                 PackageManager.DONT_KILL_APP
             )
 
-            // Disabilita gli altri alias
+            // Disable other aliases
             ALIAS_MAP.values.forEach { alias ->
                 if (alias != targetAlias) {
                     packageManager.setComponentEnabledSetting(
@@ -48,16 +48,16 @@ object AppIconManager {
                 }
             }
 
-            Log.d(TAG, "Icona applicazione aggiornata con successo al tema: $themeMode ($targetAlias)")
+            Log.d(TAG, "Application icon successfully updated for theme: $themeMode ($targetAlias)")
             true
         } catch (e: Exception) {
-            Log.e(TAG, "Errore durante il cambio icona applicazione per il tema $themeMode", e)
+            Log.e(TAG, "Error changing application icon for theme $themeMode", e)
             false
         }
     }
 
     /**
-     * Restituisce il tema attualmente impostato per l'icona dell'applicazione leggendo il PackageManager.
+     * Returns the currently active theme for the app icon from PackageManager.
      */
     fun getCurrentIcon(context: Context): AppThemeMode {
         return try {
@@ -70,13 +70,13 @@ object AppIconManager {
             }
             AppThemeMode.SYSTEM_AUTO
         } catch (e: Exception) {
-            Log.e(TAG, "Errore nella lettura dell'icona attiva dal PackageManager", e)
+            Log.e(TAG, "Error reading active icon from PackageManager", e)
             AppThemeMode.SYSTEM_AUTO
         }
     }
 
     /**
-     * Restituisce la risorsa drawable foreground per il tema
+     * Returns the foreground drawable resource for the theme
      */
     fun getForegroundDrawableRes(themeMode: AppThemeMode): Int = when (themeMode) {
         AppThemeMode.SYSTEM_AUTO -> R.drawable.ic_launcher_foreground_system_auto
@@ -89,7 +89,7 @@ object AppIconManager {
     }
 
     /**
-     * Restituisce la risorsa drawable background per il tema
+     * Returns the background drawable resource for the theme
      */
     fun getBackgroundDrawableRes(themeMode: AppThemeMode): Int = when (themeMode) {
         AppThemeMode.SYSTEM_AUTO -> R.drawable.ic_launcher_background_system_auto

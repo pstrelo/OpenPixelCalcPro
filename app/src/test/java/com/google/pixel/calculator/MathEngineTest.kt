@@ -14,7 +14,7 @@ class MathEngineTest {
 
     @Test
     fun testPrecisionDecimalAddition() {
-        // Verifica che 0.1 + 0.2 dia esattamente 0.3 senza l'errore floating point IEEE 754
+        // Verify that 0.1 + 0.2 yields exactly 0.3 without IEEE 754 floating point error
         val result = evaluator.evaluate("0.1 + 0.2")
         assertTrue(result.isSuccess)
         assertEquals("0,3", result.formattedResult)
@@ -50,7 +50,7 @@ class MathEngineTest {
 
     @Test
     fun testUnitConverter() {
-        // 1 pollice (in) = 2.54 centimetri (cm)
+        // 1 inch (in) = 2.54 centimeters (cm)
         val cm = converter.convert(1.0, "in", "cm", UnitConverter.Category.LENGTH)
         assertEquals(2.54, cm, 1e-6)
 
@@ -72,12 +72,12 @@ class MathEngineTest {
 
     @Test
     fun testShiftScientificFunctions() {
-        // sin⁻¹(1) in gradi = 90
+        // sin⁻¹(1) in degrees = 90
         val resAsin = evaluator.evaluate("sin⁻¹(1)", EvaluationContext(isRadians = false))
         assertTrue(resAsin.isSuccess)
         assertEquals("90", resAsin.formattedResult)
 
-        // tan⁻¹(1) in gradi = 45
+        // tan⁻¹(1) in degrees = 45
         val resAtan = evaluator.evaluate("tan⁻¹(1)", EvaluationContext(isRadians = false))
         assertTrue(resAtan.isSuccess)
         assertEquals("45", resAtan.formattedResult)
@@ -95,17 +95,17 @@ class MathEngineTest {
 
     @Test
     fun testAutoClosingParentheses() {
-        // Parentesi non chiuse dall'utente: sin(30 deve essere valutato come sin(30)
+        // Unclosed parentheses by user: sin(30 must be evaluated as sin(30)
         val resSin = evaluator.evaluate("sin(30", EvaluationContext(isRadians = false))
         assertTrue(resSin.isSuccess)
         assertEquals("0,5", resSin.formattedResult)
 
-        // √(16 senza parentesi chiusa -> 4
+        // √(16 without closing parenthesis -> 4
         val resSqrt = evaluator.evaluate("√(16")
         assertTrue(resSqrt.isSuccess)
         assertEquals("4", resSqrt.formattedResult)
 
-        // Espressioni annidate senza parentesi chiuse: (10 + 2 * (3 + 2 -> (10 + 2 * (3 + 2)) = 20
+        // Nested expressions without closed parentheses: (10 + 2 * (3 + 2 -> (10 + 2 * (3 + 2)) = 20
         val resNested = evaluator.evaluate("(10 + 2 * (3 + 2")
         assertTrue(resNested.isSuccess)
         assertEquals("20", resNested.formattedResult)
@@ -118,13 +118,13 @@ class MathEngineTest {
 
     @Test
     fun testSystemCalculatorPercentage() {
-        // Calcolatrice di sistema Google / Pixel:
-        // 100 + 20% = 120 (percentuale applicata come incremento)
+        // Google / Pixel system calculator behavior:
+        // 100 + 20% = 120 (percentage applied as increment)
         val resAdd = evaluator.evaluate("100 + 20%")
         assertTrue(resAdd.isSuccess)
         assertEquals("120", resAdd.formattedResult)
 
-        // 100 - 20% = 80 (percentuale applicata come sconto)
+        // 100 - 20% = 80 (percentage applied as discount)
         val resSub = evaluator.evaluate("100 - 20%")
         assertTrue(resSub.isSuccess)
         assertEquals("80", resSub.formattedResult)
@@ -157,7 +157,7 @@ class MathEngineTest {
 
     @Test
     fun testSymbolRootsAndRadDeg() {
-        // Radice quadrata con simbolo √(9) e auto-close √(9
+        // Square root with symbol √(9) and auto-close √(9
         val resSqrtClosed = evaluator.evaluate("√(9)")
         assertTrue(resSqrtClosed.isSuccess)
         assertEquals("3", resSqrtClosed.formattedResult)
@@ -166,7 +166,7 @@ class MathEngineTest {
         assertTrue(resSqrtOpen.isSuccess)
         assertEquals("3", resSqrtOpen.formattedResult)
 
-        // Radice n-esima con simbolo operatore: 3ʸ√8 = 2
+        // N-th root with operator symbol: 3ʸ√8 = 2
         val resNthRoot = evaluator.evaluate("3ʸ√8")
         assertTrue(resNthRoot.isSuccess)
         assertEquals("2", resNthRoot.formattedResult)
@@ -176,12 +176,12 @@ class MathEngineTest {
         assertTrue(resNthRoot4.isSuccess)
         assertEquals("3", resNthRoot4.formattedResult)
 
-        // Radice senza indice prefisso: ʸ√16 = 4 (default indice 2)
+        // Root without prefix index: ʸ√16 = 4 (default index 2)
         val resUnaryRoot = evaluator.evaluate("ʸ√16")
         assertTrue(resUnaryRoot.isSuccess)
         assertEquals("4", resUnaryRoot.formattedResult)
 
-        // Funzioni trigonometriche inverse e DEG/RAD
+        // Inverse trigonometric functions and DEG/RAD
         val resAsin = evaluator.evaluate("sin⁻¹(0.5)", EvaluationContext(isRadians = false))
         assertTrue(resAsin.isSuccess)
         assertEquals("30", resAsin.formattedResult)
@@ -193,22 +193,22 @@ class MathEngineTest {
 
     @Test
     fun testSuperscriptIndexedRoots() {
-        // Test radice cubica con apice: ³√(8) = 2
+        // Test cube root with superscript: ³√(8) = 2
         val resCubeClosed = evaluator.evaluate("³√(8)")
         assertTrue(resCubeClosed.isSuccess)
         assertEquals("2", resCubeClosed.formattedResult)
 
-        // Test radice cubica con parentesi auto-chiusa: ³√(8 -> 2
+        // Test cube root with auto-closed parenthesis: ³√(8 -> 2
         val resCubeAuto = evaluator.evaluate("³√(8")
         assertTrue(resCubeAuto.isSuccess)
         assertEquals("2", resCubeAuto.formattedResult)
 
-        // Test radice quarta: ⁴√(81) = 3
+        // Test fourth root: ⁴√(81) = 3
         val resFourth = evaluator.evaluate("⁴√(81)")
         assertTrue(resFourth.isSuccess)
         assertEquals("3", resFourth.formattedResult)
 
-        // Test combinazione con operatori: ³√(27) + 5 = 8
+        // Test combination with operators: ³√(27) + 5 = 8
         val resComb = evaluator.evaluate("³√(27) + 5")
         assertTrue(resComb.isSuccess)
         assertEquals("8", resComb.formattedResult)

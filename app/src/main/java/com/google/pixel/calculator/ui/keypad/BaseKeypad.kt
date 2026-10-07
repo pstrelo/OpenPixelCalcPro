@@ -18,6 +18,8 @@ import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.ui.res.stringResource
+import com.google.pixel.calculator.R
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -87,8 +89,8 @@ fun BaseKeypad(
             .padding(horizontal = if (isLandscape) 10.dp else 16.dp, vertical = if (isLandscape) 2.dp else 6.dp),
         verticalArrangement = Arrangement.spacedBy(spacing)
     ) {
-        // LEVA / FRECCIA DI ESPANSIONE SCIENTIFICA STILE GOOGLE PIXEL (posta sopra la prima fila a sinistra)
-        // In orizzontale ruota di 90 gradi per espansione laterale
+        // Scientific expansion lever/arrow (placed above the first row on the left)
+        // In landscape it rotates 90 degrees for horizontal expansion
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -105,7 +107,7 @@ fun BaseKeypad(
             ) {
                 Icon(
                     imageVector = if (isProMode) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = if (isProMode) "Riduci calcolatrice" else "Espandi funzioni scientifiche",
+                    contentDescription = if (isProMode) stringResource(R.string.reduce_calc) else stringResource(R.string.expand_scientific),
                     tint = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.8f),
                     modifier = Modifier
                         .size(if (isLandscape) 22.dp else 28.dp)
@@ -115,7 +117,7 @@ fun BaseKeypad(
         }
 
         if (!isLandscape) {
-            // SEZIONE SCIENTIFICA (3 file visibili in modalità Pro / Estesa)
+            // Scientific section (3 rows visible in Pro / Expanded mode)
             AnimatedVisibility(
                 visible = isProMode,
                 enter = expandVertically() + fadeIn(),
@@ -125,7 +127,7 @@ fun BaseKeypad(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(spacing)
             ) {
-                // FILA SCIENTIFICA 1: [⇧ Shift] [Rad/Deg] [^] [( )]
+                // SCIENTIFIC ROW 1: [⇧ Shift] [Rad/Deg] [^] [( )]
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(spacing)
@@ -180,7 +182,7 @@ fun BaseKeypad(
                     )
                 }
 
-                // FILA SCIENTIFICA 2: [e / ln] [log / 10ˣ] [√ / ʸ√x] [!]
+                // SCIENTIFIC ROW 2: [e / ln] [log / 10ˣ] [√ / ʸ√x] [!]
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(spacing)
@@ -230,7 +232,7 @@ fun BaseKeypad(
                     )
                 }
 
-                // FILA SCIENTIFICA 3: [sin / sin⁻¹] [cos / cos⁻¹] [tan / tan⁻¹] [π]
+                // SCIENTIFIC ROW 3: [sin / sin⁻¹] [cos / cos⁻¹] [tan / tan⁻¹] [π]
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(spacing)
@@ -282,7 +284,7 @@ fun BaseKeypad(
             }
         }
 
-        // FILA 1 BASE: [AC] [%] [÷] [⌫]  (disposizione originale dell'utente)
+        // ROW 1 BASE: [AC] [%] [÷] [⌫]
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(spacing)
@@ -328,13 +330,13 @@ fun BaseKeypad(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Backspace,
-                    contentDescription = "Cancella cifra",
+                    contentDescription = stringResource(R.string.delete_digit),
                     modifier = Modifier.size(if (isProMode) 24.dp else 28.dp)
                 )
             }
         }
 
-        // FILA 2 BASE: [7] [8] [9] [×]
+        // ROW 2 BASE: [7] [8] [9] [×]
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(spacing)
@@ -345,7 +347,7 @@ fun BaseKeypad(
             PixelButton(text = "×", type = PixelButtonType.OPERATOR, height = btnHeight, modifier = Modifier.weight(1f), onClick = { triggerHaptic(); onOperator("×") })
         }
 
-        // FILA 3 BASE: [4] [5] [6] [+] (disposizione originale dell'utente con +)
+        // ROW 3 BASE: [4] [5] [6] [+]
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(spacing)
@@ -356,7 +358,7 @@ fun BaseKeypad(
             PixelButton(text = "+", type = PixelButtonType.OPERATOR, height = btnHeight, modifier = Modifier.weight(1f), onClick = { triggerHaptic(); onOperator("+") })
         }
 
-        // FILA 4 BASE: [1] [2] [3] [-] (disposizione originale dell'utente con -)
+        // ROW 4 BASE: [1] [2] [3] [-]
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(spacing)
@@ -367,7 +369,7 @@ fun BaseKeypad(
             PixelButton(text = "-", type = PixelButtonType.OPERATOR, height = btnHeight, modifier = Modifier.weight(1f), onClick = { triggerHaptic(); onOperator("-") })
         }
 
-        // FILA 5 BASE: [ Selettore Strumenti ] [0] [.] [=]
+        // ROW 5 BASE: [ Tool Picker ] [0] [.] [=]
         PixelKeypadToolRow(
             currentScreen = currentScreen,
             isExpanded = isToolBarExpanded,
@@ -380,13 +382,13 @@ fun BaseKeypad(
             onEquals = onEquals
         )
         } else {
-            // ==================== MODALITÀ ORIZZONTALE (LANDSCAPE) ====================
-            // Struttura orizzontale: [Simboli extra (se attivati)] [  numeri  ] [operatori matematici]
+            // ==================== LANDSCAPE MODE ====================
+            // Landscape layout: [Extra symbols (if active)] [ numbers ] [math operators]
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(spacing)
             ) {
-                // 1. [Simboli extra (se attivati)] (3 Colonne x 4 Righe: 12 tasti scientifici)
+                // 1. [Extra symbols (if active)] (3 Columns x 4 Rows: 12 scientific keys)
                 AnimatedVisibility(
                     visible = isProMode,
                     enter = expandHorizontally() + fadeIn(),
@@ -397,7 +399,7 @@ fun BaseKeypad(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(spacing)
                     ) {
-                        // Riga 1 extra: [⇧ Shift] [Rad/Deg] [( )]
+                        // Extra row 1: [⇧ Shift] [Rad/Deg] [( )]
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing)) {
                             PixelIconButton(
                                 type = if (isShiftActive) PixelButtonType.SHIFT_ACTIVE else PixelButtonType.SCIENTIFIC,
@@ -427,7 +429,7 @@ fun BaseKeypad(
                             )
                         }
 
-                        // Riga 2 extra: [sin / sin⁻¹] [cos / cos⁻¹] [tan / tan⁻¹]
+                        // Extra row 2: [sin / sin⁻¹] [cos / cos⁻¹] [tan / tan⁻¹]
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing)) {
                             PixelButton(
                                 text = if (isShiftActive) "sin⁻¹" else "sin",
@@ -452,7 +454,7 @@ fun BaseKeypad(
                             )
                         }
 
-                        // Riga 3 extra: [ln / e] [log / 10ˣ] [^]
+                        // Extra row 3: [ln / e] [log / 10ˣ] [^]
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing)) {
                             PixelButton(
                                 text = if (isShiftActive) "ln" else "e",
@@ -477,7 +479,7 @@ fun BaseKeypad(
                             )
                         }
 
-                        // Riga 4 extra: [√ / ʸ√x] [!] [π]
+                        // Extra row 4: [√ / ʸ√x] [!] [π]
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing)) {
                             PixelButton(
                                 text = if (isShiftActive) "ʸ√x" else "√",
@@ -504,7 +506,7 @@ fun BaseKeypad(
                     }
                 }
 
-                // 2. [  numeri  ] (3 Colonne x 4 Righe: 7 8 9 / 4 5 6 / 1 2 3 / 🖩 0 .)
+                // 2. [ numbers ] (3 Columns x 4 Rows: 7 8 9 / 4 5 6 / 1 2 3 / 🖩 0 .)
                 Column(
                     modifier = Modifier.weight(3f),
                     verticalArrangement = Arrangement.spacedBy(spacing)
@@ -536,7 +538,7 @@ fun BaseKeypad(
                     )
                 }
 
-                // 3. [operatori matematici] (2 Colonne x 4 Righe: AC ⌫ / % ÷ / × - / + =)
+                // 3. [math operators] (2 Columns x 4 Rows: AC ⌫ / % ÷ / × - / + =)
                 Column(
                     modifier = Modifier.weight(2f),
                     verticalArrangement = Arrangement.spacedBy(spacing)
@@ -551,7 +553,7 @@ fun BaseKeypad(
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.Backspace,
-                                contentDescription = "Cancella cifra",
+                                contentDescription = stringResource(R.string.delete_digit),
                                 modifier = Modifier.size(22.dp)
                             )
                         }

@@ -6,13 +6,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 enum class AppThemeMode {
-    SYSTEM_AUTO,    // Dinamico di sistema (Auto: segue chiaro/scuro di sistema con accenti Monet)
-    SYSTEM_LIGHT,   // Dinamico di sistema (Sempre chiaro con accenti Monet)
-    SYSTEM_DARK,    // Dinamico di sistema (Sempre scuro con accenti Monet)
-    STANDARD_LIGHT, // Tema chiaro standard classico
-    STANDARD_DARK,  // Tema scuro standard classico
-    CANDY_POP,      // Vivace Chiaro (Pastello, dalla foto)
-    RETRO_CYBER     // Vivace Scuro (Cyber/Neon, dalla foto)
+    SYSTEM_AUTO,    // Dynamic system (Auto: follows light/dark system with Monet accents)
+    SYSTEM_LIGHT,   // Dynamic system (Always light with Monet accents)
+    SYSTEM_DARK,    // Dynamic system (Always dark with Monet accents)
+    STANDARD_LIGHT, // Classic standard light theme
+    STANDARD_DARK,  // Classic standard dark theme
+    CANDY_POP,      // Vibrant Light (Pastel)
+    RETRO_CYBER     // Vibrant Dark (Cyber/Neon)
 }
 
 class ThemePreferences(private val context: Context) {
@@ -52,7 +52,7 @@ class ThemePreferences(private val context: Context) {
         prefs.edit().putString("selected_theme", mode.name).apply()
         _themeMode.value = mode
 
-        // Se l'opzione di sincronizzazione automatica icona-tema è attiva, aggiorna anche l'icona
+        // If auto-sync between icon and theme is enabled, update the icon as well
         if (_syncIconWithTheme.value) {
             setAppIconMode(mode)
         }
@@ -63,7 +63,7 @@ class ThemePreferences(private val context: Context) {
         return if (saved != null) {
             parseThemeMode(saved)
         } else {
-            // Se mai salvata, leggi dal PackageManager l'alias attivo
+            // If never saved, read active alias from PackageManager
             AppIconManager.getCurrentIcon(context)
         }
     }

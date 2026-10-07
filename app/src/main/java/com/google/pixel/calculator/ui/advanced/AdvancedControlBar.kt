@@ -12,9 +12,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.pixel.calculator.R
 
 @Composable
 fun AdvancedControlBar(
@@ -31,7 +33,7 @@ fun AdvancedControlBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 1. Tasto Dropdown per cambiare tastiera: Operations / Functions (Matching Foto 3, 4, 5)
+        // 1. Dropdown button to switch keypad mode: Operations / Functions
         Box {
             Row(
                 modifier = Modifier
@@ -42,20 +44,20 @@ fun AdvancedControlBar(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = if (state.keypadMode == KeypadMode.OPERATIONS) "Operations" else "Functions",
+                    text = if (state.keypadMode == KeypadMode.OPERATIONS) stringResource(R.string.keypad_operations) else stringResource(R.string.keypad_functions),
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color(0xFFE2E8F0)
                 )
                 Icon(
                     imageVector = if (state.showModeDropdown) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = "Cambia tastiera",
+                    contentDescription = stringResource(R.string.switch_keypad),
                     tint = Color(0xFF94A3B8),
                     modifier = Modifier.size(20.dp)
                 )
             }
 
-            // Menu a tendina che si apre esattamente come in Foto 5
+            // Dropdown menu
             DropdownMenu(
                 expanded = state.showModeDropdown,
                 onDismissRequest = { onToggleDropdown() },
@@ -64,7 +66,7 @@ fun AdvancedControlBar(
                 DropdownMenuItem(
                     text = {
                         Text(
-                            text = "Operations",
+                            text = stringResource(R.string.keypad_operations),
                             fontSize = 17.sp,
                             fontWeight = if (state.keypadMode == KeypadMode.OPERATIONS) FontWeight.Bold else FontWeight.Normal,
                             color = if (state.keypadMode == KeypadMode.OPERATIONS) Color(0xFF60A5FA) else Color.White
@@ -76,7 +78,7 @@ fun AdvancedControlBar(
                 DropdownMenuItem(
                     text = {
                         Text(
-                            text = "Functions",
+                            text = stringResource(R.string.keypad_functions),
                             fontSize = 17.sp,
                             fontWeight = if (state.keypadMode == KeypadMode.FUNCTIONS) FontWeight.Bold else FontWeight.Normal,
                             color = if (state.keypadMode == KeypadMode.FUNCTIONS) Color(0xFF60A5FA) else Color.White
@@ -87,7 +89,7 @@ fun AdvancedControlBar(
             }
         }
 
-        // 2. Pulsante pillola Show Graph / Hide Graph (Matching Foto 3, 4)
+        // 2. Pill button Show Graph / Hide Graph
         Row(
             modifier = Modifier
                 .background(
@@ -100,9 +102,9 @@ fun AdvancedControlBar(
         ) {
             Text(
                 text = when (state.screenViewMode) {
-                    ScreenViewMode.CALCULATOR_ONLY -> "Show graph"
-                    ScreenViewMode.SPLIT_SCREEN -> "Hide graph"
-                    ScreenViewMode.FULLSCREEN_GRAPH -> "Calcolatore"
+                    ScreenViewMode.CALCULATOR_ONLY -> stringResource(R.string.show_graph)
+                    ScreenViewMode.SPLIT_SCREEN -> stringResource(R.string.hide_graph)
+                    ScreenViewMode.FULLSCREEN_GRAPH -> stringResource(R.string.calculator_label)
                 },
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Medium,

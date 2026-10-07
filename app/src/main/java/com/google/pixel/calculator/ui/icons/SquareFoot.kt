@@ -10,8 +10,8 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
 /**
- * Icona Material Symbols Outlined 'square_foot' (squadretta da disegno per il Selettore Strumenti).
- * Fonte: https://fonts.gstatic.com/render/v1/Material+Symbols+Outlined/24dp/square_foot.kt?var=opsz,wght,FILL,GRAD,ROND@24,400,0,0,50
+ * Material Symbols Outlined 'square_foot' icon (drawing square for Toolbox Selector).
+ * Source: https://fonts.gstatic.com/render/v1/Material+Symbols+Outlined/24dp/square_foot.kt?var=opsz,wght,FILL,GRAD,ROND@24,400,0,0,50
  */
 val SquareFoot: ImageVector
     get() {

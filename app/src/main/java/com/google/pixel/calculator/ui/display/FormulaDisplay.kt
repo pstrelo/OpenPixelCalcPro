@@ -22,10 +22,10 @@ import com.google.pixel.calculator.ui.theme.QuicksandFontFamily
 import com.google.pixel.calculator.ui.theme.SystemFontFamily
 
 /**
- * Display formule ad alta leggibilità in stile Google Pixel Calculator:
- * - Visualizzazione pulita e morbida delle cifre
- * - Scorrimento orizzontale automatico verso l'ultima cifra digitata
- * - Anteprima istantanea del risultato in grigio morbido
+ * High-readability formula display in Google Pixel Calculator style:
+ * - Clean and soft digit rendering
+ * - Automatic horizontal scrolling towards the latest typed digit
+ * - Instant result preview in soft secondary tone
  */
 import android.content.res.Configuration
 import androidx.compose.ui.platform.LocalConfiguration
@@ -42,7 +42,7 @@ fun FormulaDisplay(
     val scrollState = rememberScrollState()
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    // Scorre automaticamente all'ultima cifra aggiunta
+    // Automatically scroll to the latest added digit
     LaunchedEffect(expression) {
         scrollState.animateScrollTo(scrollState.maxValue)
     }
@@ -54,7 +54,7 @@ fun FormulaDisplay(
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.Bottom
     ) {
-        // Calcoli precedenti della sessione attiva (ultime 2 operazioni in portrait, 1 in landscape per compattezza)
+        // Previous calculations from active session (last 2 in portrait, 1 in landscape for compactness)
         if (sessionHistory.isNotEmpty()) {
             val historyCount = if (isLandscape) 1 else 2
             Column(
@@ -78,11 +78,11 @@ fun FormulaDisplay(
             }
         }
 
-        // Frazioni 2D se presenti
+        // 2D fractions if present
         if (expression.contains("frac(")) {
             FractionRenderView(expression = expression)
         } else {
-            // Formula o cifra attiva con scorrimento orizzontale morbido
+            // Active formula or digit with smooth horizontal scroll
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -120,7 +120,7 @@ fun FormulaDisplay(
 
         Spacer(modifier = Modifier.height(if (isLandscape) 2.dp else 4.dp))
 
-        // Messaggio di Errore
+        // Error message
         AnimatedVisibility(visible = errorMessage != null) {
             Text(
                 text = errorMessage ?: "",
@@ -132,7 +132,7 @@ fun FormulaDisplay(
             )
         }
 
-        // Anteprima Risultato in tempo reale
+        // Real-time result preview
         AnimatedVisibility(visible = resultPreview.isNotEmpty() && errorMessage == null) {
             Text(
                 text = "= $resultPreview",

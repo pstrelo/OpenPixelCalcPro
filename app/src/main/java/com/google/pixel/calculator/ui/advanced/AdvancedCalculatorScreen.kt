@@ -1,9 +1,10 @@
 package com.google.pixel.calculator.ui.advanced
 
-import androidx.compose.animation.*
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -13,25 +14,22 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.Calculate
-import androidx.compose.material.icons.filled.CloseFullscreen
 import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.pixel.calculator.R
 import com.google.pixel.calculator.ui.ActiveScreen
 import com.google.pixel.calculator.ui.theme.CalculatorTheme
-import com.google.pixel.calculator.ui.toolbox.PixelFloatingToolBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,9 +39,9 @@ fun AdvancedCalculatorScreen(
     viewModel: AdvancedCalculatorViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
-    val isDark = CalculatorTheme.colors.isDark
-    var isToolBarExpanded by rememberSaveable { mutableStateOf(false) }
+    var isToolBarExpanded by remember { mutableStateOf(false) }
 
+    // Intercept hardware and gesture back
     val handleBack: () -> Unit = {
         if (isToolBarExpanded) {
             isToolBarExpanded = false
@@ -65,14 +63,14 @@ fun AdvancedCalculatorScreen(
                     IconButton(onClick = handleBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Torna indietro",
+                            contentDescription = stringResource(R.string.back),
                             tint = CalculatorTheme.colors.onSurface
                         )
                     }
                 },
                 title = {
                     Text(
-                        text = "Calcolatrice avanzata",
+                        text = stringResource(R.string.advanced_calculator_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = CalculatorTheme.colors.onSurface
@@ -91,7 +89,7 @@ fun AdvancedCalculatorScreen(
                 .padding(padding)
         ) {
             when (state.screenViewMode) {
-                // STATO C: GRAFICO A TUTTO SCHERMO
+                // STATE C: FULLSCREEN GRAPH
                 ScreenViewMode.FULLSCREEN_GRAPH -> {
                     Box(modifier = Modifier.fillMaxSize()) {
                         AdvancedGraphCanvas(
@@ -105,7 +103,7 @@ fun AdvancedCalculatorScreen(
                                 .padding(6.dp)
                         )
 
-                        // Floating Action Pill per tornare alla tastiera
+                        // Floating Action Pill to return to keypad
                         Row(
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
@@ -118,11 +116,11 @@ fun AdvancedCalculatorScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Calculate,
-                                contentDescription = "Torna al Calcolatore",
+                                contentDescription = stringResource(R.string.back_to_calculator_keypad),
                                 tint = Color.White
                             )
                             Text(
-                                text = "Apri Tastiera Calcolo",
+                                text = stringResource(R.string.open_calculator_keyboard),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color.White
@@ -131,14 +129,14 @@ fun AdvancedCalculatorScreen(
                     }
                 }
 
-                // STATO A & B: CALCOLATORE STANDARD & GRAFICO DIVISO
-                // Struttura a 2 sezioni per garantire che tutti i tasti siano SEMPRE visibili al 100%
+                // STATE A & B: STANDARD CALCULATOR & SPLIT GRAPH
+                // 2-section structure guaranteeing all keys are 100% visible
                 else -> {
                     Column(
                         modifier = Modifier.fillMaxSize()
                     ) {
                         if (state.screenViewMode == ScreenViewMode.SPLIT_SCREEN) {
-                            // Quando il grafico è mostrato, occupa TUTTO lo spazio disponibile sopra la tastiera
+                            // When graph is shown, occupies all available space above keypad
                             Column(
                                 modifier = Modifier
                                     .weight(1f)
@@ -156,7 +154,7 @@ fun AdvancedCalculatorScreen(
                                         .fillMaxWidth()
                                         .wrapContentHeight()
                                         .padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
+                                  )
 
                                 Spacer(modifier = Modifier.height(2.dp))
 
@@ -175,7 +173,7 @@ fun AdvancedCalculatorScreen(
                                 Spacer(modifier = Modifier.height(2.dp))
                             }
                         } else {
-                            // Modalità solo calcolatrice (grafico nascosto): scrollabile per formule multiple
+                            // Calculator-only mode (hidden graph): scrollable for multiple formulas
                             Column(
                                 modifier = Modifier
                                     .weight(1f)
@@ -200,7 +198,7 @@ fun AdvancedCalculatorScreen(
                             }
                         }
 
-                        // 2. ZONA INFERIORE: TASTIERA ANCORATA ALLA BASE - SEMPRE VISIBILE AL 100%
+                        // 2. BOTTOM ZONE: KEYPAD ANCHORED AT BASE - ALWAYS 100% VISIBLE
                         AdvancedKeypad(
                             state = state,
                             onTabSelected = { viewModel.selectTab(it) },
@@ -224,7 +222,7 @@ fun AdvancedCalculatorScreen(
                 }
             }
 
-            // Overlay di dismiss al tocco fuori dalla toolbar quando aperta in modalità tastiera
+            // Dismiss overlay when touching outside open toolbar
             if (isToolBarExpanded && state.screenViewMode != ScreenViewMode.FULLSCREEN_GRAPH) {
                 Box(
                     modifier = Modifier
@@ -243,8 +241,7 @@ fun AdvancedCalculatorScreen(
 }
 
 /**
- * Pulsante grafico posizionato appena sotto la finestra di testo.
- * Apre la versione minimizzata del grafico inline, oppure la richiude.
+ * Inline graph toggle button placed right below formula display.
  */
 @Composable
 fun InlineGraphToggleButton(
@@ -289,7 +286,7 @@ fun InlineGraphToggleButton(
                 modifier = Modifier.size(15.dp)
             )
             Text(
-                text = if (isOpen) "Nascondi Grafico ✕" else "Mostra Grafico 📈",
+                text = if (isOpen) stringResource(R.string.hide_graph) else stringResource(R.string.show_graph),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
                 color = contentColor
@@ -299,9 +296,9 @@ fun InlineGraphToggleButton(
 }
 
 /**
- * Card Grafico Minimizzato:
- * Mostra il piano cartesiano 2D con altezza compatta (~170dp),
- * con legenda colori delle equazioni e tasto per espandere a schermo intero.
+ * Minimized Graph Card:
+ * Displays 2D Cartesian plane with compact height (~170dp),
+ * with equation color legend and button to expand to fullscreen.
  */
 @Composable
 fun MinimizedGraphCard(
@@ -324,7 +321,7 @@ fun MinimizedGraphCard(
         colors = CardDefaults.cardColors(containerColor = cardBg)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Canvas Cartesiano interattivo 2D
+            // Interactive 2D Cartesian Canvas
             AdvancedGraphCanvas(
                 state = state,
                 onTransform = onTransform,
@@ -334,7 +331,7 @@ fun MinimizedGraphCard(
                 modifier = Modifier.fillMaxSize()
             )
 
-            // Header bar overlay: Legenda rapida dei colori delle curve
+            // Header bar overlay: quick curve color legend
             Row(
                 modifier = Modifier
                     .align(Alignment.TopStart)
@@ -367,7 +364,7 @@ fun MinimizedGraphCard(
                 }
             }
 
-            // Pulsante rapido "Espandi ⤢" nell'angolo in basso a destra
+            // Quick expand button in bottom right corner
             Row(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
@@ -381,12 +378,12 @@ fun MinimizedGraphCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.OpenInFull,
-                    contentDescription = "Espandi a Schermo Intero",
+                    contentDescription = stringResource(R.string.expand_fullscreen),
                     tint = Color.White,
                     modifier = Modifier.size(12.dp)
                 )
                 Text(
-                    text = "Espandi",
+                    text = stringResource(R.string.expand),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -397,7 +394,7 @@ fun MinimizedGraphCard(
 }
 
 /**
- * Pulsante grafico scorporato (retrocompatibile per test legacy se invocato).
+ * Detached graph button (backward compatible).
  */
 @Composable
 fun DetachedGraphButton(
@@ -406,7 +403,7 @@ fun DetachedGraphButton(
     modifier: Modifier = Modifier
 ) {
     val (bgColor, contentColor, label) = when (screenViewMode) {
-        ScreenViewMode.CALCULATOR_ONLY -> Triple(Color(0xFF2C3042), Color(0xFF93C5FD), "Grafico 📈")
+        ScreenViewMode.CALCULATOR_ONLY -> Triple(Color(0xFF2C3042), Color(0xFF93C5FD), "Graph 📈")
         ScreenViewMode.SPLIT_SCREEN -> Triple(Color(0xFF2563EB), Color.White, "Split 2D ✕")
         ScreenViewMode.FULLSCREEN_GRAPH -> Triple(Color(0xFF1D4ED8), Color.White, "Full 2D")
     }

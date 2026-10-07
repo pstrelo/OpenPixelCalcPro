@@ -32,10 +32,12 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.pixel.calculator.R
 import com.google.pixel.calculator.core.sensors.LevelData
 import com.google.pixel.calculator.core.sensors.LevelOrientationMode
 import com.google.pixel.calculator.core.sensors.LevelSensorManager
@@ -44,14 +46,13 @@ import com.google.pixel.calculator.ui.theme.CalculatorTheme
 import kotlin.math.abs
 
 /**
- * Schermata della Livella Digitale riprogettata in perfetto stile Samsung One UI:
- * - Modalità Orizzontale (Superficie / Tavolo) con 2 cerchi interattivi simmetrici (come foto 2)
- *   che controlla l'inclinazione testa-fondo con riferimento all'asse destra-sinistra.
- * - Modalità Verticale (Parete / Bordo) con orizzonte artificiale e indicatori a trattino (come foto 1)
- *   che controlla l'inclinazione destra-sinistra con riferimento all'asse frontale testa-fondo.
- * - Transizione automatica e ultra-fluida tra le due modalità basata sulla posizione fisica.
- * - Coerenza totale con il tema attivo (Light, Dark, Candy Pop, Retro Cyber, System Monet).
- * - Feedback aptico al raggiungimento dello 0° perfetto e accensione dinamica verde smeraldo One UI.
+ * Digital Bubble Level screen:
+ * - Horizontal Mode (Surface / Table) with 2 symmetric interactive circles
+ *   tracking pitch and roll relative to axes.
+ * - Vertical Mode (Wall / Edge) with artificial horizon and reticle indicators.
+ * - Automatic smooth transition between the two modes based on physical orientation.
+ * - Total consistency with active theme (Light, Dark, Candy Pop, Retro Cyber, System Monet).
+ * - Haptic feedback when reaching true 0° level.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,7 +81,7 @@ fun LevelView(
         )
     )
 
-    // Feedback aptico all'aggancio dello zero perfetto
+    // Haptic feedback on locking true zero
     var wasLevel by remember { mutableStateOf(false) }
     LaunchedEffect(levelData.isLevel) {
         if (levelData.isLevel && !wasLevel) {
@@ -93,7 +94,7 @@ fun LevelView(
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
-    // Colore accento del tema attivo come colore principale della livella
+    // Active theme accent color as primary level indicator color
     val themeAccent = CalculatorTheme.colors.equalsContainer.takeIf { it != Color.Unspecified }
         ?: MaterialTheme.colorScheme.primary
     val onThemeAccent = CalculatorTheme.colors.equalsContent.takeIf { it != Color.Unspecified }
@@ -109,7 +110,7 @@ fun LevelView(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Viewport a schermo intero fino alla linea del pulsante strumenti con solo il riquadro grafico
+            // Viewport card covering screen up to bottom toolbar
             LevelViewportCard(
                 levelData = levelData,
                 isDark = isDark,
@@ -119,14 +120,14 @@ fun LevelView(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(
-                        start = if (isLandscape) 16.dp else 16.dp,
-                        end = if (isLandscape) 16.dp else 16.dp,
+                        start = 16.dp,
+                        end = 16.dp,
                         top = if (isLandscape) 8.dp else 16.dp,
                         bottom = if (isLandscape) 0.dp else 16.dp
                     )
             )
 
-            // Freccia indietro in alto a sinistra
+            // Back button top left
             IconButton(
                 onClick = onBack,
                 modifier = Modifier
@@ -135,12 +136,12 @@ fun LevelView(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Torna alla calcolatrice",
+                    contentDescription = stringResource(R.string.back_to_calculator),
                     tint = if (levelData.isLevel) onThemeAccent else MaterialTheme.colorScheme.onSurface
                 )
             }
 
-            // Barra degli strumenti fluttuante Material 3 coerente con tutte le schermate
+            // Material 3 floating toolbar
             PixelFloatingToolBar(
                 currentScreen = ActiveScreen.TOOLBOX_LEVEL,
                 onNavigate = onNavigate,
@@ -151,10 +152,10 @@ fun LevelView(
 }
 
 /**
- * Card contenitrice principale della Livella:
- * - In modalità Orizzontale (Surface): renderizza i due cerchi simmetrici con il grado centrale.
- * - In modalità Verticale (Wall): renderizza l'orizzonte artificiale con i trattini e il grado centrale.
- * - Colori sincronizzati con il tema attivo: lo sfondo si colora fluidamente del colore d'accento a 0°.
+ * Main level container card:
+ * - Horizontal surface mode: renders two symmetric circles with central degree value.
+ * - Vertical wall mode: renders artificial horizon with reticle and central degree value.
+ * - Smooth color animation transitioning to theme accent at 0°.
  */
 @Composable
 private fun LevelViewportCard(
@@ -165,11 +166,9 @@ private fun LevelViewportCard(
     isLandscape: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    // Sfondo del container dal tema attivo quando non allineato
     val defaultContainerBg = MaterialTheme.colorScheme.surfaceContainer
         ?: if (isDark) Color(0xFF1E2025) else Color(0xFFF1F3F8)
 
-    // A 0° (perfetto allineamento), lo sfondo si illumina in modo fluido del colore d'accento del tema
     val targetBgColor = if (levelData.isLevel) {
         accentColor
     } else {
@@ -200,7 +199,6 @@ private fun LevelViewportCard(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            // Transizione fluida e automatica tra modalità Orizzontale (piano) e Verticale (parete)
             AnimatedContent(
                 targetState = levelData.mode,
                 transitionSpec = {
@@ -233,11 +231,11 @@ private fun LevelViewportCard(
 }
 
 /**
- * MODALITÀ ORIZZONTALE (Superficie / Tavolo):
- * - Due cerchi simmetrici guidati dagli assi testa-fondo (Pitch) e destra-sinistra (Roll).
- * - Valore dei gradi reintrodotto al centro dello schermo (es. -26° o 0°).
- * - Colori sincronizzati con il tema attivo, con l'accento come colore principale.
- * - A 0° i cerchi si fondono esattamente al centro e lo sfondo si accende con l'accento del tema.
+ * HORIZONTAL MODE (Surface / Table):
+ * - Two symmetric circles driven by pitch and roll.
+ * - Central degree readout (e.g. -26° or 0°).
+ * - Synchronized theme colors.
+ * - At 0° circles merge into center.
  */
 @Composable
 private fun SurfaceLevelCanvas(
@@ -246,7 +244,6 @@ private fun SurfaceLevelCanvas(
     accentColor: Color,
     onAccentColor: Color
 ) {
-    // Animazione fluida a 120Hz degli assi di inclinazione con spring reattivo
     val animRoll by animateFloatAsState(
         targetValue = levelData.rollLeftRight,
         animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
@@ -258,13 +255,10 @@ private fun SurfaceLevelCanvas(
         label = "SurfaceAnimPitch"
     )
 
-    // Luminanza dell'accento per garantire sempre contrasto perfetto
     val isLightAccent = (0.299f * accentColor.red + 0.587f * accentColor.green + 0.114f * accentColor.blue) > 0.5f
 
-    // A 0° il cerchio fuso centrale a contrasto
     val levelMergedCircleColor = if (isLightAccent) Color.White.copy(alpha = 0.96f) else onAccentColor
 
-    // Colore del testo dei gradi al centro:
     val centerTextColorAtZero = if (isLightAccent) onAccentColor else Color.White
     val centerTextColorTilted = if (!isDark && isLightAccent) MaterialTheme.colorScheme.onSurface else accentColor
     val centerDegreeTextColor = if (levelData.isLevel) centerTextColorAtZero else centerTextColorTilted
@@ -283,26 +277,19 @@ private fun SurfaceLevelCanvas(
             val center = Offset(size.width / 2f, size.height / 2f)
             val minDim = size.minDimension
 
-            // Raggio dei cerchi proporzionato al display (~44-72dp)
             val circleRadius = (minDim * 0.17f).coerceIn(42.dp.toPx(), 72.dp.toPx())
-
-            // Massima escursione consentita per mantenere i cerchi visibili
             val maxTravel = (minDim / 2f) - circleRadius - 8.dp.toPx()
 
-            // Normalizzazione angolo (fondo scala a circa 35°)
             val normX = (animRoll / 35f).coerceIn(-1f, 1f)
             val normY = (animPitch / 35f).coerceIn(-1f, 1f)
 
             val offsetX = normX * maxTravel
             val offsetY = normY * maxTravel
 
-            // Cerchio 1 (polo positivo: testa e destra)
             val c1Center = Offset(center.x + offsetX, center.y + offsetY)
-            // Cerchio 2 (polo simmetrico opposto: fondo e sinistra)
             val c2Center = Offset(center.x - offsetX, center.y - offsetY)
 
             if (levelData.isLevel) {
-                // Quando è in piano (0°): i due cerchi si fondono esattamente al centro
                 drawCircle(
                     color = (if (isLightAccent) Color.White else onAccentColor).copy(alpha = 0.25f),
                     radius = circleRadius + 14.dp.toPx(),
@@ -314,7 +301,6 @@ private fun SurfaceLevelCanvas(
                     center = center
                 )
             } else {
-                // Cerchio di mira guida centrale di riferimento
                 drawCircle(
                     color = accentColor.copy(alpha = 0.25f),
                     radius = circleRadius,
@@ -351,7 +337,6 @@ private fun SurfaceLevelCanvas(
                     cap = StrokeCap.Round
                 )
 
-                // Cerchio 1 con bordo accento e riempimento tema
                 drawCircle(
                     color = Color.Black.copy(alpha = if (isDark) 0.35f else 0.08f),
                     radius = circleRadius + 4.dp.toPx(),
@@ -374,7 +359,6 @@ private fun SurfaceLevelCanvas(
                     center = c1Center
                 )
 
-                // Cerchio 2 simmetrico
                 drawCircle(
                     color = Color.Black.copy(alpha = if (isDark) 0.35f else 0.08f),
                     radius = circleRadius + 4.dp.toPx(),
@@ -399,7 +383,6 @@ private fun SurfaceLevelCanvas(
             }
         }
 
-        // Valore dei gradi reintrodotto al centro dello schermo
         val displayDeg = if (levelData.isLevel) "0°" else "${levelData.primaryDisplayAngle}°"
         Text(
             text = displayDeg,
@@ -413,12 +396,10 @@ private fun SurfaceLevelCanvas(
 }
 
 /**
- * MODALITÀ VERTICALE (Parete / Bordo):
- * - Orizzonte artificiale che ruota con l'inclinazione destra-sinistra (Roll).
- * - Indicatore con trattini di mira e valore dei gradi reintrodotto al centro: `—   -12°   —`.
- * - Riferimento all'altro asse: inclinazione frontale testa-fondo (avanti/indietro rispetto alla parete).
- * - Colori sincronizzati con il tema attivo, con l'accento come colore principale.
- * - A 0° lo sfondo si illumina con l'accento del tema e gli indicatori passano a onAccent: `—  0°  —`.
+ * VERTICAL MODE (Wall / Edge):
+ * - Artificial horizon rotating with lateral roll.
+ * - Reticle indicator with central degree readout: `— -12° —`.
+ * - Frontal planar reference indicator.
  */
 @Composable
 private fun VerticalWallLevelCanvas(
@@ -427,14 +408,12 @@ private fun VerticalWallLevelCanvas(
     accentColor: Color,
     onAccentColor: Color
 ) {
-    // Animazione dell'inclinazione laterale (destra/sinistra)
     val animLateral by animateFloatAsState(
         targetValue = levelData.verticalLateralAngle,
         animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
         label = "WallAnimLateral"
     )
 
-    // Animazione dell'inclinazione frontale testa-fondo (parete avanti/indietro)
     val animFrontal by animateFloatAsState(
         targetValue = levelData.verticalFrontalAngle,
         animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
@@ -464,12 +443,9 @@ private fun VerticalWallLevelCanvas(
             val width = size.width
             val height = size.height
 
-            // 1. Orizzonte artificiale che ruota in tempo reale (-animLateral)
-            // L'offset Y dell'orizzonte riflette l'asse frontale testa-fondo (avanti/indietro rispetto alla parete)
             val frontalOffsetPx = (animFrontal / 45f).coerceIn(-1f, 1f) * (height * 0.18f)
 
             rotate(-animLateral, pivot = center) {
-                // Linea dell'orizzonte che attraversa la larghezza
                 val horizonY = center.y + frontalOffsetPx
                 drawLine(
                     color = horizonLineColor,
@@ -480,11 +456,10 @@ private fun VerticalWallLevelCanvas(
                 )
             }
 
-            // 2. Trattini di mira orizzontali con spazio centrale per il testo dei gradi: `—   [Gradi]   —`
             val dashLength = 36.dp.toPx()
             val textGap = 54.dp.toPx()
 
-            // Trattino sinistro `—`
+            // Left dash `—`
             drawLine(
                 color = contentColor,
                 start = Offset(center.x - textGap - dashLength, center.y),
@@ -493,7 +468,7 @@ private fun VerticalWallLevelCanvas(
                 cap = StrokeCap.Round
             )
 
-            // Trattino destro `—`
+            // Right dash `—`
             drawLine(
                 color = contentColor,
                 start = Offset(center.x + textGap, center.y),
@@ -502,11 +477,10 @@ private fun VerticalWallLevelCanvas(
                 cap = StrokeCap.Round
             )
 
-            // 3. Indicatore di riferimento dell'altro asse (Planarità Parete testa-fondo)
+            // Frontal planarity bubble
             val bubbleRadius = 4.dp.toPx()
             val bubbleY = (center.y + (animFrontal / 30f).coerceIn(-1f, 1f) * 36.dp.toPx()).coerceIn(center.y - 36.dp.toPx(), center.y + 36.dp.toPx())
 
-            // Indicatore di planarità frontale sulla mezzeria
             drawCircle(
                 color = contentColor.copy(alpha = if (abs(animFrontal) < 1f) 0.95f else 0.45f),
                 radius = bubbleRadius,
@@ -514,7 +488,6 @@ private fun VerticalWallLevelCanvas(
             )
         }
 
-        // 4. Valore dei gradi reintrodotto al centro dello schermo (es. -12° o 0°)
         val displayAngleText = if (levelData.isLevel) "0°" else "${levelData.primaryDisplayAngle}°"
         Text(
             text = displayAngleText,

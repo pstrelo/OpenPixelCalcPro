@@ -34,8 +34,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.google.pixel.calculator.R
 import com.google.pixel.calculator.ui.ActiveScreen
 import com.google.pixel.calculator.ui.icons.BubbleLevel
 import com.google.pixel.calculator.ui.icons.SquareFoot
@@ -47,7 +49,9 @@ data class ToolDestination(
     val screen: ActiveScreen,
     val icon: ImageVector,
     val title: String,
-    val contentDescription: String
+    val contentDescription: String,
+    val titleRes: Int = 0,
+    val descRes: Int = 0
 )
 
 val AllToolDestinations: List<ToolDestination> = listOf(
@@ -55,45 +59,55 @@ val AllToolDestinations: List<ToolDestination> = listOf(
         screen = ActiveScreen.MAIN_CALCULATOR,
         icon = Icons.Default.Calculate,
         title = "Calcolatrice",
-        contentDescription = "Calcolatrice standard"
+        contentDescription = "Calcolatrice standard",
+        titleRes = R.string.tool_main_calc,
+        descRes = R.string.tool_main_calc_desc
     ),
     ToolDestination(
         screen = ActiveScreen.ADVANCED_CALCULATOR,
         icon = Icons.AutoMirrored.Filled.ShowChart,
         title = "Avanzata",
-        contentDescription = "Calcolatrice avanzata e grafici"
+        contentDescription = "Calcolatrice avanzata e grafici",
+        titleRes = R.string.tool_advanced,
+        descRes = R.string.tool_advanced_desc
     ),
     ToolDestination(
         screen = ActiveScreen.TOOLBOX_CONVERTER,
         icon = Icons.Default.SwapHoriz,
         title = "Convertitore",
-        contentDescription = "Convertitore di unità"
+        contentDescription = "Convertitore di unità",
+        titleRes = R.string.tool_converter,
+        descRes = R.string.tool_converter_desc
     ),
     ToolDestination(
         screen = ActiveScreen.TOOLBOX_LEVEL,
         icon = BubbleLevel,
         title = "Livella",
-        contentDescription = "Livella a bolla digitale"
+        contentDescription = "Livella a bolla digitale",
+        titleRes = R.string.tool_level,
+        descRes = R.string.tool_level_desc
     ),
     ToolDestination(
         screen = ActiveScreen.TOOLBOX_COMPASS,
         icon = Icons.Default.Explore,
         title = "Bussola",
-        contentDescription = "Bussola digitale"
+        contentDescription = "Bussola digitale",
+        titleRes = R.string.tool_compass,
+        descRes = R.string.tool_compass_desc
     ),
     ToolDestination(
         screen = ActiveScreen.TOOLBOX_RULER,
         icon = SquareFoot,
         title = "Righello",
-        contentDescription = "Righello su schermo"
+        contentDescription = "Righello su schermo",
+        titleRes = R.string.tool_ruler,
+        descRes = R.string.tool_ruler_desc
     )
 )
 
 /**
- * Dimensioni unificate della Toolbar strumenti in modo da garantire
- * la STESSA identica posizione (start = 16dp, bottom = 8dp) e la STESSA identica dimensione
- * (altezza 68dp in portrait, larghezza del pulsante uguale alla prima colonna, pillola uguale alle rimanenti 3 colonne)
- * su TUTTE le schermate (Calcolatrice standard, Avanzata, Convertitore, Livella, Bussola, Righello).
+ * Unified dimensions for the ToolBar across all screens
+ * (Standard Calculator, Advanced, Converter, Level, Compass, Ruler).
  */
 data class ToolBarDimensions(
     val height: Dp,
@@ -115,14 +129,14 @@ fun rememberToolBarDimensions(): ToolBarDimensions {
     val spacing = if (isLandscape) 6.dp else 12.dp
     val height = if (isLandscape) 48.dp else 82.dp
 
-    // Larghezza del primo tasto della calcolatrice principale (1 colonna su 4)
+    // Width of the first calculator key (1 column out of 4)
     val btnWidth = if (isLandscape) {
         height * 1.5f
     } else {
         ((screenWidth - (hPadding * 2) - (spacing * 3)) / 4).coerceAtLeast(82.dp)
     }
 
-    // Larghezza della pillola (copre esattamente le 3 colonne rimanenti)
+    // Width of pill bar (covers exactly the 3 remaining columns)
     val pillWidth = if (isLandscape) {
         280.dp
     } else {
@@ -142,9 +156,9 @@ fun rememberToolBarDimensions(): ToolBarDimensions {
 }
 
 /**
- * Pulsante di attivazione strumenti Material 3:
- * - Da chiuso: tondo (CircleShape), mostra l'icona dello strumento attualmente attivo.
- * - Da aperto: quadrato arrotondato (Squircle / RoundedCornerShape 18dp) con colore d'accento di sistema (primaryContainer).
+ * Material 3 tool trigger button:
+ * - When collapsed: circular (CircleShape), shows icon of active tool.
+ * - When expanded: squircle (RoundedCornerShape 18dp) with system primary container color.
  */
 @Composable
 fun PixelToolToggleButton(
@@ -168,7 +182,6 @@ fun PixelToolToggleButton(
         label = "ToolButtonCornerAnimation"
     )
 
-    // Colori rigorosamente legati al tema di sistema / tema calcolatrice (nessun rosa arbitrario)
     val isDark = CalculatorTheme.colors.isDark
     val activeContainer = MaterialTheme.colorScheme.primaryContainer.takeIf { it != Color.Unspecified }
         ?: if (isDark) CalculatorTheme.colors.equalsContainer else CalculatorTheme.colors.operatorContainer
@@ -205,9 +218,10 @@ fun PixelToolToggleButton(
             contentAlignment = Alignment.Center,
             modifier = Modifier.fillMaxSize()
         ) {
+            val titleStr = if (currentDestination.titleRes != 0) stringResource(currentDestination.titleRes) else currentDestination.title
             Icon(
                 imageVector = currentDestination.icon,
-                contentDescription = if (isExpanded) "Chiudi barra strumenti" else "Apri barra strumenti (${currentDestination.title})",
+                contentDescription = if (isExpanded) stringResource(R.string.close_toolbar) else stringResource(R.string.open_toolbar, titleStr),
                 tint = contentColor,
                 modifier = Modifier.size(if (height <= 48.dp) 20.dp else 26.dp)
             )
@@ -216,8 +230,8 @@ fun PixelToolToggleButton(
 }
 
 /**
- * Pillola orizzontale Material 3 contenente le icone degli altri 5 strumenti selezionabili.
- * SEMPRE fluttuante con ombra/elevazione e con dimensione e altezza coordinate con la schermata principale.
+ * Material 3 horizontal pill container with the other 5 selectable tools.
+ * Floating with elevation, synchronized in geometry with keypad.
  */
 @Composable
 fun PixelToolPillBar(
@@ -266,9 +280,10 @@ fun PixelToolPillBar(
                     },
                     modifier = Modifier.size(if (height <= 48.dp) 36.dp else 48.dp)
                 ) {
+                    val descStr = if (destination.descRes != 0) stringResource(destination.descRes) else destination.contentDescription
                     Icon(
                         imageVector = destination.icon,
-                        contentDescription = destination.contentDescription,
+                        contentDescription = descStr,
                         tint = pillContent,
                         modifier = Modifier.size(if (height <= 48.dp) 20.dp else 26.dp)
                     )
@@ -279,9 +294,8 @@ fun PixelToolPillBar(
 }
 
 /**
- * Barra fluttuante ancorata in basso per le schermate secondarie
- * (Livella, Bussola, Righello, Schermo intero grafico).
- * Posizionata a sinistra o a destra in base ad alignRight.
+ * Floating bottom-anchored toolbar for secondary utility screens
+ * (Level, Compass, Ruler, Fullscreen Graph).
  */
 @Composable
 fun PixelFloatingToolBar(
@@ -296,7 +310,7 @@ fun PixelFloatingToolBar(
     if (isExpanded) {
         BackHandler { isExpanded = false }
 
-        // Area trasparente a schermo intero per catturare tocchi fuori dalla barra
+        // Transparent full-screen overlay to catch taps outside toolbar
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -400,10 +414,10 @@ fun PixelFloatingToolBar(
 }
 
 /**
- * Riga del tastierino contenente il tasto strumenti (Row 5 portrait o Row 4 numeri in landscape).
- * - SOLO il pulsante strumenti è integrato nella tastiera e si modifica da cerchio a quadrato quando cliccato.
- * - I tasti numerici rimangono sempre presenti nella tastiera.
- * - La pillola compare SEMPRE FLUTTUANTE sopra la tastiera con dimensione identica fissa.
+ * Keypad row containing the tool trigger button (Row 5 portrait or Row 4 numbers in landscape).
+ * - Tool trigger button smoothly transitions between circle and rounded squircle.
+ * - Number keys remain intact.
+ * - Pill appears in floating overlay above remaining columns.
  */
 @Composable
 fun PixelKeypadToolRow(
@@ -426,7 +440,7 @@ fun PixelKeypadToolRow(
             horizontalArrangement = Arrangement.spacedBy(spacing),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Tasto 1 (in basso a sinistra): il pulsante strumenti
+            // Key 1 (bottom left): tool toggle button
             PixelToolToggleButton(
                 currentScreen = currentScreen,
                 isExpanded = isExpanded,
@@ -435,7 +449,7 @@ fun PixelKeypadToolRow(
                 modifier = Modifier.weight(1f)
             )
 
-            // Tasti numerici normali della tastiera
+            // Regular keypad buttons
             PixelButton(
                 text = "0",
                 type = PixelButtonType.NUMERIC,
@@ -470,7 +484,7 @@ fun PixelKeypadToolRow(
             }
         }
 
-        // Pillola fluttuante in overlay sopra le colonne rimanenti
+        // Floating pill bar overlay
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(spacing),

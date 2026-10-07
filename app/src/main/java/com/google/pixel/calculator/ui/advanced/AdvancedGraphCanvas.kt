@@ -27,8 +27,10 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.pixel.calculator.R
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -63,12 +65,12 @@ fun AdvancedGraphCanvas(
                         val canvasSize = size
                         val (mathX, mathY) = viewport.screenToMath(tapOffset, Size(canvasSize.width.toFloat(), canvasSize.height.toFloat()))
 
-                        // Magnetic snap: cerca radici analitiche o punti campionati vicini (< 40px)
+                        // Magnetic snap: search analytical roots or sampled points nearby (< 40px)
                         var closestPoint: Pair<Float, Float>? = null
                         var minDistance = 40f
 
                         for (eq in state.equations) {
-                            // 1. Priorità: radici analitiche dell'equazione
+                            // 1. Priority: analytical roots of the equation
                             for (root in eq.roots) {
                                 val rootScreen = viewport.mathToScreen(root, 0.0, Size(canvasSize.width.toFloat(), canvasSize.height.toFloat()))
                                 val dist = (tapOffset - rootScreen).getDistance()
@@ -78,7 +80,7 @@ fun AdvancedGraphCanvas(
                                 }
                             }
 
-                            // 2. Punti campionati sulla curva
+                            // 2. Sampled points on the curve
                             for (p in eq.sampledPoints) {
                                 if (p != null) {
                                     val screenPoint = viewport.mathToScreen(p.x.toDouble(), p.y.toDouble(), Size(canvasSize.width.toFloat(), canvasSize.height.toFloat()))
@@ -109,7 +111,7 @@ fun AdvancedGraphCanvas(
             val centerY = origin.y
             val scale = viewport.scaleX
 
-            // 1. Griglia cartesiana
+            // 1. Cartesian grid
             val gridStepMath = when {
                 scale > 120 -> 0.5f
                 scale > 50 -> 1f
@@ -118,11 +120,11 @@ fun AdvancedGraphCanvas(
             }
             val gridStepPx = gridStepMath * scale
 
-            val startX = (centerX % gridStepPx) - gridStepPx
-            var curX = startX
-            while (curX < width + gridStepPx) {
+            val leftRem = centerX % gridStepPx
+            var curX = if (leftRem < 0) leftRem + gridStepPx else leftRem
+            while (curX <= width) {
                 drawLine(
-                    color = Color(0xFF2E3347),
+                    color = Color(0x1A94A3B8),
                     start = Offset(curX, 0f),
                     end = Offset(curX, height),
                     strokeWidth = 1f
@@ -130,11 +132,11 @@ fun AdvancedGraphCanvas(
                 curX += gridStepPx
             }
 
-            val startY = (centerY % gridStepPx) - gridStepPx
-            var curY = startY
-            while (curY < height + gridStepPx) {
+            val topRem = centerY % gridStepPx
+            var curY = if (topRem < 0) topRem + gridStepPx else topRem
+            while (curY <= height) {
                 drawLine(
-                    color = Color(0xFF2E3347),
+                    color = Color(0x1A94A3B8),
                     start = Offset(0f, curY),
                     end = Offset(width, curY),
                     strokeWidth = 1f
@@ -142,21 +144,21 @@ fun AdvancedGraphCanvas(
                 curY += gridStepPx
             }
 
-            // 2. Aree di disequazione ombreggiate (Shaded Intervals)
+            // 2. Shaded inequality regions (Shaded Intervals)
             for (interval in state.shadedIntervals) {
                 val xLeft = viewport.mathToScreen(interval.from.toDouble(), 0.0, canvasSize).x
                 val xRight = viewport.mathToScreen(interval.to.toDouble(), 0.0, canvasSize).x
                 val leftClamped = xLeft.coerceIn(0f, width)
                 val rightClamped = xRight.coerceIn(0f, width)
 
-                // Sfondo traslucido della regione
+                // Translucent region background
                 drawRect(
                     color = Color(0x2810B981),
                     topLeft = Offset(leftClamped, 0f),
                     size = Size(rightClamped - leftClamped, height)
                 )
 
-                // Linee di confine verticali
+                // Vertical boundary lines
                 if (xLeft in 0f..width) {
                     drawLine(
                         color = Color(0xFF10B981),
@@ -175,7 +177,7 @@ fun AdvancedGraphCanvas(
                 }
             }
 
-            // 3. Assi cartesiani principali (X e Y)
+            // 3. Main Cartesian axes (X and Y)
             if (centerY in 0f..height) {
                 drawLine(
                     color = Color(0xFFE2E8F0),
@@ -193,7 +195,7 @@ fun AdvancedGraphCanvas(
                 )
             }
 
-            // 4. Etichette numeriche e tacche
+            // 4. Numerical labels and ticks
             val paint = android.graphics.Paint().apply {
                 color = android.graphics.Color.parseColor("#94A3B8")
                 textSize = 11.sp.toPx()
@@ -255,7 +257,7 @@ fun AdvancedGraphCanvas(
                 tY += gridStepMath
             }
 
-            // 5. Rendering delle curve matematiche multi-equazione
+            // 5. Multi-equation mathematical curve rendering
             for (eq in state.equations) {
                 if (eq.sampledPoints.isNotEmpty()) {
                     val path = Path()
@@ -284,7 +286,7 @@ fun AdvancedGraphCanvas(
                 }
             }
 
-            // 6. Tracciamento punti radici analitiche (Zero Marker)
+            // 6. Analytical roots tracking (Zero Marker)
             for (eq in state.equations) {
                 for (root in eq.roots) {
                     val rootScreen = viewport.mathToScreen(root, 0.0, canvasSize)
@@ -303,11 +305,11 @@ fun AdvancedGraphCanvas(
                 }
             }
 
-            // 7. Punto selezionato con coordinate callout (x; y)
+            // 7. Selected point with coordinate callout (x; y)
             val selPoint = state.selectedPoint
             if (selPoint != null) {
                 val screenPt = viewport.mathToScreen(selPoint.first.toDouble(), selPoint.second.toDouble(), canvasSize)
-                // Alone di evidenziazione
+                // Highlight aura
                 drawCircle(
                     color = Color(0x6660A5FA),
                     radius = 12.dp.toPx(),
@@ -319,7 +321,7 @@ fun AdvancedGraphCanvas(
                     center = screenPt
                 )
 
-                // Callout delle coordinate (x; y)
+                // Coordinate callout (x; y)
                 val coordText = "(%.2f; %.2f)".format(selPoint.first, selPoint.second)
                 val calloutPaint = android.graphics.Paint().apply {
                     color = android.graphics.Color.WHITE
@@ -356,7 +358,7 @@ fun AdvancedGraphCanvas(
             }
         }
 
-        // Overlay dei controlli rapidi (Zoom +, Zoom -, Reset, Fullscreen)
+        // Quick controls overlay (Zoom +, Zoom -, Reset, Fullscreen)
         Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -364,18 +366,18 @@ fun AdvancedGraphCanvas(
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             CanvasOverlayButton(onClick = { onTransform(1.25f, Offset.Zero) }) {
-                Icon(Icons.Default.Add, contentDescription = "Zoom In", tint = Color.White, modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.zoom_in), tint = Color.White, modifier = Modifier.size(16.dp))
             }
             CanvasOverlayButton(onClick = { onTransform(0.8f, Offset.Zero) }) {
-                Icon(Icons.Default.Remove, contentDescription = "Zoom Out", tint = Color.White, modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.Remove, contentDescription = stringResource(R.string.zoom_out), tint = Color.White, modifier = Modifier.size(16.dp))
             }
             CanvasOverlayButton(onClick = onReset) {
-                Icon(Icons.Default.Refresh, contentDescription = "Ripristina Vista", tint = Color.White, modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.reset_view), tint = Color.White, modifier = Modifier.size(16.dp))
             }
             CanvasOverlayButton(onClick = onToggleFullscreen) {
                 Icon(
                     imageVector = if (state.screenViewMode == ScreenViewMode.FULLSCREEN_GRAPH) Icons.Default.CloseFullscreen else Icons.Default.Fullscreen,
-                    contentDescription = "Schermo Intero",
+                    contentDescription = stringResource(R.string.fullscreen),
                     tint = Color.White,
                     modifier = Modifier.size(16.dp)
                 )

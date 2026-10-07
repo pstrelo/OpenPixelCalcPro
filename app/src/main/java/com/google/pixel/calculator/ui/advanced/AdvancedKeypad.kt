@@ -16,6 +16,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.google.pixel.calculator.R
 import com.google.pixel.calculator.ui.ActiveScreen
 import com.google.pixel.calculator.ui.toolbox.PixelToolPillBar
 import com.google.pixel.calculator.ui.toolbox.PixelToolToggleButton
@@ -34,6 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -41,12 +43,12 @@ import androidx.compose.ui.unit.sp
 import com.google.pixel.calculator.ui.theme.CalculatorTheme
 
 /**
- * Keypad Material 3 Expressive per Google Math Solver (6 Colonne x 6 Righe + Barra Inferiore di Risoluzione).
- * - Tab 1 (Algebra): Tasti di navigazione cursore (←, →), RAD/DEG, DEL, AC, =, tastierino numerico completo e operazioni base.
- * - Tab 2 (Trigonometria): Tutte le funzioni goniometriche dirette, inverse, iperboliche, inverse iperboliche, unità d'angolo e costanti.
- * - Tab 3 (Calcolo & Probabilità): Derivate, integrali, limiti, serie, coefficiente binomiale, distribuzioni (binompdf/cdf, normpdf/cdf), statistica (mean, var, std) e random.
- * - Tab 4 (Alfabeto & Costanti): Selettore a 3 schede per Lettere greche/latine, Costanti fisiche/matematiche (c, G, h, ħ, k_B, N_A, R, q_e, m_e...) e Prefissi metrici SI (k, M, G, T, m, μ, n, p...).
- * - Barra persistente inferiore: [ FORMAT: DEC/ENG/FRAC... ] e [ RISOLVI ➤ ].
+ * Material 3 Expressive keypad for Google Math Solver (6 Columns x 6 Rows + Bottom Solve Bar).
+ * - Tab 1 (Algebra): Cursor navigation keys (←, →), RAD/DEG, DEL, AC, =, complete numeric keypad, and basic operations.
+ * - Tab 2 (Trigonometry): Direct, inverse, hyperbolic, inverse hyperbolic trigonometric functions, angle units, and constants.
+ * - Tab 3 (Calculus & Probability): Derivatives, integrals, limits, series, binomial coefficient, distributions, statistics, and random.
+ * - Tab 4 (Alphabet & Constants): 3-tab selector for Greek/Latin letters, physical/mathematical constants, and SI metric prefixes.
+ * - Persistent bottom bar: [ FORMAT: DEC/ENG/FRAC... ] and [ SOLVE ➤ ].
  */
 @Composable
 fun AdvancedKeypad(
@@ -77,7 +79,7 @@ fun AdvancedKeypad(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        // 1. Barra orizzontale a 4 Tab tematiche (Algebra, Trigonometry, Calculus, Alphabet)
+        // 1. Horizontal bar with 4 thematic Tabs (Algebra, Trigonometry, Calculus, Alphabet)
         MathSolverTabBar(
             selectedTab = activeTab,
             onTabSelected = { tab ->
@@ -89,7 +91,7 @@ fun AdvancedKeypad(
 
         Spacer(modifier = Modifier.height(2.dp))
 
-        // 2. Griglia tasti della Tab attiva
+        // 2. Key grid for active Tab
         Box(modifier = Modifier.padding(horizontal = 6.dp)) {
             when (activeTab) {
                 MathSolverTab.ALGEBRA -> AlgebraKeypadGrid(
@@ -162,7 +164,7 @@ fun AdvancedKeypad(
 
         Spacer(modifier = Modifier.height(2.dp))
 
-        // 3. Barra persistente inferiore ([ FORMAT: DEC ], [ RISOLVI ➤ ]) con spazio dedicato per il tasto strumenti
+        // 3. Persistent bottom bar ([ FORMAT: DEC ], [ SOLVE ➤ ]) with space for tool button
         PersistentBottomEditBar(
             activeTab = activeTab,
             activeFormatLabel = activeFormatLabel,
@@ -181,7 +183,7 @@ fun AdvancedKeypad(
     }
 }
 
-// Overload basato su stato completo
+// Overload based on complete state
 @Composable
 fun AdvancedKeypad(
     state: AdvancedCalculatorState,
@@ -227,7 +229,7 @@ fun AdvancedKeypad(
     )
 }
 
-// Overload legacy retrocompatibile
+// Backward-compatible legacy overload
 @Composable
 fun AdvancedKeypad(
     state: AdvancedCalculatorState,
@@ -311,7 +313,7 @@ fun MathSolverTabBar(
 }
 
 // =========================================================================
-// ROW 1 COMUNE PER ALGEBRA: [ ← ] [ → ] [ RAD/DEG ] [ DEL ] [ AC ] [ = ]
+// ROW 1 COMMON FOR ALGEBRA: [ ← ] [ → ] [ RAD/DEG ] [ DEL ] [ AC ] [ = ]
 // =========================================================================
 
 @Composable
@@ -345,7 +347,7 @@ fun NavigationAndControlRow(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 1. [ ← ] Sposta cursore a sinistra
+        // 1. [ ← ] Move cursor left
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -357,13 +359,13 @@ fun NavigationAndControlRow(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Cursore a sinistra",
+                contentDescription = "Cursor left",
                 tint = navColor,
                 modifier = Modifier.size(18.dp)
             )
         }
 
-        // 2. [ → ] Sposta cursore a destra
+        // 2. [ → ] Move cursor right
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -375,13 +377,13 @@ fun NavigationAndControlRow(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = "Cursore a destra",
+                contentDescription = "Cursor right",
                 tint = navColor,
                 modifier = Modifier.size(18.dp)
             )
         }
 
-        // 3. [ RAD / DEG ] Tasto cambio unità angolare incorporato in tastiera
+        // 3. [ RAD / DEG ] Angle unit toggle key
         DegRadKey(
             isRadians = isRadians,
             btnHeight = btnHeight,
@@ -390,7 +392,7 @@ fun NavigationAndControlRow(
             onToggle = onToggleRadians
         )
 
-        // 4. [ DEL ] Cancella carattere
+        // 4. [ DEL ] Delete character
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -408,7 +410,7 @@ fun NavigationAndControlRow(
             )
         }
 
-        // 5. [ AC ] Pulisce tutto
+        // 5. [ AC ] Clear all
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -426,7 +428,7 @@ fun NavigationAndControlRow(
             )
         }
 
-        // 6. [ = ] Inserisce simbolo di uguaglianza per equazioni
+        // 6. [ = ] Insert equals sign for equations
         SquircleKey(
             label = "=",
             bgColor = eqBg,
@@ -442,7 +444,7 @@ fun NavigationAndControlRow(
 }
 
 // =========================================================================
-// 1. ALGEBRA KEYPAD GRID (6 Colonne x 6 Righe)
+// 1. ALGEBRA KEYPAD GRID (6 Columns x 6 Rows)
 // =========================================================================
 
 @Composable
@@ -532,7 +534,7 @@ private fun AlgebraKeypadGrid(
 }
 
 // =========================================================================
-// 2. TRIGONOMETRY KEYPAD GRID (6 Colonne x 6 Righe - 100% Funzioni)
+// 2. TRIGONOMETRY KEYPAD GRID (6 Columns x 6 Rows - 100% Functions)
 // =========================================================================
 
 @Composable
@@ -549,7 +551,7 @@ private fun TrigonometryKeypadGrid(
     val delColor = if (isDark) MathSolverTheme.deleteContent else Color(0xFFE11D48)
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        // Row 1: Funzioni Goniometriche Dirette e Reciproche
+        // Row 1: Direct and Reciprocal Trigonometric Functions
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("sin", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("sin(") }
             SquircleKey("cos", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("cos(") }
@@ -559,7 +561,7 @@ private fun TrigonometryKeypadGrid(
             SquircleKey("cot", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("cot(") }
         }
 
-        // Row 2: Funzioni Goniometriche Inverse
+        // Row 2: Inverse Trigonometric Functions
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("arcsin", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("arcsin(") }
             SquircleKey("arccos", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("arccos(") }
@@ -569,7 +571,7 @@ private fun TrigonometryKeypadGrid(
             SquircleKey("arccot", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("arccot(") }
         }
 
-        // Row 3: Funzioni Iperboliche Dirette e Reciproche
+        // Row 3: Direct and Reciprocal Hyperbolic Functions
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("sinh", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("sinh(") }
             SquircleKey("cosh", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("cosh(") }
@@ -579,7 +581,7 @@ private fun TrigonometryKeypadGrid(
             SquircleKey("coth", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("coth(") }
         }
 
-        // Row 4: Funzioni Iperboliche Inverse
+        // Row 4: Inverse Hyperbolic Functions
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("asinh", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("asinh(") }
             SquircleKey("acosh", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("acosh(") }
@@ -589,7 +591,7 @@ private fun TrigonometryKeypadGrid(
             SquircleKey("acoth", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("acoth(") }
         }
 
-        // Row 5: Unità d'Angolo, Costanti & Potenze
+        // Row 5: Angle Units, Constants & Powers
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("π", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("π") }
             SquircleKey("°", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("°") }
@@ -599,7 +601,7 @@ private fun TrigonometryKeypadGrid(
             SquircleKey("□²", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^2") }
         }
 
-        // Row 6: Variabili, Parentesi & Cancellazione
+        // Row 6: Variables, Parentheses & Backspace
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("x", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("x") }
             SquircleKey("e", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("e") }
@@ -617,7 +619,7 @@ private fun TrigonometryKeypadGrid(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Backspace,
-                    contentDescription = "Cancella carattere",
+                    contentDescription = stringResource(R.string.delete_digit),
                     tint = delColor,
                     modifier = Modifier.size(16.dp)
                 )
@@ -627,7 +629,7 @@ private fun TrigonometryKeypadGrid(
 }
 
 // =========================================================================
-// 3. CALCULUS KEYPAD GRID (6 Colonne x 6 Righe - 100% Funzioni)
+// 3. CALCULUS KEYPAD GRID (6 Columns x 6 Rows - 100% Functions)
 // =========================================================================
 
 @Composable
@@ -644,7 +646,7 @@ private fun CalculusKeypadGrid(
     val delColor = if (isDark) MathSolverTheme.deleteContent else Color(0xFFE11D48)
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        // Row 1: Derivate, Integrali, Limiti, Somme, Produttorie
+        // Row 1: Derivatives, Integrals, Limits, Sums, Products
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("d/dx", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 12.sp) { onKey("d/dx(") }
             SquircleKey("∫", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 18.sp) { onKey("∫(") }
@@ -654,7 +656,7 @@ private fun CalculusKeypadGrid(
             SquircleKey("Π", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 16.sp) { onKey("prod(") }
         }
 
-        // Row 2: Costanti, Logaritmi & Potenze
+        // Row 2: Constants, Logarithms & Powers
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("∞", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 16.sp) { onKey("∞") }
             SquircleKey("e", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("e") }
@@ -664,7 +666,7 @@ private fun CalculusKeypadGrid(
             SquircleKey("√□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("sqrt(") }
         }
 
-        // Row 3: Combinatoria & Probabilità (Binomiale nCk, Permutazioni nPk, Fattoriale, Random, Gamma)
+        // Row 3: Combinatorics & Probability (Binomial nCk, Permutations nPk, Factorial, Random, Gamma)
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("binom", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 11.sp) { onKey("binom(") }
             SquircleKey("nPr", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 12.sp) { onKey("perm(") }
@@ -674,7 +676,7 @@ private fun CalculusKeypadGrid(
             SquircleKey("Γ", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 15.sp) { onKey("gamma(") }
         }
 
-        // Row 4: Distribuzioni Statistiche (Binomiale & Normale PDF/CDF), Frazione & Valore Assoluto
+        // Row 4: Statistical Distributions (Binomial & Normal PDF/CDF), Fraction & Absolute Value
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("binompdf", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 9.sp) { onKey("binompdf(") }
             SquircleKey("binomcdf", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 9.sp) { onKey("binomcdf(") }
@@ -684,7 +686,7 @@ private fun CalculusKeypadGrid(
             SquircleKey("|x|", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("abs(") }
         }
 
-        // Row 5: Statistica Descrittiva (Media, Varianza, Deviazione Standard, Mediana) & Relazioni
+        // Row 5: Descriptive Statistics (Mean, Variance, Standard Deviation, Median) & Relations
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("mean", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("mean(") }
             SquircleKey("var", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("var(") }
@@ -694,7 +696,7 @@ private fun CalculusKeypadGrid(
             SquircleKey(">", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true) { onKey(" > ") }
         }
 
-        // Row 6: Variabili, Separatore Argomenti (,), Parentesi & Cancellazione
+        // Row 6: Variables, Argument Separator (,), Parentheses & Backspace
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SquircleKey("x", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("x") }
             SquircleKey("t", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("t") }
@@ -712,7 +714,7 @@ private fun CalculusKeypadGrid(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Backspace,
-                    contentDescription = "Cancella carattere",
+                    contentDescription = stringResource(R.string.delete_digit),
                     tint = delColor,
                     modifier = Modifier.size(16.dp)
                 )
@@ -725,10 +727,10 @@ private fun CalculusKeypadGrid(
 // 4. ALPHABET, CONSTANTS & SI PREFIXES KEYPAD GRID
 // =========================================================================
 
-enum class AlphabetSubTab(val label: String) {
-    LETTERS("Lettere"),
-    CONSTANTS("Costanti"),
-    SI_PREFIXES("Prefissi SI")
+enum class AlphabetSubTab(val labelRes: Int) {
+    LETTERS(R.string.subtab_letters),
+    CONSTANTS(R.string.subtab_constants),
+    SI_PREFIXES(R.string.subtab_si_prefixes)
 }
 
 @Composable
@@ -749,7 +751,7 @@ private fun AlphabetKeypadGrid(
     val clearColor = if (isDark) MathSolverTheme.clearContent else Color(0xFFDC2626)
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        // Selettore a 3 schede per sotto-sezioni (Lettere, Costanti, Prefissi SI)
+        // 3-tab selector for sub-sections (Letters, Constants, SI Prefixes)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -771,7 +773,7 @@ private fun AlphabetKeypadGrid(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = tab.label,
+                        text = stringResource(tab.labelRes),
                         fontSize = 11.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                         color = chipTextColor
@@ -782,7 +784,7 @@ private fun AlphabetKeypadGrid(
 
         when (subTab) {
             AlphabetSubTab.LETTERS -> {
-                // Lettere latine e greche complete (30 simboli + Backspace)
+                // Complete Latin and Greek letters (30 symbols + Backspace)
                 val letterRows = listOf(
                     listOf("a", "b", "c", "d", "e", "f"),
                     listOf("g", "h", "i", "j", "k", "l"),
@@ -806,7 +808,7 @@ private fun AlphabetKeypadGrid(
                         }
                     }
                 }
-                // Riga 6 lettere greche avanzate e cancellazione
+                // Row 6: advanced Greek letters and backspace
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     listOf("μ", "π", "φ", "ω", "Δ").forEach { key ->
                         SquircleKey(
@@ -831,7 +833,7 @@ private fun AlphabetKeypadGrid(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Backspace,
-                            contentDescription = "Cancella carattere",
+                            contentDescription = stringResource(R.string.delete_digit),
                             tint = delColor,
                             modifier = Modifier.size(16.dp)
                         )
@@ -840,8 +842,8 @@ private fun AlphabetKeypadGrid(
             }
 
             AlphabetSubTab.CONSTANTS -> {
-                // Costanti Fisiche e Matematiche universali
-                // Row 1: Velocità della luce, Gravitazione, Gravità terrestre, Costante di Planck, ħ, Boltzmann
+                // Universal Physical and Mathematical Constants
+                // Row 1: Speed of light, Gravitational, Earth gravity, Planck, ħ, Boltzmann
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     SquircleKey("c", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true) { onKey("c") }
                     SquircleKey("G", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true) { onKey("G") }
@@ -850,7 +852,7 @@ private fun AlphabetKeypadGrid(
                     SquircleKey("ħ", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true) { onKey("ħ") }
                     SquircleKey("k_B", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 11.sp) { onKey("k_B") }
                 }
-                // Row 2: Numero di Avogadro, Costante dei Gas, Carica elettrone, Massa elettrone, Massa protone, Unità massa atomica
+                // Row 2: Avogadro, Gas Constant, Electron charge, Electron mass, Proton mass, Unified atomic mass
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     SquircleKey("N_A", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 11.sp) { onKey("N_A") }
                     SquircleKey("R", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true) { onKey("R") }
@@ -859,7 +861,7 @@ private fun AlphabetKeypadGrid(
                     SquircleKey("m_p", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 11.sp) { onKey("m_p") }
                     SquircleKey("u", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true) { onKey("u") }
                 }
-                // Row 3: Costanti Dielettriche, Stefan-Boltzmann, Sezione Aurea, Eulero, Pi Greco
+                // Row 3: Permittivity, Stefan-Boltzmann, Golden ratio, Euler's number, Pi
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     SquircleKey("ε₀", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 15.sp) { onKey("ε₀") }
                     SquircleKey("μ₀", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 15.sp) { onKey("μ₀") }
@@ -868,7 +870,7 @@ private fun AlphabetKeypadGrid(
                     SquircleKey("e", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 15.sp) { onKey("e") }
                     SquircleKey("π", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 15.sp) { onKey("π") }
                 }
-                // Row 4: Costanti Matematiche Frequenti & Potenze
+                // Row 4: Frequent Mathematical Constants & Powers
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     SquircleKey("√2", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("sqrt(2)") }
                     SquircleKey("√3", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 12.sp) { onKey("sqrt(3)") }
@@ -877,7 +879,7 @@ private fun AlphabetKeypadGrid(
                     SquircleKey("□ⁿ", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^") }
                     SquircleKey("√□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("sqrt(") }
                 }
-                // Row 5: Operatori e Parentesi
+                // Row 5: Operators and Parentheses
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     SquircleKey("(", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("(") }
                     SquircleKey(")", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(")") }
@@ -886,7 +888,7 @@ private fun AlphabetKeypadGrid(
                     SquircleKey("+", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 16.sp) { onKey("+") }
                     SquircleKey("-", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 16.sp) { onKey("-") }
                 }
-                // Row 6: Variabili, Uguale & Cancellazione
+                // Row 6: Variables, Equals & Backspace
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     SquircleKey("x", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("x") }
                     SquircleKey("e", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("e") }
@@ -904,7 +906,7 @@ private fun AlphabetKeypadGrid(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Backspace,
-                            contentDescription = "Cancella carattere",
+                            contentDescription = stringResource(R.string.delete_digit),
                             tint = delColor,
                             modifier = Modifier.size(16.dp)
                         )
@@ -913,8 +915,8 @@ private fun AlphabetKeypadGrid(
             }
 
             AlphabetSubTab.SI_PREFIXES -> {
-                // Prefissi Metrici del Sistema Internazionale (inserimento moltiplicatore scientifico immediato)
-                // Row 1: Grandi Multipli: Tera (10¹²), Giga (10⁹), Mega (10⁶), kilo (10³), etto (10²), deca (10¹)
+                // International System (SI) Metric Prefixes
+                // Row 1: Large Multiples: Tera (10¹²), Giga (10⁹), Mega (10⁶), kilo (10³), hecto (10²), deca (10¹)
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     SquircleKey("T (10¹²)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 9.sp) { onKey("*10^12") }
                     SquircleKey("G (10⁹)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 10.sp) { onKey("*10^9") }
@@ -923,7 +925,7 @@ private fun AlphabetKeypadGrid(
                     SquircleKey("h (10²)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 10.sp) { onKey("*10^2") }
                     SquircleKey("da (10¹)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 9.sp) { onKey("*10^1") }
                 }
-                // Row 2: Sottomultipli: deci (10⁻¹), centi (10⁻²), milli (10⁻³), micro (10⁻⁶), nano (10⁻⁹), pico (10⁻¹²)
+                // Row 2: Submultiples: deci (10⁻¹), centi (10⁻²), milli (10⁻³), micro (10⁻⁶), nano (10⁻⁹), pico (10⁻¹²)
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     SquircleKey("d (10⁻¹)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 9.sp) { onKey("*10^-1") }
                     SquircleKey("c (10⁻²)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 9.sp) { onKey("*10^-2") }
@@ -932,7 +934,7 @@ private fun AlphabetKeypadGrid(
                     SquircleKey("n (10⁻⁹)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 9.sp) { onKey("*10^-9") }
                     SquircleKey("p (10⁻¹²)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 8.sp) { onKey("*10^-12") }
                 }
-                // Row 3: Estremi & Notazione Scientifica: femto (10⁻¹⁵), atto (10⁻¹⁸), Peta (10¹⁵), Exa (10¹⁸), ×10ⁿ, □/□
+                // Row 3: Extremes & Scientific Notation: femto (10⁻¹⁵), atto (10⁻¹⁸), Peta (10¹⁵), Exa (10¹⁸), ×10ⁿ, □/□
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     SquircleKey("f (10⁻¹⁵)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 8.sp) { onKey("*10^-15") }
                     SquircleKey("a (10⁻¹⁸)", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 8.sp) { onKey("*10^-18") }
@@ -941,7 +943,7 @@ private fun AlphabetKeypadGrid(
                     SquircleKey("×10ⁿ", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 11.sp) { onKey("*10^") }
                     SquircleKey("□/□", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("/") }
                 }
-                // Row 4: Potenze, Radici, Parentesi & Moltiplicazione
+                // Row 4: Powers, Roots, Parentheses & Multiplication
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     SquircleKey("□ⁿ", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^") }
                     SquircleKey("□²", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey("^2") }
@@ -950,7 +952,7 @@ private fun AlphabetKeypadGrid(
                     SquircleKey(")", fnBg, fnColor, btnHeight, Modifier.weight(1f)) { onKey(")") }
                     SquircleKey("×", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 16.sp) { onKey("*") }
                 }
-                // Row 5: Potenze Base di 10 e separatore decimale
+                // Row 5: Powers of 10 and decimal separator
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     SquircleKey("1", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true) { onKey("1") }
                     SquircleKey("10", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true) { onKey("10") }
@@ -959,7 +961,7 @@ private fun AlphabetKeypadGrid(
                     SquircleKey(".", fnBg, fnColor, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey(".") }
                     SquircleKey("+", fnBg, fnColor, btnHeight, Modifier.weight(1f), fontSize = 16.sp) { onKey("+") }
                 }
-                // Row 6: Variabili, Uguale & Cancellazione
+                // Row 6: Variables, Equals & Backspace
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     SquircleKey("x", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("x") }
                     SquircleKey("π", fnBg, tabAccent, btnHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("π") }
@@ -977,7 +979,7 @@ private fun AlphabetKeypadGrid(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Backspace,
-                            contentDescription = "Cancella carattere",
+                            contentDescription = stringResource(R.string.delete_digit),
                             tint = delColor,
                             modifier = Modifier.size(16.dp)
                         )
@@ -989,7 +991,7 @@ private fun AlphabetKeypadGrid(
 }
 
 // =========================================================================
-// 5. PERSISTENT BOTTOM EDIT BAR ([ FORMAT: DEC ], [ RISOLVI ➤ ])
+// 5. PERSISTENT BOTTOM EDIT BAR ([ FORMAT: DEC ], [ SOLVE ➤ ])
 // =========================================================================
 
 @Composable
@@ -1029,8 +1031,8 @@ fun PersistentBottomEditBar(
         horizontalArrangement = Arrangement.spacedBy(dims.spacing),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Tasto Strumenti a sinistra (da tondo a quadrato M3)
-        // Stessa identica dimensione e posizione della calcolatrice principale
+        // Tool button on left (circle to square M3 transition)
+        // Same dimensions and position as main calculator
         PixelToolToggleButton(
             currentScreen = ActiveScreen.ADVANCED_CALCULATOR,
             isExpanded = isToolBarExpanded,
@@ -1039,7 +1041,7 @@ fun PersistentBottomEditBar(
             modifier = Modifier.size(width = dims.btnWidth, height = barHeight)
         )
 
-        // Zona comandi con la pillola che fluttua sopra di essi alla stessa identica dimensione
+        // Command zone with floating pill
         Box(
             modifier = Modifier.weight(1f),
             contentAlignment = Alignment.CenterStart
@@ -1049,7 +1051,7 @@ fun PersistentBottomEditBar(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // [ FORMAT ] Tasto per ciclare formato risultato (DEC, FRAC, ENG, DMS, POL)
+                // [ FORMAT ] Button to cycle result format (DEC, FRAC, ENG, DMS, POL)
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -1079,7 +1081,7 @@ fun PersistentBottomEditBar(
                     }
                 }
 
-                // [ RISOLVI ➤ ] Pulsante pillola di esecuzione / calcolo prominente con accento della tab attiva
+                // [ SOLVE ➤ ] Execution / solve pill button with active tab accent
                 Box(
                     modifier = Modifier
                         .weight(1.8f)
@@ -1094,14 +1096,14 @@ fun PersistentBottomEditBar(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "RISOLVI",
+                            text = stringResource(R.string.solve),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Send,
-                            contentDescription = "Calcola ed Esegui",
+                            contentDescription = stringResource(R.string.solve),
                             tint = Color.White,
                             modifier = Modifier.size(17.dp)
                         )
@@ -1109,7 +1111,7 @@ fun PersistentBottomEditBar(
                 }
             }
 
-            // Pillola fluttuante Material 3 SEMPRE fluttuante e della STESSA dimensione fissa
+            // Material 3 floating pill bar
             androidx.compose.animation.AnimatedVisibility(
                 visible = isToolBarExpanded,
                 enter = fadeIn(tween(180)) + scaleIn(
@@ -1178,8 +1180,8 @@ fun SquircleKey(
 }
 
 /**
- * Tasto DEG / RAD incorporato direttamente nel tastierino matematico.
- * Si illumina e si contorna quando la modalità DEG è attiva.
+ * DEG / RAD key embedded directly in the keypad.
+ * Glows and outlines when DEG mode is active.
  */
 @Composable
 fun DegRadKey(

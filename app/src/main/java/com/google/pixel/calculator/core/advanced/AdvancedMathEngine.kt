@@ -9,15 +9,15 @@ import java.math.RoundingMode
 import kotlin.math.*
 
 /**
- * Motore matematico ad altissima efficienza per la Calcolatrice Avanzata.
- * Esegue calcolo numerico e simbolico per:
- * - Valutazione di espressioni standard e multi-riga
- * - Ricerca radici ed equazioni f(x) = 0 o f(x) = g(x) (Brent-Dekker)
- * - Risoluzione di disequazioni con intervalli (es. x ∈ [-2, 3))
- * - Calcolo di derivata numerica puntuale f'(x₀) con stencil a 5 punti
- * - Integrale definito con quadratura adattiva di Simpson
- * - Limiti numerici lim(x -> x₀)
- * - Campionamento ad alte prestazioni per grafici 2D e rilevamento zeri/intercette
+ * High-performance mathematical engine for the Advanced Calculator.
+ * Performs numerical and symbolic computation for:
+ * - Evaluation of standard and multi-line expressions
+ * - Root and equation finding f(x) = 0 or f(x) = g(x) (Brent-Dekker)
+ * - Inequality solving with intervals (e.g. x ∈ [-2, 3))
+ * - Point numerical derivative computation f'(x₀) with 5-point stencil
+ * - Definite integral with Simpson adaptive quadrature
+ * - Numerical limits lim(x -> x₀)
+ * - High-performance sampling for 2D graphs and zero/intercept detection
  */
 class AdvancedMathEngine(
     private val parser: ExpressionParser = ExpressionParser()
@@ -67,7 +67,7 @@ class AdvancedMathEngine(
     }
 
     // ==========================================
-    // 1. VALUTAZIONE GENERALE DI UN'ESPRESSIONE
+    // 1. GENERAL EXPRESSION EVALUATION
     // ==========================================
 
     fun isVariableAssignment(expr: String): Boolean {
@@ -118,7 +118,7 @@ class AdvancedMathEngine(
     }
 
     // ==========================================
-    // 2. DISPATCHER RISOLUTORE AUTOMATICO
+    // 2. AUTOMATIC SOLVER DISPATCHER
     // ==========================================
 
     fun solve(
@@ -129,29 +129,29 @@ class AdvancedMathEngine(
         val clean = autoCloseParentheses(input).trim()
         if (clean.isBlank()) return SolveResult.Error("Espressione vuota")
 
-        // 1. Derivata: d/dx o f'(x) o diff
+        // 1. Derivative: d/dx or f'(x) or diff
         if (clean.startsWith("d/dx", ignoreCase = true) || clean.startsWith("diff", ignoreCase = true)) {
             return solveDerivative(clean, isRadians, customVariables)
         }
 
-        // 2. Integrale: ∫ o integral
+        // 2. Integral: ∫ or integral
         if (clean.contains("∫") || clean.startsWith("integral", ignoreCase = true)) {
             return solveIntegral(clean, isRadians, customVariables)
         }
 
-        // 3. Limite: lim
+        // 3. Limit: lim
         if (clean.startsWith("lim", ignoreCase = true)) {
             return solveLimit(clean, isRadians, customVariables)
         }
 
-        // 4. Disequazione: <=, >=, <, >
+        // 4. Inequality: <=, >=, <, >
         val ineqOps = listOf("<=", ">=", "≤", "≥", "<", ">")
         val foundIneq = ineqOps.firstOrNull { clean.contains(it) }
         if (foundIneq != null) {
             return solveInequality(clean, foundIneq, isRadians, customVariables)
         }
 
-        // 5. Assegnazione Costante o Equazione con '='
+        // 5. Constant Assignment or Equation with '='
         if (clean.contains("=")) {
             val parts = clean.split("=")
             if (parts.size == 2 && isVariableAssignment(clean)) {
@@ -174,7 +174,7 @@ class AdvancedMathEngine(
             return solveEquation(clean, isRadians, customVariables)
         }
 
-        // 6. Parsing AST e controllo presenza incognita x
+        // 6. AST Parsing and variable 'x' presence check
         val ast = try {
             parser.parse(clean)
         } catch (e: Exception) {
@@ -185,7 +185,7 @@ class AdvancedMathEngine(
             return findRootsOfFunction(clean, isRadians, customVariables)
         }
 
-        // 7. Semplice calcolo numerico
+        // 7. Simple numeric calculation
         return try {
             val ctx = EvaluationContext(
                 variables = EvaluationContext.DEFAULT_VARIABLES + customVariables,
@@ -211,7 +211,7 @@ class AdvancedMathEngine(
     }
 
     // ==========================================
-    // 3. RISOLUTORE EQUAZIONI: f(x) = 0 o f(x) = g(x)
+    // 3. EQUATION SOLVER: f(x) = 0 or f(x) = g(x)
     // ==========================================
 
     fun solveEquation(
@@ -280,7 +280,7 @@ class AdvancedMathEngine(
                 if (abs(prevY) < 1e-10) {
                     addUniqueRoot(foundRoots, prevX)
                 } else if (prevY * curY < 0.0) {
-                    // Cambio di segno: esegui Brent-Dekker / bisezione rapida
+                    // Sign change: perform Brent-Dekker / fast bisection
                     val root = brentRootFind(::f, prevX, curX, 1e-8, 100)
                     if (root != null && abs(f(root)) < 1e-4) {
                         addUniqueRoot(foundRoots, root)
@@ -291,10 +291,10 @@ class AdvancedMathEngine(
             prevY = curY
         }
 
-        // Ordina le radici per vicinanza all'origine |x|
+        // Sort roots by proximity to origin |x|
         foundRoots.sortBy { abs(it) }
-        // Per funzioni periodiche/trigonometriche (come cos(x)), limita alle radici principali (max 2 vicino a 0),
-        // per polinomi limita a max 4 radici. Elimina l'esplosione caotica di 32 radici!
+        // For periodic/trigonometric functions (such as cos(x)), limit to principal roots (max 2 near 0),
+        // for polynomials limit to max 4 roots. Avoids chaotic explosion of 32 roots!
         val maxRoots = if (isTrig) 2 else 4
         val cappedRoots = foundRoots.distinctBy { (it * 1000).roundToLong() }.take(maxRoots).sorted()
 
@@ -317,7 +317,7 @@ class AdvancedMathEngine(
     }
 
     /**
-     * Metodo di Brent per la ricerca radici super veloce (superlineare).
+     * Brent's method for super-fast (superlinear) root finding.
      */
     private fun brentRootFind(
         f: (Double) -> Double,
@@ -392,7 +392,7 @@ class AdvancedMathEngine(
     }
 
     // ==========================================
-    // 4. RISOLUTORE DISEQUAZIONI
+    // 4. INEQUALITY SOLVER
     // ==========================================
 
     fun solveInequality(
@@ -426,14 +426,14 @@ class AdvancedMathEngine(
             }
         }
 
-        // Troviamo i punti critici (zeri)
+        // Find critical points (zeros)
         val rootsResult = findRootsOfFunction(diffExpr, isRadians, customVariables)
         val criticalPoints = when (rootsResult) {
             is SolveResult.EquationRoots -> rootsResult.roots.sorted()
             else -> emptyList()
         }
 
-        // Partizioniamo la retta reale [-50, 50]
+        // Partition the real line [-50, 50]
         val intervals = mutableListOf<ShadedInterval>()
         val textIntervals = mutableListOf<String>()
 
@@ -479,7 +479,7 @@ class AdvancedMathEngine(
     }
 
     // ==========================================
-    // 5. DERIVATA NUMERICA PUNTUALE
+    // 5. POINT NUMERICAL DERIVATIVE
     // ==========================================
 
     fun solveDerivative(
@@ -487,7 +487,7 @@ class AdvancedMathEngine(
         isRadians: Boolean = true,
         customVariables: Map<String, BigDecimal> = emptyMap()
     ): SolveResult {
-        // Formato atteso: d/dx(f(x), x0) oppure d/dx(f(x)) con default x0=0 o punto dato
+        // Expected format: d/dx(f(x), x0) or d/dx(f(x)) with default x0=0 or given point
         val content = expr.substringAfter("(").substringBeforeLast(")")
         val parts = content.split(",")
         val funcStr = parts[0].trim()
@@ -517,7 +517,7 @@ class AdvancedMathEngine(
             return SolveResult.Error("Derivata non definita in x = $x0")
         }
 
-        // Stencil a 5 punti: f'(x) ≈ (-f(x+2h) + 8f(x+h) - 8f(x-h) + f(x-2h)) / 12h
+        // 5-point stencil: f'(x) ≈ (-f(x+2h) + 8f(x+h) - 8f(x-h) + f(x-2h)) / 12h
         val h = 1e-5
         val deriv = (-f(x0 + 2 * h) + 8 * f(x0 + h) - 8 * f(x0 - h) + f(x0 - 2 * h)) / (12 * h)
 
@@ -530,7 +530,7 @@ class AdvancedMathEngine(
     }
 
     // ==========================================
-    // 6. INTEGRALE DEFINITO (QUADRATURA SIMPSON)
+    // 6. DEFINITE INTEGRAL (SIMPSON QUADRATURE)
     // ==========================================
 
     fun solveIntegral(
@@ -538,7 +538,7 @@ class AdvancedMathEngine(
         isRadians: Boolean = true,
         customVariables: Map<String, BigDecimal> = emptyMap()
     ): SolveResult {
-        // Formato atteso: ∫(f(x), a, b)
+        // Expected format: ∫(f(x), a, b)
         val content = expr.substringAfter("(").substringBeforeLast(")")
         val parts = content.split(",")
         if (parts.size < 3) {
@@ -612,7 +612,7 @@ class AdvancedMathEngine(
     }
 
     // ==========================================
-    // 7. LIMITE NUMERICO
+    // 7. NUMERICAL LIMIT
     // ==========================================
 
     fun solveLimit(
@@ -620,7 +620,7 @@ class AdvancedMathEngine(
         isRadians: Boolean = true,
         customVariables: Map<String, BigDecimal> = emptyMap()
     ): SolveResult {
-        // Formato: lim(f(x), x0)
+        // Format: lim(f(x), x0)
         val content = expr.substringAfter("(").substringBeforeLast(")")
         val parts = content.split(",")
         val funcStr = parts[0].trim()
@@ -645,7 +645,7 @@ class AdvancedMathEngine(
             }
         }
 
-        // Valuta lim sinistro e destro
+        // Evaluate left and right limits
         val eps = 1e-7
         val left = f(x0 - eps)
         val right = f(x0 + eps)
@@ -659,7 +659,7 @@ class AdvancedMathEngine(
     }
 
     // ==========================================
-    // 8. CAMPIONAMENTO AD ALTE PRESTAZIONI PER IL GRAFICO
+    // 8. HIGH-PERFORMANCE SAMPLING FOR GRAPH
     // ==========================================
 
     fun sampleFunction(
@@ -691,15 +691,15 @@ class AdvancedMathEngine(
                 )
                 val yVal = ast.evaluate(ctx).toDouble()
                 if (yVal.isFinite() && !yVal.isNaN() && abs(yVal) < 1e5) {
-                    // Rilevamento asintoti verticali: se il segno cambia rapidamente con pendenza altissima
+                    // Vertical asymptote detection: if sign changes rapidly with high slope
                     val lastY = prevY
                     if (lastY != null && lastY * yVal < 0 && abs(yVal - lastY) > 40.0 && abs(yVal - lastY) / stepSize > 300.0) {
-                        points.add(null) // Discontinuità asintotica (es. tan(x), cot(x), 1/x)
+                        points.add(null) // Asymptotic discontinuity (e.g. tan(x), cot(x), 1/x)
                     }
                     points.add(Point(x, yVal.toFloat()))
                     prevY = yVal
                 } else {
-                    points.add(null) // Discontinuità o asintoto verticale
+                    points.add(null) // Discontinuity or vertical asymptote
                     prevY = null
                 }
             } catch (e: Exception) {
@@ -736,7 +736,7 @@ class AdvancedMathEngine(
     }
 
     /**
-     * Sviluppo in frazione continua per trovare la frazione esatta p/q ridotta ai minimi termini (es. 0.375 -> 3/8, 0.33333333 -> 1/3, 2.5 -> 5/2)
+     * Continued fraction expansion to find the exact reduced fraction p/q in lowest terms (e.g. 0.375 -> 3/8, 0.33333333 -> 1/3, 2.5 -> 5/2)
      */
     fun toFraction(value: Double, tolerance: Double = 1e-7, maxDenominator: Long = 1000000L): String {
         if (value.isNaN() || value.isInfinite()) return toDecimal(value)
@@ -769,7 +769,7 @@ class AdvancedMathEngine(
     }
 
     /**
-     * Notazione ingegneristica con esponenti multipli di 3 (kilo, mega, micro, nano, ecc.)
+     * Engineering notation with exponents multiples of 3 (kilo, mega, micro, nano, etc.)
      */
     fun toEngineering(value: Double): String {
         if (value == 0.0) return "0"
@@ -794,7 +794,7 @@ class AdvancedMathEngine(
     }
 
     /**
-     * Sessagesimale: Gradi, Primi e Secondi (DMS)
+     * Sexagesimal: Degrees, Minutes, and Seconds (DMS)
      */
     fun toDms(value: Double): String {
         if (value.isNaN() || value.isInfinite()) return toDecimal(value)
@@ -808,7 +808,7 @@ class AdvancedMathEngine(
     }
 
     /**
-     * Coordinate polari: r ∠ θ
+     * Polar coordinates: r ∠ θ
      */
     fun toPolar(value: Double, isRadians: Boolean): String {
         if (value.isNaN() || value.isInfinite()) return toDecimal(value)

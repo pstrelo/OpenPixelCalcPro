@@ -14,9 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.pixel.calculator.R
 import com.google.pixel.calculator.ui.ActiveScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,14 +40,14 @@ fun ToolboxModal(
         ) {
             Column {
                 Text(
-                    text = "Strumenti Pixel Utility",
+                    text = stringResource(R.string.toolbox_title),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Funzionalità avanzate integrate con i sensori del Pixel",
+                    text = stringResource(R.string.toolbox_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -58,8 +60,8 @@ fun ToolboxModal(
 
             ToolboxItem(
                 icon = "⚖️",
-                title = "Convertitore di Unità",
-                description = "Valute, grandezze fisiche, dosaggi e oltre 17 categorie offline",
+                title = stringResource(R.string.tool_converter),
+                description = stringResource(R.string.tool_unit_converter_summary),
                 itemShape = RoundedCornerShape(20.dp),
                 iconShape = RoundedCornerShape(14.dp),
                 iconBg = MaterialTheme.colorScheme.secondaryContainer,
@@ -71,8 +73,8 @@ fun ToolboxModal(
 
             ToolboxItem(
                 icon = "🟢",
-                title = "Livella a Bolla Digitale",
-                description = "Misura l'inclinazione su due assi con l'accelerometro del Pixel",
+                title = stringResource(R.string.tool_level),
+                description = stringResource(R.string.tool_bubble_level_summary),
                 itemShape = RoundedCornerShape(topStart = 20.dp, topEnd = 12.dp, bottomEnd = 20.dp, bottomStart = 12.dp),
                 iconShape = CircleShape,
                 iconBg = MaterialTheme.colorScheme.primaryContainer,
@@ -84,8 +86,8 @@ fun ToolboxModal(
 
             ToolboxItem(
                 icon = "🧭",
-                title = "Bussola Digitale",
-                description = "Orientamento magnetico e punti cardinali a 360°",
+                title = stringResource(R.string.tool_compass),
+                description = stringResource(R.string.tool_compass_summary),
                 itemShape = RoundedCornerShape(20.dp),
                 iconShape = CircleShape,
                 iconBg = MaterialTheme.colorScheme.tertiaryContainer,
@@ -97,8 +99,8 @@ fun ToolboxModal(
 
             ToolboxItem(
                 icon = "📏",
-                title = "Righello su Schermo",
-                description = "Scala millimetrica e pollici calibrata fisicamente sul display Pixel",
+                title = stringResource(R.string.tool_ruler),
+                description = stringResource(R.string.tool_ruler_summary),
                 itemShape = RoundedCornerShape(topStart = 12.dp, topEnd = 20.dp, bottomEnd = 12.dp, bottomStart = 20.dp),
                 iconShape = RoundedCornerShape(14.dp),
                 iconBg = MaterialTheme.colorScheme.surfaceContainerHighest ?: MaterialTheme.colorScheme.surfaceVariant,

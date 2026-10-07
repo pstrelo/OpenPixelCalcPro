@@ -90,7 +90,7 @@ class CompassLocationManager(private val context: Context) {
         )
         val availableProviders = runCatching { mgr.allProviders }.getOrDefault(emptyList())
 
-        // 1. Recupera subito l'ultima posizione nota migliore e più recente da qualsiasi provider
+        // 1. Immediately retrieve the most recent and best last known location from any provider
         var bestLast: Location? = null
         for (provider in candidateProviders) {
             if (availableProviders.contains(provider)) {
@@ -105,7 +105,7 @@ class CompassLocationManager(private val context: Context) {
             updateFromLocation(bestLast, true)
         }
 
-        // 2. Crea il listener con aggiornamento immediato
+        // 2. Create the listener with immediate updates
         val listener = object : LocationListener {
             override fun onLocationChanged(location: Location) {
                 updateFromLocation(location, true)
@@ -117,7 +117,7 @@ class CompassLocationManager(private val context: Context) {
         }
         locationListener = listener
 
-        // 3. Registra con minDistance = 0f (per rilevare anche i soli cambi di altitudine nell'emulatore)
+        // 3. Register with minDistance = 0f (to detect altitude-only changes in emulator as well)
         for (provider in candidateProviders) {
             if (availableProviders.contains(provider)) {
                 try {
@@ -166,7 +166,7 @@ class CompassLocationManager(private val context: Context) {
             isGpsActive = true
         )
 
-        // Risoluzione inversa nome città / località tramite Geocoder asincrono
+        // Reverse geocoding for city / locality name via asynchronous Geocoder
         fetchGeocodedName(lat, lon)
     }
 
@@ -198,7 +198,7 @@ class CompassLocationManager(private val context: Context) {
                     }
                 }
             } catch (_: Exception) {
-                // Fallback trasparente se geocoder offline
+                // Seamless fallback if geocoder is offline
             }
         }
     }

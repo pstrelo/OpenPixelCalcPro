@@ -65,11 +65,11 @@ sealed class MathNode {
                     l.divide(r, context.mathContext)
                 }
                 "%", "mod" -> {
-                    // Se usato come operatore binario classico (modulo)
+                    // If used as classic binary operator (modulo)
                     l.remainder(r, context.mathContext)
                 }
                 "^", "pow" -> {
-                    // Se l'esponente è intero usiamo pow di BigDecimal per massima precisione, altrimenti Double
+                    // If the exponent is an integer, use BigDecimal.pow for maximum precision, otherwise Double
                     try {
                         val intExp = r.intValueExact()
                         if (kotlin.math.abs(intExp) > 10000) throw ArithmeticException("Esponente troppo elevato (massimo 10000)")
@@ -83,7 +83,7 @@ sealed class MathNode {
                     }
                 }
                 "ʸ√", "nroot", "root", "ˣ√", "ⁿ√" -> {
-                    // l = indice (y), r = radicando (x) -> radice y-esima di x
+                    // l = index (y), r = radicand (x) -> y-th root of x
                     val index = l.toDouble()
                     val radicand = r.toDouble()
                     if (index == 0.0) throw ArithmeticException("Indice della radice non può essere zero")
@@ -104,11 +104,11 @@ sealed class MathNode {
                 "-", "neg" -> v.negate(context.mathContext)
                 "+", "pos" -> v
                 "%", "percent" -> {
-                    // Percentuale: es. 50% = 0.5
+                    // Percentage: e.g. 50% = 0.5
                     v.divide(BigDecimal(100), context.mathContext)
                 }
                 "ʸ√", "nroot", "root", "√" -> {
-                    // Se usato come operatore unario senza indice, default radice quadrata
+                    // If used as unary operator without index, defaults to square root
                     if (v.signum() < 0) throw ArithmeticException("Radice quadrata di numero negativo")
                     BigDecimal(sqrt(v.toDouble()), context.mathContext)
                 }
@@ -372,7 +372,7 @@ sealed class MathNode {
                 "abs" -> evaluatedArgs[0].abs(mc)
 
                 // ==========================================
-                // COMBINATORIA & PROBABILITÀ
+                // COMBINATORICS & PROBABILITY
                 // ==========================================
                 "binom", "ncr", "comb" -> {
                     if (evaluatedArgs.size < 2) throw ArithmeticException("binom(n, k) richiede 2 argomenti")
@@ -516,12 +516,12 @@ sealed class MathNode {
 }
 
 /**
- * Contesto di valutazione con precisione matematica e variabili.
+ * Evaluation context with mathematical precision and variables.
  */
 data class EvaluationContext(
     val variables: Map<String, BigDecimal> = DEFAULT_VARIABLES,
     val isRadians: Boolean = true,
-    val mathContext: MathContext = MathContext(34, RoundingMode.HALF_UP) // Precisione 34 cifre decimali (standard IEEE 754r a 128 bit)
+    val mathContext: MathContext = MathContext(34, RoundingMode.HALF_UP) // 34 decimal digits precision (128-bit IEEE 754r standard)
 ) {
     companion object {
         val DEFAULT_VARIABLES: Map<String, BigDecimal> = mapOf(

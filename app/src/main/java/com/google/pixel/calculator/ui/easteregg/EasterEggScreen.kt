@@ -23,6 +23,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -47,7 +48,7 @@ fun EasterEggScreen(
         try {
             uriHandler.openUri(url)
         } catch (_: Exception) {
-            Toast.makeText(context, "Impossibile aprire il link", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.cannot_open_link), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -70,7 +71,7 @@ fun EasterEggScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Indietro",
+                            contentDescription = stringResource(R.string.back),
                             tint = textPrimary
                         )
                     }
@@ -87,7 +88,7 @@ fun EasterEggScreen(
                 .padding(horizontal = 20.dp, vertical = 4.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Immagine mostrata per intero con proporzioni naturali e senza riquadro
+            // Full image shown with natural proportions and no frame
             Image(
                 painter = painterResource(id = R.drawable.easter_egg_author),
                 contentDescription = "Lorenzo Trinati",
@@ -98,7 +99,7 @@ fun EasterEggScreen(
                     .padding(bottom = 8.dp)
             )
 
-            // Nome
+            // Name
             Text(
                 text = "Lorenzo Trinati",
                 fontFamily = QuicksandFontFamily,
@@ -108,9 +109,9 @@ fun EasterEggScreen(
                 letterSpacing = 0.5.sp
             )
 
-            // Ruolo / Sottotitolo
+            // Role / Subtitle
             Text(
-                text = "Creatore dell'applicazione",
+                text = stringResource(R.string.easter_egg_role),
                 fontFamily = QuicksandFontFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
@@ -118,7 +119,7 @@ fun EasterEggScreen(
                 modifier = Modifier.padding(top = 2.dp, bottom = 12.dp)
             )
 
-            // Scheda con descrizione rielaborata e sintetica
+            // Card with concise description
             Surface(
                 color = cardBackground,
                 shape = RoundedCornerShape(20.dp),
@@ -130,7 +131,7 @@ fun EasterEggScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Il progetto nasce dall'esigenza di migliorare la calcolatrice stock di Google Pixel. Nato per uso personale, ho voluto condividerlo con tutti nella speranza che sia utile e possa continuare a crescere ed evolversi.",
+                        text = stringResource(R.string.easter_egg_bio),
                         fontFamily = QuicksandFontFamily,
                         fontWeight = FontWeight.Normal,
                         fontSize = 14.sp,
@@ -143,9 +144,9 @@ fun EasterEggScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Sezione Link Social
+            // Social links section
             Text(
-                text = "CONTATTI & PROGETTI",
+                text = stringResource(R.string.easter_egg_contacts),
                 fontFamily = QuicksandFontFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 11.sp,
@@ -156,7 +157,7 @@ fun EasterEggScreen(
                     .padding(start = 4.dp, bottom = 8.dp)
             )
 
-            // Pulsante Instagram (@lorenzotrinati senza punto)
+            // Instagram button
             SocialButton(
                 iconRes = R.drawable.ic_instagram,
                 title = "Instagram",
@@ -166,7 +167,7 @@ fun EasterEggScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Pulsante GitHub
+            // GitHub button
             SocialButton(
                 iconRes = R.drawable.ic_github,
                 title = "GitHub",

@@ -7,8 +7,8 @@ import java.math.MathContext
 import kotlin.math.abs
 
 /**
- * Suite di test esaustiva di QA e Verfica Matematica per Pixel Calculator.
- * Esegue oltre 30 test edge-case su tutti i moduli del motore matematico.
+ * Exhaustive QA and Mathematics Verification Test Suite for Pixel Calculator.
+ * Executes 30+ edge-case tests across all modules of the math engine.
  */
 object ExhaustiveMathTestSuite {
 
@@ -28,7 +28,7 @@ object ExhaustiveMathTestSuite {
     private val evaluator = MathEvaluator()
     private val converter = UnitConverter()
 
-    // Contesto sicuro che include esplicitamente le costanti matematiche standard
+    // Safe context explicitly including standard mathematical constants
     private val radContext = EvaluationContext.DEFAULT.copy(isRadians = true)
     private val degContext = EvaluationContext.DEFAULT.copy(isRadians = false)
 
@@ -41,7 +41,7 @@ object ExhaustiveMathTestSuite {
         println("================================================================================")
 
         // ---------------------------------------------------------
-        // GRUPPO 1: Precisione Floating Point vs BigDecimal
+        // GROUP 1: Floating Point vs BigDecimal Precision
         // ---------------------------------------------------------
         runTest("Precisione", "0.1 + 0.2 exactness (evita errore IEEE 754 0.30000000000000004)") {
             val res = evaluator.evaluate("0.1 + 0.2", radContext)
@@ -81,7 +81,7 @@ object ExhaustiveMathTestSuite {
         }
 
         // ---------------------------------------------------------
-        // GRUPPO 2: Divisione per zero (base e frazioni 2D)
+        // GROUP 2: Division by zero (basic and 2D fractions)
         // ---------------------------------------------------------
         runTest("Divisione per zero", "Divisione standard per zero: 1 / 0") {
             val res = evaluator.evaluate("1 / 0", radContext)
@@ -119,7 +119,7 @@ object ExhaustiveMathTestSuite {
         }
 
         // ---------------------------------------------------------
-        // GRUPPO 3: Frazioni 2D complesse e nidificate
+        // GROUP 3: Complex and nested 2D fractions
         // ---------------------------------------------------------
         runTest("Frazioni 2D", "Frazione complessa a due piani: frac(frac(1,2), frac(3,4)) = 2/3") {
             val res = evaluator.evaluate("frac(frac(1,2), frac(3,4))", radContext)
@@ -137,7 +137,7 @@ object ExhaustiveMathTestSuite {
         }
 
         runTest("Frazioni 2D", "Frazione nidificata con espressioni algebriche: frac(1 + frac(1,2), frac(3,4) - 1)") {
-            // Numeratore = 1.5, Denominatore = -0.25 -> 1.5 / -0.25 = -6
+            // Numerator = 1.5, Denominator = -0.25 -> 1.5 / -0.25 = -6
             val res = evaluator.evaluate("frac(1 + frac(1,2), frac(3,4) - 1)", radContext)
             check(res.isSuccess && res.rawValue?.compareTo(BigDecimal("-6")) == 0,
                 expected = "-6",
@@ -152,7 +152,7 @@ object ExhaustiveMathTestSuite {
         }
 
         // ---------------------------------------------------------
-        // GRUPPO 4: Moltiplicazione Implicita
+        // GROUP 4: Implicit Multiplication
         // ---------------------------------------------------------
         runTest("Moltiplicazione Implicita", "Prodotto implicito a catena: 2(3)(4) = 24") {
             val res = evaluator.evaluate("2(3)(4)", radContext)
@@ -199,7 +199,7 @@ object ExhaustiveMathTestSuite {
         }
 
         // ---------------------------------------------------------
-        // GRUPPO 5: Trigonometria e Domini
+        // GROUP 5: Trigonometry and Domains
         // ---------------------------------------------------------
         runTest("Trigonometria", "tan(90°) in modalità DEG: asintoto verticale / indefinita") {
             val res = evaluator.evaluate("tan(90)", degContext)
@@ -257,7 +257,7 @@ object ExhaustiveMathTestSuite {
         }
 
         // ---------------------------------------------------------
-        // GRUPPO 6: Radici, Potenze e Fattoriali
+        // GROUP 6: Roots, Powers, and Factorials
         // ---------------------------------------------------------
         runTest("Radici e Potenze", "Radice quadrata di numero negativo: sqrt(-4)") {
             val res = evaluator.evaluate("sqrt(-4)", radContext)
@@ -323,7 +323,7 @@ object ExhaustiveMathTestSuite {
         }
 
         // ---------------------------------------------------------
-        // GRUPPO 7: Unit Converter
+        // GROUP 7: Unit Converter
         // ---------------------------------------------------------
         runTest("Unit Converter", "0 °C convertito a °F e Kelvin") {
             val f = converter.convert(0.0, "C", "F", UnitConverter.Category.TEMPERATURE)
@@ -366,17 +366,17 @@ object ExhaustiveMathTestSuite {
         }
 
         // ---------------------------------------------------------
-        // GRUPPO 9: Regressioni Architetturali e Costanti Globali
+        // GROUP 9: Architectural Regressions and Global Constants
         // ---------------------------------------------------------
         runTest("Costanti e Contesto", "Costante 'pi' accessibile con EvaluationContext(isRadians = false)") {
-            // Verifica che costruttore di EvaluationContext non perda pi quando si specifica isRadians
+            // Verify that EvaluationContext constructor preserves pi when isRadians is specified
             val ctx = EvaluationContext(isRadians = false)
             val res = evaluator.evaluate("pi", ctx)
             val ok = res.isSuccess && res.formattedResult.startsWith("3,14")
             check(ok,
                 expected = "3,141592...",
                 actual = "success=${res.isSuccess}, err=${res.errorMessage}",
-                bugNote = if (!ok) "BUG: EvaluationContext ha 'variables = emptyMap()' come valore predefinito! Quando CalculatorViewModel istanzia EvaluationContext(isRadians = ...), tutte le costanti (pi, e, phi) vanno perse!" else null)
+                bugNote = if (!ok) "BUG: EvaluationContext defaults 'variables = emptyMap()'! When CalculatorViewModel instantiates EvaluationContext(isRadians = ...), all constants (pi, e, phi) are lost!" else null)
         }
 
         runTest("Costanti e Contesto", "Costante 'e' di Eulero con contesto standard") {
@@ -392,7 +392,7 @@ object ExhaustiveMathTestSuite {
             check(ok,
                 expected = "Errore di sintassi",
                 actual = "success=${res.isSuccess}, formatted=${res.formattedResult}",
-                bugNote = if (!ok) "BUG: L'espressione '2 *' valuta a 0 perché popOperatorToOutput rimpiazza l'operando mancante con ZERO, invertendo inoltre l'ordine degli operandi (0 * 2 = 0)!" else null)
+                bugNote = if (!ok) "BUG: Expression '2 *' evaluates to 0 because popOperatorToOutput replaces missing operand with ZERO and inverts operand order (0 * 2 = 0)!" else null)
         }
 
         runTest("Unit Converter", "Controllo typo enum Category: LENGHT vs LENGTH") {
@@ -401,7 +401,7 @@ object ExhaustiveMathTestSuite {
             check(ok,
                 expected = "LENGTH",
                 actual = enumName ?: "NULL",
-                bugNote = if (!ok) "TYPO: Category enum è 'LENGHT' anziché 'LENGTH'" else null)
+                bugNote = if (!ok) "TYPO: Category enum is 'LENGHT' instead of 'LENGTH'" else null)
         }
 
         printSummary()
@@ -462,10 +462,10 @@ object ExhaustiveMathTestSuite {
         val sb = StringBuilder()
         sb.append(String.format("%-8s #%-2d %-25s : %s\n", status, r.id, r.category, r.description))
         if (!r.passed) {
-            sb.append(String.format("         Atteso   : %s\n", r.expected))
-            sb.append(String.format("         Ricevuto : %s\n", r.actual))
+            sb.append(String.format("         Expected : %s\n", r.expected))
+            sb.append(String.format("         Actual   : %s\n", r.actual))
             if (r.bugNote != null) {
-                sb.append(String.format("         ANOMALIA : %s\n", r.bugNote))
+                sb.append(String.format("         ANOMALY  : %s\n", r.bugNote))
             }
         }
         return sb.toString().trimEnd()
@@ -477,11 +477,11 @@ object ExhaustiveMathTestSuite {
         val failed = results.count { !it.passed }
 
         println("\n================================================================================")
-        println("                              RIASSUNTO DEI TEST                                ")
+        println("                                TEST SUMMARY                                    ")
         println("================================================================================")
-        println(String.format("Totale test eseguiti : %d", total))
-        println(String.format("Superati (PASS)      : %d (%.1f%%)", passed, (passed.toDouble() / total) * 100))
-        println(String.format("Falliti/Bug (FAIL)   : %d (%.1f%%)", failed, (failed.toDouble() / total) * 100))
+        println(String.format("Total tests executed : %d", total))
+        println(String.format("Passed (PASS)        : %d (%.1f%%)", passed, (passed.toDouble() / total) * 100))
+        println(String.format("Failed/Bug (FAIL)    : %d (%.1f%%)", failed, (failed.toDouble() / total) * 100))
         println("================================================================================")
     }
 

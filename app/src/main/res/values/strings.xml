@@ -1,3 +1,351 @@
 <resources>
-    <string name="app_name">Calcolatrice Pixel</string>
+    <!-- Application Name (Default: English) -->
+    <string name="app_name">Pixel Calculator</string>
+
+    <!-- Main Calculator & Top Bar -->
+    <string name="calc_history_desc">Calculation history</string>
+    <string name="options_settings_desc">Options and settings</string>
+    <string name="clear_history">Clear history</string>
+    <string name="choose_theme">Choose theme</string>
+    <string name="disable_vibration">Disable vibration</string>
+    <string name="enable_vibration">Enable vibration</string>
+    <string name="use_degrees">Use Degrees (DEG)</string>
+    <string name="use_radians">Use Radians (RAD)</string>
+    <string name="history_empty">History is empty</string>
+    <string name="current_expression">Current expression</string>
+    <string name="history_today">Today</string>
+    <string name="history_yesterday">Yesterday</string>
+    <string name="clear_history_title">Clear history?</string>
+    <string name="clear_history_message">This operation will remove all calculations saved in history.</string>
+    <string name="clear">Clear</string>
+    <string name="cancel">Cancel</string>
+    <string name="close">Close</string>
+    <string name="back">Back</string>
+
+    <!-- Keypad & Display -->
+    <string name="reduce_calc">Minimize calculator</string>
+    <string name="expand_scientific">Expand scientific functions</string>
+    <string name="delete_digit">Delete digit</string>
+    <string name="delete_char">Delete character</string>
+    <string name="calc_error">Calculation error</string>
+    <string name="arithmetic_error">Arithmetic error</string>
+    <string name="syntax_error">Syntax or calculation error</string>
+    <string name="cursor_left">Cursor left</string>
+    <string name="cursor_right">Cursor right</string>
+    <string name="solve">SOLVE</string>
+    <string name="calculate_and_execute">Calculate and execute</string>
+
+    <!-- Theme & Settings Dialog -->
+    <string name="back_to_themes">Back to themes</string>
+    <string name="set_app_icon">Set app icon</string>
+    <string name="icon_badge">Icon</string>
+    <string name="sync_icon_with_theme">Sync icon with theme</string>
+    <string name="sync_icon_desc">Update the icon whenever you change theme</string>
+    <string name="icon_currently_active">Currently active icon</string>
+    <string name="icon_material_you_desc">Dynamic Material You style icon</string>
+    <string name="icon_theme_palette_desc">Icon with theme color palette</string>
+    <string name="prompt_set_app_icon">Do you also want to set the application icon with this theme\'s colors?</string>
+    <string name="btn_set_app_icon">Also set app icon</string>
+    <string name="btn_apply_theme_only">Apply theme to app only</string>
+
+    <!-- Theme Options -->
+    <string name="theme_system_auto">System default (Auto)</string>
+    <string name="theme_system_light">System colors (Always light)</string>
+    <string name="theme_system_dark">System colors (Always dark)</string>
+    <string name="theme_standard_light">Standard Light</string>
+    <string name="theme_standard_dark">Standard Dark</string>
+    <string name="theme_candy_pop">Candy Pop (Vibrant)</string>
+    <string name="theme_retro_cyber">Retro Cyber (Vibrant Dark)</string>
+
+    <!-- Toolbar & Toolbox Destinations -->
+    <string name="tool_main_calc">Calculator</string>
+    <string name="tool_main_calc_desc">Standard calculator</string>
+    <string name="tool_advanced">Advanced</string>
+    <string name="tool_advanced_desc">Advanced calculator and graphs</string>
+    <string name="tool_converter">Converter</string>
+    <string name="tool_converter_desc">Unit converter</string>
+    <string name="tool_level">Level</string>
+    <string name="tool_level_desc">Digital bubble level</string>
+    <string name="tool_compass">Compass</string>
+    <string name="tool_compass_desc">Digital compass</string>
+    <string name="tool_ruler">Ruler</string>
+    <string name="tool_ruler_desc">On-screen ruler</string>
+    <string name="close_toolbar">Close toolbar</string>
+    <string name="open_toolbar">Open toolbar (%1$s)</string>
+    <string name="toolbox_title">Pixel Utility Tools</string>
+    <string name="toolbox_subtitle">Advanced features integrated with Pixel sensors</string>
+    <string name="tool_unit_converter_summary">Currencies, physical quantities, recipes and over 17 offline categories</string>
+    <string name="tool_bubble_level_summary">Measure dual-axis tilt with Pixel\'s accelerometer</string>
+    <string name="tool_compass_summary">Magnetic heading and 360° cardinal directions</string>
+    <string name="tool_ruler_summary">Millimeter and inch scale physically calibrated for Pixel display</string>
+
+    <!-- Unit Converter -->
+    <string name="swap_units">Swap units</string>
+    <string name="change_unit">Change unit</string>
+    <string name="unit_picker_from">Unit of measurement</string>
+    <string name="unit_picker_to">Convert to</string>
+    <string name="search_units_placeholder">Search units (e.g. km, ounces, euro)...</string>
+    <string name="search">Search</string>
+    <string name="clear_text">Clear text</string>
+    <string name="no_units_found">No units found for \"%1$s\"</string>
+    <string name="currency_offline_default">Default offline rates</string>
+    <string name="currency_updated_at">Updated on: %1$s</string>
+    <string name="update_exchange_rates">Update exchange rates</string>
+
+    <!-- Unit Categories -->
+    <string name="category_currency">Currency</string>
+    <string name="category_length">Length</string>
+    <string name="category_mass">Mass / Weight</string>
+    <string name="category_temperature">Temperature</string>
+    <string name="category_area">Area</string>
+    <string name="category_volume">Volume</string>
+    <string name="category_speed">Speed</string>
+    <string name="category_time">Time</string>
+    <string name="category_pressure">Pressure</string>
+    <string name="category_energy">Energy / Work</string>
+    <string name="category_power">Power</string>
+    <string name="category_data">Digital Data</string>
+    <string name="category_angle">Angle</string>
+    <string name="category_fuel">Fuel Consumption</string>
+    <string name="category_cooking">Cooking / Recipes</string>
+    <string name="category_typography">Typography</string>
+    <string name="category_frequency">Frequency</string>
+
+    <!-- Units: Currency -->
+    <string name="unit_eur">Euro</string>
+    <string name="unit_usd">US Dollar</string>
+    <string name="unit_gbp">British Pound</string>
+    <string name="unit_jpy">Japanese Yen</string>
+    <string name="unit_chf">Swiss Franc</string>
+    <string name="unit_cad">Canadian Dollar</string>
+    <string name="unit_aud">Australian Dollar</string>
+    <string name="unit_cny">Chinese Yuan</string>
+    <string name="unit_inr">Indian Rupee</string>
+    <string name="unit_brl">Brazilian Real</string>
+    <string name="unit_btc">Bitcoin</string>
+    <string name="unit_eth">Ethereum</string>
+
+    <!-- Units: Length -->
+    <string name="unit_m">Meters</string>
+    <string name="unit_km">Kilometers</string>
+    <string name="unit_dm">Decimeters</string>
+    <string name="unit_cm">Centimeters</string>
+    <string name="unit_mm">Millimeters</string>
+    <string name="unit_um">Micrometers</string>
+    <string name="unit_nm">Nanometers</string>
+    <string name="unit_in">Inches</string>
+    <string name="unit_ft">Feet</string>
+    <string name="unit_yd">Yards</string>
+    <string name="unit_mi">Miles</string>
+    <string name="unit_nm_sea">Nautical miles</string>
+    <string name="unit_ly">Light years</string>
+
+    <!-- Units: Mass -->
+    <string name="unit_kg">Kilograms</string>
+    <string name="unit_g">Grams</string>
+    <string name="unit_mg">Milligrams</string>
+    <string name="unit_ug">Micrograms</string>
+    <string name="unit_t">Metric tons</string>
+    <string name="unit_q">Quintals</string>
+    <string name="unit_lb">Pounds</string>
+    <string name="unit_oz">Ounces</string>
+    <string name="unit_ct">Carats</string>
+    <string name="unit_st">Stone</string>
+
+    <!-- Units: Temperature -->
+    <string name="unit_c">Celsius</string>
+    <string name="unit_f">Fahrenheit</string>
+    <string name="unit_k">Kelvin</string>
+
+    <!-- Units: Area -->
+    <string name="unit_m2">Square meters</string>
+    <string name="unit_km2">Square kilometers</string>
+    <string name="unit_ha">Hectares</string>
+    <string name="unit_ac">Acres</string>
+    <string name="unit_cm2">Square centimeters</string>
+    <string name="unit_mm2">Square millimeters</string>
+    <string name="unit_ft2">Square feet</string>
+    <string name="unit_in2">Square inches</string>
+    <string name="unit_mi2">Square miles</string>
+
+    <!-- Units: Volume -->
+    <string name="unit_l">Liters</string>
+    <string name="unit_ml">Milliliters</string>
+    <string name="unit_cl">Centiliters</string>
+    <string name="unit_dl">Deciliters</string>
+    <string name="unit_m3">Cubic meters</string>
+    <string name="unit_cm3">Cubic centimeters</string>
+    <string name="unit_gal_us">US Gallons</string>
+    <string name="unit_gal_uk">UK Gallons</string>
+    <string name="unit_pt_us">US Pints</string>
+    <string name="unit_pt_uk">UK Pints</string>
+    <string name="unit_floz_us">US Fluid Ounces</string>
+    <string name="unit_floz_uk">UK Fluid Ounces</string>
+
+    <!-- Units: Speed -->
+    <string name="unit_kmh">Kilometers per hour</string>
+    <string name="unit_ms">Meters per second</string>
+    <string name="unit_mph">Miles per hour</string>
+    <string name="unit_kn">Knots</string>
+    <string name="unit_mach">Mach (at sea level)</string>
+
+    <!-- Units: Time -->
+    <string name="unit_s">Seconds</string>
+    <string name="unit_time_ms">Milliseconds</string>
+    <string name="unit_us">Microseconds</string>
+    <string name="unit_min">Minutes</string>
+    <string name="unit_h">Hours</string>
+    <string name="unit_d">Days</string>
+    <string name="unit_wk">Weeks</string>
+    <string name="unit_mo">Months (average)</string>
+    <string name="unit_yr">Years (Gregorian)</string>
+
+    <!-- Units: Pressure -->
+    <string name="unit_pa">Pascals</string>
+    <string name="unit_hpa">Hectopascals</string>
+    <string name="unit_kpa">Kilopascals</string>
+    <string name="unit_bar">Bar</string>
+    <string name="unit_mbar">Millibar</string>
+    <string name="unit_psi">Pounds per square inch</string>
+    <string name="unit_atm">Standard atmospheres</string>
+    <string name="unit_mmhg">Millimeters of mercury</string>
+
+    <!-- Units: Energy -->
+    <string name="unit_j">Joules</string>
+    <string name="unit_kj">Kilojoules</string>
+    <string name="unit_cal">Calories</string>
+    <string name="unit_kcal">Kilocalories</string>
+    <string name="unit_wh">Watt-hours</string>
+    <string name="unit_kwh">Kilowatt-hours</string>
+    <string name="unit_ev">Electronvolts</string>
+    <string name="unit_btu">British Thermal Units</string>
+
+    <!-- Units: Power -->
+    <string name="unit_w">Watts</string>
+    <string name="unit_kw">Kilowatts</string>
+    <string name="unit_mw">Megawatts</string>
+    <string name="unit_hp">Mechanical horsepower (hp)</string>
+    <string name="unit_cv">Metric horsepower (CV)</string>
+    <string name="unit_btu_h">BTU per hour</string>
+
+    <!-- Units: Data -->
+    <string name="unit_b">Bytes</string>
+    <string name="unit_kb">Kilobytes</string>
+    <string name="unit_mb">Megabytes</string>
+    <string name="unit_gb">Gigabytes</string>
+    <string name="unit_tb">Terabytes</string>
+    <string name="unit_pb">Petabytes</string>
+    <string name="unit_bit">Bits</string>
+    <string name="unit_kbit">Kilobits</string>
+    <string name="unit_mbit">Megabits</string>
+    <string name="unit_gbit">Gigabits</string>
+
+    <!-- Units: Angle -->
+    <string name="unit_deg">Degrees</string>
+    <string name="unit_rad">Radians</string>
+    <string name="unit_grad">Gradians</string>
+    <string name="unit_arcmin">Arcminutes</string>
+    <string name="unit_arcsec">Arcseconds</string>
+    <string name="unit_turn">Turns</string>
+
+    <!-- Units: Fuel -->
+    <string name="unit_kml">Kilometers per liter</string>
+    <string name="unit_l100km">Liters per 100 km</string>
+    <string name="unit_mpgus">Miles per gallon (US)</string>
+    <string name="unit_mpguk">Miles per gallon (UK)</string>
+
+    <!-- Units: Cooking -->
+    <string name="unit_cup">Cups (240 mL)</string>
+    <string name="unit_tbsp">Tablespoons (15 mL)</string>
+    <string name="unit_tsp">Teaspoons (5 mL)</string>
+    <string name="unit_floz_c">Cooking fluid ounces</string>
+    <string name="unit_g_cook">Grams</string>
+    <string name="unit_ml_cook">Milliliters</string>
+    <string name="unit_pinch">Pinches (approx 0.36 g)</string>
+
+    <!-- Units: Typography -->
+    <string name="unit_pt">Points (DTP / PostScript)</string>
+    <string name="unit_px">Pixels (96 DPI CSS)</string>
+    <string name="unit_mm_t">Millimeters</string>
+    <string name="unit_in_t">Inches</string>
+    <string name="unit_pica">Picas (12 pt)</string>
+
+    <!-- Units: Frequency -->
+    <string name="unit_hz">Hertz</string>
+    <string name="unit_khz">Kilohertz</string>
+    <string name="unit_mhz">Megahertz</string>
+    <string name="unit_ghz">Gigahertz</string>
+    <string name="unit_rpm">Revolutions per minute</string>
+
+    <!-- Compass & Calibration -->
+    <string name="compass_options">Compass options</string>
+    <string name="recalibrate_compass">Recalibrate compass</string>
+    <string name="update_gps_location">Update GPS location</string>
+    <string name="enable_gps_location">Enable GPS location</string>
+    <string name="use_dms_format">Use DMS format (D°M\'S\")</string>
+    <string name="use_decimal_format">Use decimal format</string>
+    <string name="copy_coordinates">Copy coordinates</string>
+    <string name="default_gps_location">GPS Location</string>
+    <string name="compass_flat_hint">Hold the phone flat for maximum accuracy</string>
+    <string name="altitude">Altitude</string>
+    <string name="calibration_completed">Calibration Completed</string>
+    <string name="calibration_recalibrate">Recalibrate Compass</string>
+    <string name="calibration_success_desc">The magnetic sensor now provides high-precision orientation and azimuth.</string>
+    <string name="calibration_instruction">Move the phone in a figure-8 pattern (∞) in the air, gently tilting it on all sides.</string>
+    <string name="calibration_progress">Calibration progress</string>
+    <string name="sensor_accuracy_high">Sensor Accuracy: High</string>
+    <string name="sensor_accuracy_medium">Sensor Accuracy: Medium</string>
+    <string name="sensor_accuracy_low">Sensor Accuracy: Low</string>
+    <string name="sensor_uncalibrated">Sensor uncalibrated</string>
+    <string name="done">Done</string>
+
+    <!-- Level -->
+    <string name="back_to_calculator">Back to calculator</string>
+
+    <!-- Ruler -->
+    <string name="ruler_title">Digital Ruler</string>
+    <string name="more_options">More options</string>
+    <string name="hide_mm_ticks">Hide millimeter ticks</string>
+    <string name="show_mm_ticks">Show millimeter ticks (1 mm)</string>
+    <string name="use_layout_accent_color">Use layout accent color</string>
+    <string name="use_classic_yellow_color">Use classic meter yellow</string>
+    <string name="ruler_unit_cm">Centimeters (cm)</string>
+    <string name="ruler_unit_mm">Millimeters (mm)</string>
+    <string name="ruler_unit_inch">Inches (in)</string>
+
+    <!-- Advanced Calculator & Graph -->
+    <string name="advanced_calculator_title">Advanced Calculator</string>
+    <string name="open_calculator_keyboard">Open Calculator Keypad</string>
+    <string name="back_to_calculator_keypad">Back to Calculator</string>
+    <string name="hide_graph">Hide Graph ✕</string>
+    <string name="show_graph">Show Graph 📈</string>
+    <string name="expand_fullscreen">Expand to Fullscreen</string>
+    <string name="expand">Expand</string>
+    <string name="remove_equation">Remove equation</string>
+    <string name="add_equation">Add equation</string>
+    <string name="catalog_title">Scientific Functions Library</string>
+    <string name="zoom_in">Zoom In</string>
+    <string name="zoom_out">Zoom Out</string>
+    <string name="reset_view">Reset View</string>
+    <string name="fullscreen">Fullscreen</string>
+    <string name="subtab_letters">Letters</string>
+    <string name="subtab_constants">Constants</string>
+    <string name="subtab_si_prefixes">SI Prefixes</string>
+    <string name="catalog_tab_trig">📐 Trigonometry</string>
+    <string name="catalog_tab_calculus">📈 Analysis</string>
+    <string name="catalog_tab_hyperbolic">⚡ Hyperbolic</string>
+    <string name="catalog_tab_algebra">🔢 Algebra</string>
+    <string name="catalog_tab_constants">⚛️ Constants</string>
+    <string name="no_real_roots">No real roots</string>
+    <string name="keypad_operations">Operations</string>
+    <string name="keypad_functions">Functions</string>
+    <string name="switch_keypad">Switch keypad</string>
+    <string name="calculator_label">Calculator</string>
+    <string name="formula_placeholder">Enter expression or equation…</string>
+
+    <!-- Easter Egg Screen -->
+    <string name="cannot_open_link">Unable to open link</string>
+    <string name="easter_egg_role">Application Creator</string>
+    <string name="easter_egg_bio">The project was born from the need to improve Google Pixel\'s stock calculator. Created for personal use, I wanted to share it with everyone hoping it will be useful and keep growing and evolving.</string>
+    <string name="easter_egg_contacts">CONTACTS &amp; PROJECTS</string>
 </resources>

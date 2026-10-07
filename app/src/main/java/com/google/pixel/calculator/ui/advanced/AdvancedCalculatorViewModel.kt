@@ -80,7 +80,7 @@ class AdvancedCalculatorViewModel(
     fun removeEquation(index: Int) {
         val current = _uiState.value.equations
         if (current.size <= 1) {
-            // Se c'è una sola equazione, puliscila senza rimuoverla
+            // If there is only one equation, clear it without removing
             updateEquationAt(0) {
                 it.copy(
                     expression = "",
@@ -188,7 +188,7 @@ class AdvancedCalculatorViewModel(
         val pos = eq.cursorPosition.coerceIn(0, expr.length)
         if (pos <= 0) return
 
-        // Gestione token multi-carattere: se preceduto da " = ", cancella tutti e 3 i caratteri
+        // Multi-character token handling: if preceded by " = ", delete all 3 characters
         val deleteLen = when {
             pos >= 3 && expr.substring(pos - 3, pos) == " = " -> 3
             else -> 1
@@ -335,19 +335,19 @@ class AdvancedCalculatorViewModel(
             "e" -> insertCharacter("e")
             "i" -> insertCharacter("i")
 
-            // TASTO '=': Inserisce strettamente l'uguale nella formula (NON calcola!)
+            // KEY '=': Strictly inserts equals symbol into formula (does NOT calculate!)
             "=" -> insertCharacter(" = ")
 
-            // TASTO '➤' o 'EXE': Esegue la risoluzione effettiva
+            // KEY '➤' or 'EXE': Executes actual solution
             "➤", "EXE" -> executeSolve()
 
-            // TASTO 'FORMAT': Cicla istantaneamente la rappresentazione
+            // KEY 'FORMAT': Instantly cycles result representation
             "FORMAT" -> cycleFormat()
 
-            // Tasto 'DEG / RAD' incorporato nella tastiera
+            // Key 'DEG / RAD' embedded in the keyboard
             "DEG", "RAD", "DEG/RAD" -> toggleRadians()
 
-            // Variabili
+            // Variables
             "x" -> insertCharacter("x")
             "y" -> insertCharacter("y")
 
@@ -356,7 +356,7 @@ class AdvancedCalculatorViewModel(
     }
 
     // ==========================================
-    // 5. RISOLUZIONE ESEGUITA ESCLUSIVAMENTE DA '➤'
+    // 5. SOLVE EXECUTION EXCLUSIVELY BY '➤'
     // ==========================================
 
     fun getCustomVariables(): Map<String, java.math.BigDecimal> {
@@ -658,7 +658,7 @@ class AdvancedCalculatorViewModel(
     }
 
     // ==========================================
-    // 9. HELPER INTERNI PER IL GRAFICO
+    // 9. INTERNAL HELPERS FOR GRAPH
     // ==========================================
 
     private fun updateEquationAt(index: Int, transform: (EquationItem) -> EquationItem) {
@@ -682,7 +682,7 @@ class AdvancedCalculatorViewModel(
         viewModelScope.launch(dispatcher) {
             val state = _uiState.value
             val scale = state.graphViewport.scaleX
-            // Buffer generoso pari ad almeno 2.5x la larghezza dello schermo per prevenire troncamenti
+            // Generous buffer of at least 2.5x screen width to prevent clipping
             val halfSpan = maxOf((1600f / scale) * 1.5f, 40f)
             val centerX = state.graphViewport.centerMathX.toFloat()
             val xMin = centerX - halfSpan
@@ -704,7 +704,7 @@ class AdvancedCalculatorViewModel(
         viewModelScope.launch(dispatcher) {
             val state = _uiState.value
             val scale = state.graphViewport.scaleX
-            // Buffer generoso pari ad almeno 2.5x la larghezza dello schermo per prevenire troncamenti
+            // Generous buffer of at least 2.5x screen width to prevent clipping
             val halfSpan = maxOf((1600f / scale) * 1.5f, 40f)
             val centerX = state.graphViewport.centerMathX.toFloat()
             val xMin = centerX - halfSpan

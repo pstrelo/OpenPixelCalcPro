@@ -16,10 +16,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.pixel.calculator.R
 import com.google.pixel.calculator.core.advanced.AdvancedMathEngine
 import com.google.pixel.calculator.ui.theme.CalculatorTheme
 
@@ -55,7 +57,7 @@ fun AdvancedFormulaDisplay(
                 .padding(10.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            // Elenco equazioni stile Desmos/GeoGebra con badge colorati interattivi
+            // Equations list with interactive color badges
             state.equations.forEachIndexed { index, eq ->
                 val isActive = index == state.activeEquationIndex
                 val rowBorder = if (isActive) {
@@ -80,7 +82,7 @@ fun AdvancedFormulaDisplay(
                         .padding(horizontal = 8.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Badge colorato interattivo della curva o costante (es. y₁, y₂ o a, b cliccabile per cambiare colore)
+                    // Interactive curve/variable color badge (e.g. y₁, y₂ or a, b clickable to cycle color)
                     val isAssignment = AdvancedMathEngine().isVariableAssignment(eq.expression)
                     val badgeText = if (isAssignment) {
                         eq.expression.substringBefore("=").trim()
@@ -106,7 +108,7 @@ fun AdvancedFormulaDisplay(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    // Espressione con cursore in-place e formattazione naturale
+                    // Expression with in-place cursor and natural formatting
                     Column(
                         modifier = Modifier.weight(1f)
                     ) {
@@ -116,7 +118,7 @@ fun AdvancedFormulaDisplay(
                             cursorPosition = eq.cursorPosition
                         )
 
-                        // Risultato singolo (scalare, disequazione o errore) quando non è una matrice multi-radice
+                        // Single result (scalar, inequality, or error) when not a multi-root matrix
                         if (eq.formattedResult.isNotBlank() && eq.roots.size <= 1) {
                             Spacer(modifier = Modifier.height(2.dp))
                             val resultColor = when {
@@ -124,8 +126,13 @@ fun AdvancedFormulaDisplay(
                                 eq.formattedResult.contains("∈") || eq.formattedResult.contains("<") || eq.formattedResult.contains(">") -> Color(0xFF38BDF8)
                                 else -> Color(0xFF6EE7B7)
                             }
+                            val displayResult = if (eq.formattedResult == "Nessuna radice reale") {
+                                stringResource(R.string.no_real_roots)
+                            } else {
+                                eq.formattedResult
+                            }
                             Text(
-                                text = eq.formattedResult,
+                                text = displayResult,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = resultColor
@@ -133,7 +140,7 @@ fun AdvancedFormulaDisplay(
                         }
                     }
 
-                    // Lato Destro: Matrice soluzioni a staffe quadrate verticali per radici multiple [ x = -3 ; x = 3 ]
+                    // Right side: Vertical bracket solution matrix for multiple roots [ x = -3 ; x = 3 ]
                     if (eq.roots.size > 1) {
                         SolutionMatrixBracket(
                             roots = eq.roots,
@@ -142,7 +149,7 @@ fun AdvancedFormulaDisplay(
                         Spacer(modifier = Modifier.width(6.dp))
                     }
 
-                    // Pulsante rimozione equazione secondaria
+                    // Secondary equation removal button
                     if (state.equations.size > 1) {
                         IconButton(
                             onClick = { onRemoveFormula(index) },
@@ -150,7 +157,7 @@ fun AdvancedFormulaDisplay(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "Rimuovi equazione",
+                                contentDescription = stringResource(R.string.remove_equation),
                                 tint = Color(0xFF94A3B8),
                                 modifier = Modifier.size(16.dp)
                             )
@@ -159,13 +166,12 @@ fun AdvancedFormulaDisplay(
                 }
             }
 
-            // Riga inferiore: Tasto Mostra/Nascondi Grafico + Tasto "+ Aggiungi equazione"
+            // Bottom row: Show/Hide Graph button + "+ Add equation" button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Tasto Grafico incorporato nella card (sostituisce il vecchio badge formato)
                 val isGraphOpen = state.screenViewMode != ScreenViewMode.CALCULATOR_ONLY
                 val graphBtnBg = if (isGraphOpen) {
                     if (isDark) Color(0xFF1E3A8A) else Color(0xFFDBEAFE)
@@ -200,14 +206,14 @@ fun AdvancedFormulaDisplay(
                         modifier = Modifier.size(14.dp)
                     )
                     Text(
-                        text = if (isGraphOpen) "Nascondi Grafico ✕" else "Mostra Grafico 📈",
+                        text = if (isGraphOpen) stringResource(R.string.hide_graph) else stringResource(R.string.show_graph),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = graphBtnText
                     )
                 }
 
-                // Pulsante "+ Aggiungi equazione" (fino a 4 simultanee)
+                // "+ Add equation" button (up to 4 simultaneously)
                 if (state.equations.size < 4) {
                     val addColor = if (isDark) Color(0xFF93C5FD) else CalculatorTheme.colors.onSurfaceVariant
                     Row(
@@ -219,12 +225,12 @@ fun AdvancedFormulaDisplay(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = "Aggiungi",
+                            contentDescription = stringResource(R.string.add_equation),
                             tint = addColor,
                             modifier = Modifier.size(15.dp)
                         )
                         Text(
-                            text = "Aggiungi equazione",
+                            text = stringResource(R.string.add_equation),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
                             color = addColor
@@ -237,7 +243,7 @@ fun AdvancedFormulaDisplay(
 }
 
 /**
- * Visualizzazione a staffa / parentesi quadra verticale per equazioni a più radici:
+ * Vertical square bracket matrix display for multi-root equations:
  * [ x = -3 ]
  * [ x =  3 ]
  */
@@ -258,7 +264,7 @@ fun SolutionMatrixBracket(
             .background(bracketBg, RoundedCornerShape(8.dp))
             .padding(horizontal = 6.dp, vertical = 4.dp)
     ) {
-        // Staffa sinistra
+        // Left bracket
         Text(
             text = "[",
             fontSize = if (roots.size > 2) 24.sp else 20.sp,
@@ -284,7 +290,7 @@ fun SolutionMatrixBracket(
             }
         }
 
-        // Staffa destra
+        // Right bracket
         Text(
             text = "]",
             fontSize = if (roots.size > 2) 24.sp else 20.sp,
@@ -296,7 +302,7 @@ fun SolutionMatrixBracket(
 }
 
 /**
- * Renderizza formule con esponenti formattati in apice (x², xⁿ), frazioni 2D e cursore dinamico in-place.
+ * Renders formulas with superscript exponents (x², xⁿ), 2D fractions, and dynamic in-place cursor.
  */
 @Composable
 fun FormulaMath2DRenderer(
@@ -325,7 +331,7 @@ fun FormulaMath2DRenderer(
                 Spacer(modifier = Modifier.width(4.dp))
             }
             Text(
-                text = "Inserisci espressione o equazione...",
+                text = stringResource(R.string.formula_placeholder),
                 color = placeholderColor,
                 fontSize = 15.sp
             )
@@ -333,7 +339,7 @@ fun FormulaMath2DRenderer(
         return
     }
 
-    // Frazione 2D se contiene "/" isolato
+    // 2D fraction if isolated "/"
     if (expression.contains("/") && !expression.contains("d/dx") && !expression.contains("=")) {
         val slashIndex = expression.indexOf('/')
         val numPart = expression.substring(0, slashIndex).trim().removePrefix("(").removeSuffix(")")
@@ -407,7 +413,7 @@ fun FormulaMath2DRenderer(
             }
         }
     } else {
-        // Lineare con posizionamento esatto del cursore in-place
+        // Linear with exact in-place cursor positioning
         val safeCursor = cursorPosition.coerceIn(0, expression.length)
         val beforeCursor = expression.substring(0, safeCursor)
         val afterCursor = expression.substring(safeCursor)

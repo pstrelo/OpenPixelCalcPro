@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -38,25 +39,26 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.pixel.calculator.R
 import com.google.pixel.calculator.core.utils.RulerUtils
 import com.google.pixel.calculator.ui.ActiveScreen
 import com.google.pixel.calculator.ui.theme.CalculatorTheme
 import com.google.pixel.calculator.ui.theme.QuicksandFontFamily
 import kotlin.math.roundToInt
 
-enum class RulerUnit(val label: String, val shortLabel: String) {
-    CM("Centimetri (cm)", "cm"),
-    MM("Millimetri (mm)", "mm"),
-    INCH("Pollici (in)", "in")
+enum class RulerUnit(val label: String, val shortLabel: String, val labelRes: Int = 0) {
+    CM("Centimetri (cm)", "cm", R.string.ruler_unit_cm),
+    MM("Millimetri (mm)", "mm", R.string.ruler_unit_mm),
+    INCH("Pollici (in)", "in", R.string.ruler_unit_inch)
 }
 
 /**
- * Schermata Righello Digitale con interfaccia ultra-pulita, minimale ed elegante:
- * - Corsia verticale graduata a sinistra con tacche e numeri ben proporzionati.
- * - Linea di misurazione orizzontale tratteggiata che attraversa tutto lo schermo.
- * - Badge a pillola galleggiante al centro della linea con il valore esatto (es. "5.00 cm").
- * - Coerenza cromatica rigorosa con i colori del tema/layout dell'applicazione.
- * - Accuratezza dimensionale fisica reale con supporto a calibrazione al decimo di millimetro.
+ * Digital Ruler screen with clean, minimal layout:
+ * - Left vertical graduated lane with ticks and numbers.
+ * - Horizontal dashed measurement line spanning the display.
+ * - Floating pill badge in the center of the line showing exact value (e.g. "5.00 cm").
+ * - Dynamic color consistency with active theme / layout colors.
+ * - Physical dimensional accuracy based on device display DPI.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,21 +77,20 @@ fun RulerView(
     val rawDpi = remember { RulerUtils.getRawScreenDpi(context) }
     val effectiveYdpi = rawDpi.second
 
-    // Impostazioni unità e visualizzazione
+    // Unit and display settings
     var selectedUnit by rememberSaveable { mutableStateOf(RulerUnit.CM) }
     var showMmTicks by rememberSaveable { mutableStateOf(false) }
     var useClassicYellow by rememberSaveable { mutableStateOf(false) }
 
-    // Posizione dello slider (in pixel). Se -1f, verrà inizializzato a 5.00 cm
+    // Slider position in pixels. Defaults to 5.00 cm
     var sliderY by rememberSaveable { mutableFloatStateOf(-1f) }
 
-    // Riferimenti layout
+    // Layout dimensions
     val zeroY = with(density) { 32.dp.toPx() }
     val rulerWidth = 84.dp
     val rulerWidthPx = with(density) { rulerWidth.toPx() }
     val bottomToolbarClearance = with(density) { if (isLandscape) 56.dp.toPx() else 96.dp.toPx() }
 
-    // Inizializzazione iniziale a 5.00 cm (come nell'anteprima utente)
     LaunchedEffect(effectiveYdpi, zeroY) {
         if (sliderY < 0f) {
             val initial5cmPx = RulerUtils.cmToPixels(5.0f, effectiveYdpi)
@@ -97,7 +98,6 @@ fun RulerView(
         }
     }
 
-    // Colori rigorosamente sincronizzati con il tema / layout attivo
     val isDark = CalculatorTheme.colors.isDark
     val backgroundColor = CalculatorTheme.colors.background
     val rulerLaneColor = MaterialTheme.colorScheme.surfaceContainer ?: if (isDark) Color(0xFF1A1C21) else Color(0xFFF1F2F6)
@@ -105,9 +105,6 @@ fun RulerView(
     val onSurfaceColor = MaterialTheme.colorScheme.onSurface
     val onSurfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
 
-    // Colore accento linea tratteggiata e pillola:
-    // Se useClassicYellow è attivo, usa il caldo giallo oro iconico (0xFFFFD153) dalla foto.
-    // Altrimenti, usa il colore d'accento del layout (equalsContainer / primaryContainer).
     val defaultLayoutAccent = CalculatorTheme.colors.equalsContainer.takeIf { it != Color.Unspecified }
         ?: if (isDark) Color(0xFFFFD153) else Color(0xFFE5A800)
     val defaultLayoutAccentContent = CalculatorTheme.colors.equalsContent.takeIf { it != Color.Unspecified }
@@ -116,7 +113,7 @@ fun RulerView(
     val accentContainer = if (useClassicYellow) Color(0xFFFFD153) else defaultLayoutAccent
     val accentContent = if (useClassicYellow) Color(0xFF1C1500) else defaultLayoutAccentContent
 
-    // Calcolo del valore misurato
+    // Measured value computation
     val distancePx = (sliderY - zeroY).coerceAtLeast(0f)
     val measuredText = remember(distancePx, effectiveYdpi, selectedUnit) {
         when (selectedUnit) {
@@ -135,7 +132,7 @@ fun RulerView(
         }
     }
 
-    // Text Measurer per rendering testo ultra-rapido nel Canvas a 120 FPS
+    // High performance text measurer for Canvas
     val textMeasurer = rememberTextMeasurer()
     val numberStyle = TextStyle(
         fontSize = 12.sp,
@@ -144,7 +141,7 @@ fun RulerView(
         color = onSurfaceVariantColor
     )
 
-    // Pre-misurazione dei numeri 0..30 per eliminare allocazioni durante il drag
+    // Pre-measure numbers 0..30 to eliminate allocation during drag
     val premeasuredNumbers = remember(onSurfaceVariantColor) {
         (0..30).associateWith { num ->
             textMeasurer.measure(
@@ -160,7 +157,7 @@ fun RulerView(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Righello Digitale",
+                        text = stringResource(R.string.ruler_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = onSurfaceColor
@@ -170,13 +167,13 @@ fun RulerView(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Torna indietro",
+                            contentDescription = stringResource(R.string.back),
                             tint = onSurfaceColor
                         )
                     }
                 },
                 actions = {
-                    // Chip selettore rapido unità (cm / mm / in)
+                    // Quick unit toggle chip (cm / mm / in)
                     FilterChip(
                         selected = false,
                         onClick = {
@@ -202,13 +199,13 @@ fun RulerView(
                         modifier = Modifier.padding(end = 4.dp)
                     )
 
-                    // Menu opzioni aggiuntive
+                    // Options dropdown menu
                     var showMenu by remember { mutableStateOf(false) }
                     Box {
                         IconButton(onClick = { showMenu = true }) {
                             Icon(
                                 imageVector = Icons.Default.MoreVert,
-                                contentDescription = "Altre opzioni",
+                                contentDescription = stringResource(R.string.more_options),
                                 tint = onSurfaceColor
                             )
                         }
@@ -217,14 +214,30 @@ fun RulerView(
                             onDismissRequest = { showMenu = false }
                         ) {
                             DropdownMenuItem(
-                                text = { Text(if (showMmTicks) "Nascondi tacche millimetri" else "Mostra tacche millimetri (1 mm)") },
+                                text = {
+                                    Text(
+                                        if (showMmTicks) {
+                                            stringResource(R.string.hide_mm_ticks)
+                                        } else {
+                                            stringResource(R.string.show_mm_ticks)
+                                        }
+                                    )
+                                },
                                 onClick = {
                                     showMmTicks = !showMmTicks
                                     showMenu = false
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text(if (useClassicYellow) "Usa colore accento layout" else "Usa colore giallo metro classico") },
+                                text = {
+                                    Text(
+                                        if (useClassicYellow) {
+                                            stringResource(R.string.use_layout_accent_color)
+                                        } else {
+                                            stringResource(R.string.use_classic_yellow_color)
+                                        }
+                                    )
+                                },
                                 onClick = {
                                     useClassicYellow = !useClassicYellow
                                     showMenu = false
@@ -246,7 +259,7 @@ fun RulerView(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Area Canvas interattiva a schermo intero con rilevamento gesture fluido
+            // Interactive gesture area
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -278,20 +291,19 @@ fun RulerView(
                         }
                     }
             ) {
-                // Canvas di rendering del righello e della linea tratteggiata
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val width = size.width
                     val height = size.height
                     val maxY = height - bottomToolbarClearance
 
-                    // 1. Corsia verticale del righello a sinistra
+                    // 1. Left vertical lane
                     drawRect(
                         color = rulerLaneColor,
                         topLeft = Offset(0f, 0f),
                         size = Size(rulerWidthPx, height)
                     )
 
-                    // 2. Linea divisoria verticale
+                    // 2. Vertical lane divider
                     drawLine(
                         color = dividerColor,
                         start = Offset(rulerWidthPx, 0f),
@@ -299,13 +311,12 @@ fun RulerView(
                         strokeWidth = 1.dp.toPx()
                     )
 
-                    // 3. Tacche di misurazione e numeri
+                    // 3. Graduated ticks and numbers
                     val cmTickLength = 48.dp.toPx()
                     val halfCmTickLength = 28.dp.toPx()
                     val mmTickLength = 16.dp.toPx()
 
                     if (selectedUnit == RulerUnit.INCH) {
-                        // Modalità Pollici (Inches)
                         val inStepPx = RulerUtils.inchesToPixels(1f, effectiveYdpi)
                         val maxInches = ((maxY - zeroY) / inStepPx).toInt() + 1
 
@@ -313,7 +324,6 @@ fun RulerView(
                             val y = zeroY + (i * inStepPx)
                             if (y > maxY + inStepPx) break
 
-                            // Tacca intera pollice
                             drawLine(
                                 color = onSurfaceColor,
                                 start = Offset(0f, y),
@@ -321,7 +331,6 @@ fun RulerView(
                                 strokeWidth = 2.2.dp.toPx()
                             )
 
-                            // Numero del pollice
                             premeasuredNumbers[i]?.let { layoutResult ->
                                 val textY = y - (layoutResult.size.height / 2f)
                                 val textX = 56.dp.toPx()
@@ -331,7 +340,6 @@ fun RulerView(
                                 )
                             }
 
-                            // Mezzo pollice (1/2 in)
                             val yHalf = y + (inStepPx / 2f)
                             if (yHalf <= maxY) {
                                 drawLine(
@@ -342,7 +350,6 @@ fun RulerView(
                                 )
                             }
 
-                            // Quarti di pollice (1/4 in)
                             if (showMmTicks) {
                                 val yQuarter1 = y + (inStepPx / 4f)
                                 val yQuarter3 = y + (3f * inStepPx / 4f)
@@ -365,7 +372,6 @@ fun RulerView(
                             }
                         }
                     } else {
-                        // Modalità Metrica: Centimetri e Millimetri
                         val cmStepPx = RulerUtils.cmToPixels(1f, effectiveYdpi)
                         val halfCmStepPx = cmStepPx / 2f
                         val mmStepPx = cmStepPx / 10f
@@ -375,7 +381,6 @@ fun RulerView(
                             val y = zeroY + (cm * cmStepPx)
                             if (y > maxY + cmStepPx) break
 
-                            // Tacca del centimetro
                             drawLine(
                                 color = onSurfaceColor,
                                 start = Offset(0f, y),
@@ -383,7 +388,6 @@ fun RulerView(
                                 strokeWidth = 2.2.dp.toPx()
                             )
 
-                            // Numero centimetro a destra della tacca
                             premeasuredNumbers[cm]?.let { layoutResult ->
                                 val textY = y - (layoutResult.size.height / 2f)
                                 val textX = 56.dp.toPx()
@@ -393,7 +397,6 @@ fun RulerView(
                                 )
                             }
 
-                            // Tacca del mezzo centimetro (5 mm)
                             val yHalf = y + halfCmStepPx
                             if (yHalf <= maxY) {
                                 drawLine(
@@ -404,7 +407,6 @@ fun RulerView(
                                 )
                             }
 
-                            // Tacche dei singoli millimetri (se abilitate)
                             if (showMmTicks) {
                                 for (mm in 1..9) {
                                     if (mm == 5) continue
@@ -422,7 +424,7 @@ fun RulerView(
                         }
                     }
 
-                    // 4. Linea tratteggiata di misurazione che attraversa tutto lo schermo
+                    // 4. Dashed horizontal measurement line
                     if (sliderY >= zeroY) {
                         drawLine(
                             color = accentContainer,
@@ -438,7 +440,7 @@ fun RulerView(
                     }
                 }
 
-                // 5. Pillola centrale galleggiante con valore misurato
+                // 5. Central floating badge with measurement reading
                 if (sliderY >= zeroY) {
                     val badgeHeight = 38.dp
                     val badgeHalfHeightPx = with(density) { (badgeHeight / 2).toPx() }
@@ -465,7 +467,6 @@ fun RulerView(
                                     interactionSource = remember { MutableInteractionSource() },
                                     indication = null
                                 ) {
-                                    // Tap sulla pillola: cambia rapidamente l'unità di misura
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     selectedUnit = when (selectedUnit) {
                                         RulerUnit.CM -> RulerUnit.MM
@@ -492,7 +493,7 @@ fun RulerView(
                 }
             }
 
-            // Barra fluttuante degli strumenti ancorata in basso a destra per non coprire il righello graduato
+            // Floating bottom toolbar
             PixelFloatingToolBar(
                 currentScreen = ActiveScreen.TOOLBOX_RULER,
                 onNavigate = onNavigate,

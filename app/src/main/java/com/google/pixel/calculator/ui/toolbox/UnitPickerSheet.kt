@@ -15,9 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.pixel.calculator.R
 import com.google.pixel.calculator.core.utils.UnitConverter
 import com.google.pixel.calculator.ui.theme.CalculatorTheme
 
@@ -27,7 +30,7 @@ enum class UnitPickerTarget {
 }
 
 /**
- * Restituisce l'icona vettoriale Material 3 specifica per ciascuna delle 17 categorie.
+ * Returns the specific Material 3 vector icon for each of the 17 categories.
  */
 fun getCategoryMaterialIcon(category: UnitConverter.Category): ImageVector = when (category) {
     UnitConverter.Category.CURRENCY -> Icons.Default.Payments
@@ -50,11 +53,11 @@ fun getCategoryMaterialIcon(category: UnitConverter.Category): ImageVector = whe
 }
 
 /**
- * ModalBottomSheet Material 3 Expressive per la selezione rapida delle unità di misura.
- * - Ricerca istantanea con filtro su tutte le grandezze.
- * - Schede scorrevoli con testo puro (nessuna emoticon accanto alle scritte).
- * - Icone Material 3 all'interno dei cerchi del menu.
- * - Evidenziazione dell'unità attualmente attiva con checkmark.
+ * Material 3 Expressive ModalBottomSheet for fast unit selection.
+ * - Instant search with filtering across all dimensions.
+ * - Scrollable tabs with pure text (no emojis next to text).
+ * - Material 3 icons inside menu circular containers.
+ * - Clear checkmark highlight for active unit.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,6 +69,7 @@ fun UnitPickerSheet(
     onDismiss: () -> Unit,
     onSelectUnit: (category: UnitConverter.Category, unitCode: String) -> Unit
 ) {
+    val context = LocalContext.current
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf(initialCategory) }
 
@@ -83,24 +87,28 @@ fun UnitPickerSheet(
                 .fillMaxSize()
                 .padding(horizontal = 16.dp)
         ) {
-            // Intestazione con titolo mirato
+            // Target header title
             Text(
-                text = if (target == UnitPickerTarget.FROM) "Unità di misura" else "Converti in",
+                text = if (target == UnitPickerTarget.FROM) {
+                    stringResource(R.string.unit_picker_from)
+                } else {
+                    stringResource(R.string.unit_picker_to)
+                },
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(start = 4.dp, bottom = 12.dp)
             )
 
-            // Campo di Ricerca Rapida
+            // Quick search field
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("Cerca unità (es. km, once, euro)...") },
+                placeholder = { Text(stringResource(R.string.search_units_placeholder)) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Search,
-                        contentDescription = "Cerca",
+                        contentDescription = stringResource(R.string.search),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
@@ -109,7 +117,7 @@ fun UnitPickerSheet(
                         IconButton(onClick = { searchQuery = "" }) {
                             Icon(
                                 imageVector = Icons.Default.Clear,
-                                contentDescription = "Cancella testo"
+                                contentDescription = stringResource(R.string.clear_text)
                             )
                         }
                     }
@@ -125,7 +133,7 @@ fun UnitPickerSheet(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Se la barra di ricerca è vuota, mostra le tab delle categorie con testo puro (nessuna emoticon)
+            // Scrollable category tabs when search query is empty
             if (searchQuery.isEmpty()) {
                 ScrollableTabRow(
                     selectedTabIndex = selectedCategory.ordinal,
@@ -149,7 +157,7 @@ fun UnitPickerSheet(
                             onClick = { selectedCategory = cat },
                             text = {
                                 Text(
-                                    text = cat.displayName,
+                                    text = if (cat.nameRes != 0) stringResource(cat.nameRes) else cat.displayName,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                     fontSize = 14.sp,
                                     color = if (isSelected) CalculatorTheme.colors.onSurface else CalculatorTheme.colors.onSurfaceVariant
@@ -161,18 +169,22 @@ fun UnitPickerSheet(
                 Spacer(modifier = Modifier.height(10.dp))
             }
 
-            // Lista Unità filtrate
+            // Filtered unit list
             val unitsToDisplay = remember(searchQuery, selectedCategory) {
                 if (searchQuery.isBlank()) {
                     converter.getUnitsForCategory(selectedCategory)
                 } else {
                     val query = searchQuery.trim().lowercase()
                     allCategories.flatMap { cat ->
+                        val catLocalized = if (cat.nameRes != 0) context.getString(cat.nameRes).lowercase() else cat.displayName.lowercase()
                         converter.getUnitsForCategory(cat).filter { unit ->
+                            val unitLocalized = unit.nameRes?.let { context.getString(it).lowercase() } ?: ""
                             unit.name.lowercase().contains(query) ||
+                                    unitLocalized.contains(query) ||
                                     unit.code.lowercase().contains(query) ||
                                     unit.symbol.lowercase().contains(query) ||
-                                    cat.displayName.lowercase().contains(query)
+                                    cat.displayName.lowercase().contains(query) ||
+                                    catLocalized.contains(query)
                         }
                     }
                 }
@@ -194,7 +206,7 @@ fun UnitPickerSheet(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "Nessuna unità trovata per \"$searchQuery\"",
+                                text = stringResource(R.string.no_units_found, searchQuery),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodyMedium
                             )
@@ -231,7 +243,7 @@ fun UnitPickerSheet(
                                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    // Cerchio del menu con icona Material 3
+                                    // Circular menu badge with Material 3 icon
                                     Surface(
                                         shape = CircleShape,
                                         color = if (isCurrent) {
@@ -257,14 +269,15 @@ fun UnitPickerSheet(
 
                                     Column {
                                         Text(
-                                            text = unit.name,
+                                            text = unit.nameRes?.let { stringResource(it) } ?: unit.name,
                                             fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.SemiBold,
                                             fontSize = 15.sp,
                                             color = MaterialTheme.colorScheme.onSurface
                                         )
+                                        val catText = if (unit.category.nameRes != 0) stringResource(unit.category.nameRes) else unit.category.displayName
                                         Text(
                                             text = if (searchQuery.isNotEmpty()) {
-                                                "${unit.category.displayName} • ${unit.symbol}"
+                                                "$catText • ${unit.symbol}"
                                             } else {
                                                 unit.symbol
                                             },
@@ -295,7 +308,7 @@ fun UnitPickerSheet(
                                     if (isCurrent) {
                                         Icon(
                                             imageVector = Icons.Default.Check,
-                                            contentDescription = "Selezionata",
+                                            contentDescription = null,
                                             tint = CalculatorTheme.colors.equalsContainer,
                                             modifier = Modifier.size(20.dp)
                                         )

@@ -27,9 +27,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.pixel.calculator.R
 import com.google.pixel.calculator.data.AppThemeMode
 import com.google.pixel.calculator.ui.theme.PixelAppIconPreview
 
@@ -46,49 +48,49 @@ fun ThemeSelectionDialog(
     val themeOptions = listOf(
         ThemeOption(
             mode = AppThemeMode.SYSTEM_AUTO,
-            title = "Predefinito di sistema (Auto)",
+            titleRes = R.string.theme_system_auto,
             colors = listOf(Color(0xFF4285F4), Color(0xFF34A853), Color(0xFFFBBC05), Color(0xFFEA4335)),
             isDynamic = true
         ),
         ThemeOption(
             mode = AppThemeMode.SYSTEM_LIGHT,
-            title = "Colori di sistema (Sempre chiaro)",
+            titleRes = R.string.theme_system_light,
             colors = listOf(Color(0xFF4285F4), Color(0xFFF1F2F6), Color(0xFFE2E3EC), Color(0xFF041E49)),
             isDynamic = true
         ),
         ThemeOption(
             mode = AppThemeMode.SYSTEM_DARK,
-            title = "Colori di sistema (Sempre scuro)",
+            titleRes = R.string.theme_system_dark,
             colors = listOf(Color(0xFF131418), Color(0xFF26282E), Color(0xFF4285F4), Color(0xFFD3E3FD)),
             isDynamic = true
         ),
         ThemeOption(
             mode = AppThemeMode.STANDARD_LIGHT,
-            title = "Chiaro Standard",
+            titleRes = R.string.theme_standard_light,
             colors = listOf(Color(0xFFFFFFFF), Color(0xFFF1F2F6), Color(0xFFE2E3EC), Color(0xFF354558)),
             isDynamic = false
         ),
         ThemeOption(
             mode = AppThemeMode.STANDARD_DARK,
-            title = "Scuro Standard",
+            titleRes = R.string.theme_standard_dark,
             colors = listOf(Color(0xFF131418), Color(0xFF26282E), Color(0xFF373942), Color(0xFFD3E3FD)),
             isDynamic = false
         ),
         ThemeOption(
             mode = AppThemeMode.CANDY_POP,
-            title = "Candy Pop (Vivace)",
+            titleRes = R.string.theme_candy_pop,
             colors = listOf(Color(0xFFD8F3DC), Color(0xFFFFCCD5), Color(0xFFFF6B8B), Color(0xFFFFD152)),
             isDynamic = false
         ),
         ThemeOption(
             mode = AppThemeMode.RETRO_CYBER,
-            title = "Retro Cyber (Vivace Scuro)",
+            titleRes = R.string.theme_retro_cyber,
             colors = listOf(Color(0xFF1E222C), Color(0xFF34D399), Color(0xFFFF3366), Color(0xFFFACC15)),
             isDynamic = false
         )
     )
 
-    // Stato per il sottomenu: quando un tema viene selezionato, questo stato si popola
+    // Submenu state: populated when a theme is selected for confirmation
     var selectedThemeForSubmenu by remember { mutableStateOf<AppThemeMode?>(null) }
 
     AlertDialog(
@@ -98,7 +100,7 @@ fun ThemeSelectionDialog(
         title = {
             if (selectedThemeForSubmenu == null) {
                 Text(
-                    text = "Scegli tema",
+                    text = stringResource(R.string.choose_theme),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -114,13 +116,13 @@ fun ThemeSelectionDialog(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Torna all'elenco dei temi",
+                            contentDescription = stringResource(R.string.back_to_themes),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Imposta icona app",
+                        text = stringResource(R.string.set_app_icon),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -141,7 +143,7 @@ fun ThemeSelectionDialog(
                 label = "ThemeSubmenuTransition"
             ) { targetSelectedTheme ->
                 if (targetSelectedTheme == null) {
-                    // 1. ELENCO PRINCIPALE DEI TEMI
+                    // 1. MAIN THEME LIST
                     val scrollState = rememberScrollState()
                     Column(
                         modifier = Modifier
@@ -163,7 +165,6 @@ fun ThemeSelectionDialog(
                                     .clip(RoundedCornerShape(18.dp))
                                     .background(itemBg)
                                     .clickable {
-                                        // Aprendo il sottomenu per confermare tema ed eventuale icona
                                         selectedThemeForSubmenu = option.mode
                                     }
                                     .padding(horizontal = 10.dp, vertical = 10.dp),
@@ -182,7 +183,7 @@ fun ThemeSelectionDialog(
                                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
                                         Text(
-                                            text = option.title,
+                                            text = stringResource(option.titleRes),
                                             style = MaterialTheme.typography.bodyLarge,
                                             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                                             color = MaterialTheme.colorScheme.onSurface
@@ -205,7 +206,7 @@ fun ThemeSelectionDialog(
                                                         tint = MaterialTheme.colorScheme.onPrimaryContainer
                                                     )
                                                     Text(
-                                                        text = "Icona",
+                                                        text = stringResource(R.string.icon_badge),
                                                         fontSize = 10.sp,
                                                         fontWeight = FontWeight.Bold,
                                                         color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -216,7 +217,6 @@ fun ThemeSelectionDialog(
                                     }
                                 }
                                 Spacer(modifier = Modifier.width(6.dp))
-                                // Piccola miniatura anteprima icona
                                 PixelAppIconPreview(
                                     themeMode = option.mode,
                                     size = 28.dp,
@@ -230,7 +230,7 @@ fun ThemeSelectionDialog(
                             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                         )
 
-                        // Voce di sincronizzazione automatica icona-tema in fondo all'elenco dei temi
+                        // Automatic icon-theme synchronization switch
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -248,13 +248,13 @@ fun ThemeSelectionDialog(
                             Spacer(modifier = Modifier.width(10.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Sincronizza icona con tema",
+                                    text = stringResource(R.string.sync_icon_with_theme),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = "Aggiorna l'icona ogni volta che cambi tema",
+                                    text = stringResource(R.string.sync_icon_desc),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -267,10 +267,9 @@ fun ThemeSelectionDialog(
                         }
                     }
                 } else {
-                    // 2. SOTTOMENU PER IMPOSTARE ANCHE L'ICONA CON QUEL TEMA
+                    // 2. SUBMENU TO SET APP ICON ALONGSIDE THEME
                     val themeOption = themeOptions.first { it.mode == targetSelectedTheme }
                     val isAlreadyIcon = targetSelectedTheme == currentAppIcon
-                    val isAlreadyTheme = targetSelectedTheme == currentTheme
 
                     Column(
                         modifier = Modifier
@@ -279,7 +278,6 @@ fun ThemeSelectionDialog(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        // Anteprima grafica in risalto dell'icona dell'app per questo tema
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -298,7 +296,7 @@ fun ThemeSelectionDialog(
                                     elevation = 6.dp
                                 )
                                 Text(
-                                    text = themeOption.title,
+                                    text = stringResource(themeOption.titleRes),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
@@ -320,7 +318,7 @@ fun ThemeSelectionDialog(
                                                 tint = MaterialTheme.colorScheme.onPrimaryContainer
                                             )
                                             Text(
-                                                text = "Icona attualmente attiva",
+                                                text = stringResource(R.string.icon_currently_active),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontWeight = FontWeight.SemiBold,
                                                 color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -330,9 +328,9 @@ fun ThemeSelectionDialog(
                                 } else {
                                     Text(
                                         text = if (themeOption.isDynamic) {
-                                            "Icona con stile Material You dinamico"
+                                            stringResource(R.string.icon_material_you_desc)
                                         } else {
-                                            "Icona con la palette colori del tema"
+                                            stringResource(R.string.icon_theme_palette_desc)
                                         },
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -341,15 +339,13 @@ fun ThemeSelectionDialog(
                             }
                         }
 
-                        // Testo esplicativo della scelta
                         Text(
-                            text = "Vuoi impostare anche l'icona dell'applicazione con i colori di questo tema?",
+                            text = stringResource(R.string.prompt_set_app_icon),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Medium
                         )
 
-                        // Pulsante 1: Imposta anche icona dell'app (e applica tema)
                         Button(
                             onClick = {
                                 onSelectTheme(targetSelectedTheme)
@@ -370,13 +366,12 @@ fun ThemeSelectionDialog(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Imposta anche icona dell'app",
+                                text = stringResource(R.string.btn_set_app_icon),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Bold
                             )
                         }
 
-                        // Pulsante 2: Applica solo all'app (disattiva la sincronizzazione prima di cambiare tema)
                         OutlinedButton(
                             onClick = {
                                 onToggleSyncIcon(false)
@@ -387,7 +382,7 @@ fun ThemeSelectionDialog(
                             shape = RoundedCornerShape(percent = 50)
                         ) {
                             Text(
-                                text = "Applica solo tema nell'app",
+                                text = stringResource(R.string.btn_apply_theme_only),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -403,7 +398,7 @@ fun ThemeSelectionDialog(
                     shape = RoundedCornerShape(percent = 50)
                 ) {
                     Text(
-                        text = "Chiudi",
+                        text = stringResource(R.string.close),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -414,7 +409,7 @@ fun ThemeSelectionDialog(
                     shape = RoundedCornerShape(percent = 50)
                 ) {
                     Text(
-                        text = "Indietro",
+                        text = stringResource(R.string.back),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -424,10 +419,9 @@ fun ThemeSelectionDialog(
     )
 }
 
-
 private data class ThemeOption(
     val mode: AppThemeMode,
-    val title: String,
+    val titleRes: Int,
     val colors: List<Color>,
     val isDynamic: Boolean
 )
@@ -443,7 +437,7 @@ fun ClearHistoryConfirmDialog(
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh ?: MaterialTheme.colorScheme.surface,
         title = {
             Text(
-                text = "Cancella cronologia?",
+                text = stringResource(R.string.clear_history_title),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -451,7 +445,7 @@ fun ClearHistoryConfirmDialog(
         },
         text = {
             Text(
-                text = "Questa operazione rimuoverà tutti i calcoli salvati nella cronologia.",
+                text = stringResource(R.string.clear_history_message),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -469,7 +463,7 @@ fun ClearHistoryConfirmDialog(
                 shape = RoundedCornerShape(percent = 50)
             ) {
                 Text(
-                    text = "Cancella",
+                    text = stringResource(R.string.clear),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -481,7 +475,7 @@ fun ClearHistoryConfirmDialog(
                 shape = RoundedCornerShape(percent = 50)
             ) {
                 Text(
-                    text = "Annulla",
+                    text = stringResource(R.string.cancel),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold
                 )

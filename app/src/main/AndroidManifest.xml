@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Sensori per il Toolbox (nessun permesso invasivo richiesto) -->
+    <!-- Sensors for Toolbox (no invasive permissions required) -->
     <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false" />
     <uses-feature android:name="android.hardware.sensor.compass" android:required="false" />
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -16,6 +16,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_system_auto"
         android:supportsRtl="true"
+        android:localeConfig="@xml/locales_config"
         android:theme="@style/Theme.PixelCalculator">
 
         <activity
@@ -28,7 +29,7 @@
             </intent-filter>
         </activity>
 
-        <!-- Launcher Activity Aliases per ogni tema -->
+        <!-- Launcher Activity Aliases for each theme -->
         <activity-alias
             android:name=".MainActivityAliasSystemAuto"
             android:targetActivity=".MainActivity"

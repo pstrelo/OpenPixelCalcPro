@@ -20,11 +20,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.pixel.calculator.R
 import com.google.pixel.calculator.data.HistoryItem
 import com.google.pixel.calculator.ui.theme.CalculatorTheme
 import com.google.pixel.calculator.ui.theme.QuicksandFontFamily
@@ -35,11 +37,11 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Pannello cronologia identico all'esperienza Google Pixel Calculator:
- * - Scende e occupa l'area display superiore sopra il tastierino
- * - Stato vuoto minimalista con icona orologio e "Cronologia vuota"
- * - Elementi allineati a destra raggruppati per data ("Oggi", "Ieri", ecc.)
- * - Maniglia di trascinamento e riga "Espressione corrente" sul fondo
+ * History panel identical to Google Pixel Calculator experience:
+ * - Slides down to occupy the upper display area above the keypad
+ * - Minimalist empty state with clock icon and "History is empty"
+ * - Right-aligned items grouped by date ("Today", "Yesterday", etc.)
+ * - Drag handle and "Current expression" row at the bottom
  */
 @Composable
 fun PixelHistoryPanel(
@@ -67,14 +69,14 @@ fun PixelHistoryPanel(
             .draggable(
                 orientation = Orientation.Vertical,
                 state = rememberDraggableState { delta ->
-                    // Se l'utente trascina verso l'alto (delta < -15), chiudi la cronologia
+                    // If user drags upwards (delta < -15), close history
                     if (delta < -15) {
                         onDismiss()
                     }
                 }
             )
     ) {
-        // TASTO CANCELLA CRONOLOGIA IN ALTO
+        // CLEAR HISTORY BUTTON AT TOP
         if (historyList.isNotEmpty() && onClearHistory != null) {
             Row(
                 modifier = Modifier
@@ -89,13 +91,13 @@ fun PixelHistoryPanel(
                 ) {
                     Icon(
                         imageVector = Icons.Default.DeleteSweep,
-                        contentDescription = "Cancella cronologia",
+                        contentDescription = stringResource(R.string.clear_history),
                         modifier = Modifier.size(16.dp),
                         tint = MaterialTheme.colorScheme.error
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Cancella cronologia",
+                        text = stringResource(R.string.clear_history),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.error
@@ -104,7 +106,7 @@ fun PixelHistoryPanel(
             }
         }
 
-        // CORPO DELLA CRONOLOGIA
+        // HISTORY BODY
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -112,7 +114,7 @@ fun PixelHistoryPanel(
                 .padding(horizontal = 24.dp)
         ) {
             if (historyList.isEmpty()) {
-                // STATO VUOTO (Esattamente come Screenshot 3: media_1790088839748.png)
+                // EMPTY STATE
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
@@ -120,13 +122,13 @@ fun PixelHistoryPanel(
                 ) {
                     Icon(
                         imageVector = Icons.Default.History,
-                        contentDescription = "Cronologia vuota",
+                        contentDescription = stringResource(R.string.history_empty),
                         tint = colors.onSurfaceVariant.copy(alpha = 0.7f),
                         modifier = Modifier.size(36.dp)
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "Cronologia vuota",
+                        text = stringResource(R.string.history_empty),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Normal,
                         fontFamily = SystemFontFamily,
@@ -134,9 +136,11 @@ fun PixelHistoryPanel(
                     )
                 }
             } else {
-                // LISTA CALCOLI RAGGRUPPATI (Esattamente come Screenshot 4: media_1790088914317.png)
-                val grouped = remember(historyList) {
-                    groupHistoryByDate(historyList)
+                // GROUPED CALCULATION LIST
+                val todayLabel = stringResource(R.string.history_today)
+                val yesterdayLabel = stringResource(R.string.history_yesterday)
+                val grouped = remember(historyList, todayLabel, yesterdayLabel) {
+                    groupHistoryByDate(historyList, todayLabel, yesterdayLabel)
                 }
 
                 LazyColumn(
@@ -192,7 +196,7 @@ fun PixelHistoryPanel(
             }
         }
 
-        // SEPARATORE CON MANIGLIA DI CHIUSURA (Screenshot 3 e 4)
+        // DRAG HANDLE SEPARATOR
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -209,7 +213,7 @@ fun PixelHistoryPanel(
             ) {}
         }
 
-        // RIGA INFERIORE: "Espressione corrente" A SINISTRA E RISULTATO/ESPRESSIONE A DESTRA
+        // BOTTOM ROW: "Current expression" ON LEFT AND RESULT/EXPRESSION ON RIGHT
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -218,7 +222,7 @@ fun PixelHistoryPanel(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Espressione corrente",
+                text = stringResource(R.string.current_expression),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Normal,
                 fontFamily = SystemFontFamily,
@@ -243,12 +247,16 @@ fun PixelHistoryPanel(
     }
 }
 
-// Funzione di utilità per raggruppare i calcoli per data ("Oggi", "Ieri", ecc.)
-private fun groupHistoryByDate(items: List<HistoryItem>): Map<String, List<HistoryItem>> {
+// Helper function to group calculations by date ("Today", "Yesterday", etc.)
+private fun groupHistoryByDate(
+    items: List<HistoryItem>,
+    todayLabel: String,
+    yesterdayLabel: String
+): Map<String, List<HistoryItem>> {
     val result = mutableMapOf<String, MutableList<HistoryItem>>()
     val now = Calendar.getInstance()
     val itemCal = Calendar.getInstance()
-    val dateFormat = SimpleDateFormat("d MMMM", Locale.ITALIAN)
+    val dateFormat = SimpleDateFormat("d MMMM", Locale.getDefault())
 
     for (item in items) {
         itemCal.timeInMillis = item.timestamp
@@ -259,8 +267,8 @@ private fun groupHistoryByDate(items: List<HistoryItem>): Map<String, List<Histo
                 now.get(Calendar.DAY_OF_YEAR) - itemCal.get(Calendar.DAY_OF_YEAR) == 1
 
         val label = when {
-            isToday -> "Oggi"
-            isYesterday -> "Ieri"
+            isToday -> todayLabel
+            isYesterday -> yesterdayLabel
             else -> dateFormat.format(Date(item.timestamp))
         }
 

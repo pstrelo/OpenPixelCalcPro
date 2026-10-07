@@ -12,10 +12,10 @@ import androidx.compose.ui.platform.LocalContext
 import com.google.pixel.calculator.data.AppThemeMode
 
 /**
- * Ruoli cromatici specifici per la calcolatrice che rispettano le regole:
- * - Tasto uguale con colore accentuato
- * - Tasti non numerici (operatori e controlli) con gradazione tonale diversa dai tasti numerici
- * - Tasti numerici con tonalità neutra / morbida
+ * Specific chromatic roles for the calculator adhering to rules:
+ * - Equals key with emphasized accent color
+ * - Non-numeric keys (operators and controls) with tonal gradation distinct from numeric keys
+ * - Numeric keys with neutral / soft tone
  */
 data class CalculatorColors(
     val background: Color,
@@ -38,7 +38,7 @@ data class CalculatorColors(
 )
 
 val LocalCalculatorColors = staticCompositionLocalOf<CalculatorColors> {
-    error("Nessun CalculatorColors fornito")
+    error("No CalculatorColors provided")
 }
 
 object CalculatorTheme {
@@ -48,7 +48,7 @@ object CalculatorTheme {
         get() = LocalCalculatorColors.current
 }
 
-// 1. TEMA CHIARO STANDARD CLASSICO
+// 1. CLASSIC STANDARD LIGHT THEME
 private val PixelLightCalculatorColors = CalculatorColors(
     background = Color(0xFFFFFFFF),
     surface = Color(0xFFFFFFFF),
@@ -60,7 +60,7 @@ private val PixelLightCalculatorColors = CalculatorColors(
     operatorContent = Color(0xFF191C1E),
     controlContainer = Color(0xFFE2E3EC),
     controlContent = Color(0xFF191C1E),
-    equalsContainer = Color(0xFF354558), // Tasto uguale scuro in risalto stile Google Pixel Light
+    equalsContainer = Color(0xFF354558), // Distinct dark equals key in Google Pixel Light style
     equalsContent = Color(0xFFFFFFFF),
     scientificContainer = Color(0xFFF1F2F6),
     scientificContent = Color(0xFF191C1E),
@@ -69,7 +69,7 @@ private val PixelLightCalculatorColors = CalculatorColors(
     isDark = false
 )
 
-// 2. TEMA SCURO STANDARD CLASSICO
+// 2. CLASSIC STANDARD DARK THEME
 private val PixelDarkCalculatorColors = CalculatorColors(
     background = Color(0xFF131418),
     surface = Color(0xFF131418),
@@ -77,11 +77,11 @@ private val PixelDarkCalculatorColors = CalculatorColors(
     onSurfaceVariant = Color(0xFF8E9099),
     numericContainer = Color(0xFF26282E),
     numericContent = Color(0xFFE2E2E6),
-    operatorContainer = Color(0xFF373942), // Gradazione leggermente più chiara
+    operatorContainer = Color(0xFF373942), // Slightly lighter gradation
     operatorContent = Color(0xFFE2E2E6),
     controlContainer = Color(0xFF373942),
     controlContent = Color(0xFFE2E2E6),
-    equalsContainer = Color(0xFFD3E3FD), // Azzurro pastello d'accento Pixel Dark
+    equalsContainer = Color(0xFFD3E3FD), // Pixel Dark pastel accent blue
     equalsContent = Color(0xFF041E49),
     scientificContainer = Color(0xFF26282E),
     scientificContent = Color(0xFFE2E2E6),
@@ -90,19 +90,19 @@ private val PixelDarkCalculatorColors = CalculatorColors(
     isDark = true
 )
 
-// 3. TEMA CANDY POP (VIVACE CHIARO - dalla foto utente)
+// 3. CANDY POP THEME (VIBRANT LIGHT)
 private val CandyPopCalculatorColors = CalculatorColors(
     background = Color(0xFFFAF7F5),
     surface = Color(0xFFFAF7F5),
     onSurface = Color(0xFF28252C),
     onSurfaceVariant = Color(0xFF6B6572),
-    numericContainer = Color(0xFFD8F3DC), // Menta pastello morbido
+    numericContainer = Color(0xFFD8F3DC), // Soft pastel mint
     numericContent = Color(0xFF1B4332),
-    operatorContainer = Color(0xFFFFCCD5), // Rosa pastello fragola
+    operatorContainer = Color(0xFFFFCCD5), // Strawberry pastel pink
     operatorContent = Color(0xFF590D22),
-    controlContainer = Color(0xFFFF6B8B), // Rosso corallo vivace per AC e controlli
+    controlContainer = Color(0xFFFF6B8B), // Vibrant coral red for AC and controls
     controlContent = Color(0xFFFFFFFF),
-    equalsContainer = Color(0xFFFFD152), // Giallo sole caldo a contrasto
+    equalsContainer = Color(0xFFFFD152), // Contrasting warm sunshine yellow
     equalsContent = Color(0xFF3D2A00),
     scientificContainer = Color(0xFFD8F3DC),
     scientificContent = Color(0xFF1B4332),
@@ -111,19 +111,19 @@ private val CandyPopCalculatorColors = CalculatorColors(
     isDark = false
 )
 
-// 4. TEMA RETRO CYBER (VIVACE SCURO - dalla foto utente)
+// 4. RETRO CYBER THEME (VIBRANT DARK)
 private val RetroCyberCalculatorColors = CalculatorColors(
     background = Color(0xFF14161D),
     surface = Color(0xFF14161D),
     onSurface = Color(0xFFF1F3F8),
     onSurfaceVariant = Color(0xFF9096A6),
-    numericContainer = Color(0xFF1E222C), // Chassis scuro
-    numericContent = Color(0xFF34D399),   // Numeri ciano/smeraldo brillante
-    operatorContainer = Color(0xFFFF3366), // Rosa neon/magenta vivace
+    numericContainer = Color(0xFF1E222C), // Dark chassis
+    numericContent = Color(0xFF34D399),   // Bright cyan/emerald numbers
+    operatorContainer = Color(0xFFFF3366), // Vibrant neon magenta
     operatorContent = Color(0xFFFFFFFF),
-    controlContainer = Color(0xFF2563EB), // Blu cobalto elettrico per AC e controlli
+    controlContainer = Color(0xFF2563EB), // Electric cobalt blue for AC and controls
     controlContent = Color(0xFFFFFFFF),
-    equalsContainer = Color(0xFFFACC15), // Giallo agrumi fluo d'accento
+    equalsContainer = Color(0xFFFACC15), // Fluorescent citrus yellow accent
     equalsContent = Color(0xFF1C1500),
     scientificContainer = Color(0xFF1E222C),
     scientificContent = Color(0xFF34D399),
@@ -157,7 +157,7 @@ fun PixelCalculatorTheme(
     val (m3ColorScheme, calcColors) = when {
         isSystemDynamic -> {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                // Dynamic Color Monet reale di sistema con accenti coerenti (es. blu dei controlli)
+                // Real system Monet Dynamic Color with coherent accents
                 val dynamicScheme = if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
                 val colors = if (isDark) {
                     CalculatorColors(

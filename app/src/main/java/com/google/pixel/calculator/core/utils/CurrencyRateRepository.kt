@@ -2,6 +2,7 @@ package com.google.pixel.calculator.core.utils
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.google.pixel.calculator.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,10 +20,10 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Repository per i tassi di cambio valuta offline-first a consumo dati ultra-ridotto (~2KB).
- * - Fornisce tassi di default istantanei senza alcuna connessione.
- * - Salva i tassi in SharedPreferences.
- * - Aggiorna in background solo se la cache ha più di 24 ore o su richiesta esplicita.
+ * Offline-first repository for currency exchange rates with ultra-low data consumption (~2KB).
+ * - Provides instant default rates without network connectivity.
+ * - Saves cached rates in SharedPreferences.
+ * - Updates in background only when cache is older than 24 hours or on explicit user request.
  */
 class CurrencyRateRepository(private val context: Context? = null) {
 
@@ -30,9 +31,9 @@ class CurrencyRateRepository(private val context: Context? = null) {
         private const val PREFS_NAME = "currency_rates_prefs"
         private const val KEY_RATES_JSON = "key_rates_json"
         private const val KEY_LAST_UPDATE_MS = "key_last_update_ms"
-        private const val CACHE_VALIDITY_MS = 24 * 60 * 60 * 1000L // 24 ore
+        private const val CACHE_VALIDITY_MS = 24 * 60 * 60 * 1000L // 24 hours
 
-        // Tassi di default robusti (Base: EUR = 1.0) per operatività 100% offline out-of-the-box
+        // Robust default rates (Base: EUR = 1.0) for 100% offline out-of-the-box readiness
         val DEFAULT_RATES: Map<String, Double> = mapOf(
             "EUR" to 1.0,
             "USD" to 1.085,
@@ -81,7 +82,7 @@ class CurrencyRateRepository(private val context: Context? = null) {
     }
 
     /**
-     * Converte un importo tra due valute utilizzando i tassi attualmente disponibili.
+     * Converts an amount between two currencies using currently available rates.
      */
     fun convert(amount: Double, fromCode: String, toCode: String): Double {
         if (fromCode == toCode) return amount
@@ -95,18 +96,31 @@ class CurrencyRateRepository(private val context: Context? = null) {
     }
 
     /**
-     * Restituisce la stringa descrittiva dell'ultimo aggiornamento (es. "Aggiornato: 06/10 12:30" o "Predefiniti offline").
+     * Returns a human-readable description of the last rate update (e.g. "Updated on: 06/10 12:30" or localized default).
      */
-    fun getLastUpdateText(): String {
+    fun getLastUpdateText(customContext: Context? = null): String {
+        val effectiveContext = customContext ?: context
         val ts = _lastUpdateTimestamp.value
-        if (ts <= 0L) return "Tassi offline di base"
         val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-        return "Aggiornato al: ${sdf.format(Date(ts))}"
+
+        if (effectiveContext != null) {
+            return if (ts <= 0L) {
+                effectiveContext.getString(R.string.currency_offline_default)
+            } else {
+                effectiveContext.getString(R.string.currency_updated_at, sdf.format(Date(ts)))
+            }
+        }
+
+        return if (ts <= 0L) {
+            "Default offline rates"
+        } else {
+            "Updated on: ${sdf.format(Date(ts))}"
+        }
     }
 
     /**
-     * Esegue l'aggiornamento se necessario (cache > 24h) o forzato.
-     * Consumo dati limitato: ~2KB per chiamata con compressione GZIP automatica.
+     * Performs update if needed (cache > 24h) or forced.
+     * Lightweight network overhead: ~2KB per call with automatic GZIP compression.
      */
     fun updateRatesIfNeeded(scope: CoroutineScope, force: Boolean = false) {
         val now = System.currentTimeMillis()
@@ -137,7 +151,7 @@ class CurrencyRateRepository(private val context: Context? = null) {
                     }
                 }
             } catch (_: Exception) {
-                // Silenzioso: se offline o errore di rete, l'app continua ad usare i tassi cached/default senza crash
+                // Silent fallback: if offline or network error occurs, keep cached/default rates without crashing
             } finally {
                 _isUpdating.value = false
             }
@@ -145,12 +159,12 @@ class CurrencyRateRepository(private val context: Context? = null) {
     }
 
     /**
-     * Effettua la richiesta HTTP nativa a bassissimo consumo.
+     * Performs low-overhead native HTTP request to fetch exchange rates.
      */
     private fun fetchRemoteRates(): Map<String, Double>? {
         var conn: HttpURLConnection? = null
         return try {
-            // Endpoint pubblico gratuito e leggero (~2KB)
+            // Free and lightweight public endpoint (~2KB)
             val url = URL("https://open.er-api.com/v6/latest/EUR")
             conn = (url.openConnection() as HttpURLConnection).apply {
                 connectTimeout = 4000

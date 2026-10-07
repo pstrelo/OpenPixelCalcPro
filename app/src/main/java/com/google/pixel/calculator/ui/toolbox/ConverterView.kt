@@ -3,8 +3,8 @@ package com.google.pixel.calculator.ui.toolbox
 import androidx.compose.runtime.Composable
 
 /**
- * Schermata di conversione unità.
- * Reindirizzata alla nuova versione in stile iPhone (ConverterCalculatorView).
+ * Unit converter screen.
+ * Delegates to ConverterCalculatorView.
  */
 @Composable
 fun ConverterView(

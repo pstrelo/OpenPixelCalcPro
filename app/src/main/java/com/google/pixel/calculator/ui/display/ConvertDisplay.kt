@@ -24,10 +24,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.pixel.calculator.R
 import com.google.pixel.calculator.core.utils.UnitConverter
 import com.google.pixel.calculator.ui.theme.CalculatorTheme
 import com.google.pixel.calculator.ui.theme.QuicksandFontFamily
@@ -39,12 +41,12 @@ enum class ActiveConverterField {
 }
 
 /**
- * Display a due caselle interattive per il convertitore di unità:
- * - Entrambe le caselle sono cliccabili.
- * - La casella attiva (in cui si scrive) ha testo in colore normale ad alto contrasto e bordo attivo.
- * - La casella passiva mostra il valore convertito con testo più sbiadito (faded/trasparente).
- * - Cliccando una casella, se ne modifica il valore e l'altra mostra la conversione automatica.
- * - Tasto Swap centrale (⇅) per scambiare le unità.
+ * Interactive two-box display for the unit converter:
+ * - Both boxes are clickable.
+ * - Active box (for current editing) renders high-contrast text and active focus.
+ * - Passive box renders calculated converted value with faded text.
+ * - Clicking a box focuses it for input while the other updates in real time.
+ * - Central swap button (⇅) swaps the units.
  */
 @Composable
 fun ConvertDisplay(
@@ -83,7 +85,7 @@ fun ConvertDisplay(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.Center
     ) {
-        // --- CASELLA SUPERIORE (TOP BOX) ---
+        // --- TOP BOX ---
         ConverterBox(
             valueStr = topValueStr,
             unit = topUnit,
@@ -99,7 +101,7 @@ fun ConvertDisplay(
             }
         )
 
-        // --- BARRA CENTRALE: DIVISORE E PULSANTE SWAP (⇅) ---
+        // --- CENTER BAR: DIVIDER AND SWAP BUTTON (⇅) ---
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -120,7 +122,7 @@ fun ConvertDisplay(
             ) {
                 Icon(
                     imageVector = Icons.Default.SwapVert,
-                    contentDescription = "Inverti unità",
+                    contentDescription = stringResource(R.string.swap_units),
                     tint = CalculatorTheme.colors.equalsContainer,
                     modifier = Modifier.size(24.dp)
                 )
@@ -135,7 +137,7 @@ fun ConvertDisplay(
             )
         }
 
-        // --- CASELLA INFERIORE (BOTTOM BOX) ---
+        // --- BOTTOM BOX ---
         ConverterBox(
             valueStr = bottomValueStr,
             unit = bottomUnit,
@@ -165,7 +167,7 @@ private fun ConverterBox(
     val textColor = if (isActive) {
         CalculatorTheme.colors.onSurface
     } else {
-        CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.40f) // Sbiadita quando non selezionata
+        CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.40f) // Faded when not selected
     }
 
     val isLandscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
@@ -187,7 +189,7 @@ private fun ConverterBox(
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Numero con scorrimento orizzontale
+            // Horizontal scrollable number display
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -229,7 +231,7 @@ private fun ConverterBox(
 
             Spacer(modifier = Modifier.width(10.dp))
 
-            // Chip Unità (cliccabile per cambiare solo l'unità di questa casella)
+            // Unit chip (clickable to change only this box's unit)
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = CalculatorTheme.colors.operatorContainer.copy(alpha = if (isActive) 0.85f else 0.50f),
@@ -251,7 +253,7 @@ private fun ConverterBox(
                     )
                     Icon(
                         imageVector = Icons.Default.UnfoldMore,
-                        contentDescription = "Cambia unità",
+                        contentDescription = stringResource(R.string.change_unit),
                         tint = CalculatorTheme.colors.onSurfaceVariant,
                         modifier = Modifier.size(16.dp)
                     )
