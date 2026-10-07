@@ -89,6 +89,20 @@ fun CompassView(
         }
     }
 
+    // Avvio ascolto sensori posizione con richiesta automatica permessi
+    LaunchedEffect(Unit) {
+        if (!locationManager.hasPermission()) {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        } else {
+            locationManager.startListening()
+        }
+    }
+
     DisposableEffect(Unit) {
         if (locationManager.hasPermission()) {
             locationManager.startListening()

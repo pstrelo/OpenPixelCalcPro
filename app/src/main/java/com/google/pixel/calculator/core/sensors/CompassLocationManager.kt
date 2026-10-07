@@ -10,6 +10,7 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Looper
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 data class CompassLocationData(
     val latitude: Double = 40.093056,
@@ -30,7 +32,7 @@ data class CompassLocationData(
     val longitudeDms: String = "120°2'1\"",
     val longitudeCardinal: String = "EL",
     val altitudeFormatted: String = "991m",
-    val locationName: String = "Florida",
+    val locationName: String = "Posizione GPS",
     val hasPermission: Boolean = false,
     val isGpsActive: Boolean = false
 )
@@ -59,13 +61,15 @@ class CompassLocationManager(private val context: Context) {
     private var locationListener: LocationListener? = null
 
     fun hasPermission(): Boolean {
-        return ContextCompat.checkSelfPermission(
+        val fineGranted = ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+        ) == PackageManager.PERMISSION_GRANTED
+        val coarseGranted = ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.ACCESS_COARSE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
+        return fineGranted || coarseGranted
     }
 
     @SuppressLint("MissingPermission")
@@ -76,16 +80,32 @@ class CompassLocationManager(private val context: Context) {
             _locationFlow.value = _locationFlow.value.copy(hasPermission = false)
             return
         }
+        _locationFlow.value = _locationFlow.value.copy(hasPermission = true)
 
-        // Recupera subito l'ultima posizione nota per azzerare i tempi di caricamento
-        val lastGps = runCatching { mgr.getLastKnownLocation(LocationManager.GPS_PROVIDER) }.getOrNull()
-        val lastNetwork = runCatching { mgr.getLastKnownLocation(LocationManager.NETWORK_PROVIDER) }.getOrNull()
-        val bestLast = lastGps ?: lastNetwork
+        val candidateProviders = listOf(
+            LocationManager.FUSED_PROVIDER,
+            LocationManager.GPS_PROVIDER,
+            LocationManager.NETWORK_PROVIDER,
+            LocationManager.PASSIVE_PROVIDER
+        )
+        val availableProviders = runCatching { mgr.allProviders }.getOrDefault(emptyList())
 
-        if (bestLast != null) {
-            updateFromLocation(bestLast, permitted)
+        // 1. Recupera subito l'ultima posizione nota migliore e più recente da qualsiasi provider
+        var bestLast: Location? = null
+        for (provider in candidateProviders) {
+            if (availableProviders.contains(provider)) {
+                val loc = runCatching { mgr.getLastKnownLocation(provider) }.getOrNull()
+                if (loc != null && (bestLast == null || loc.time > bestLast.time)) {
+                    bestLast = loc
+                }
+            }
         }
 
+        if (bestLast != null) {
+            updateFromLocation(bestLast, true)
+        }
+
+        // 2. Crea il listener con aggiornamento immediato
         val listener = object : LocationListener {
             override fun onLocationChanged(location: Location) {
                 updateFromLocation(location, true)
@@ -97,27 +117,21 @@ class CompassLocationManager(private val context: Context) {
         }
         locationListener = listener
 
-        try {
-            if (mgr.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                mgr.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER,
-                    3000L,
-                    2f,
-                    listener
-                )
+        // 3. Registra con minDistance = 0f (per rilevare anche i soli cambi di altitudine nell'emulatore)
+        for (provider in candidateProviders) {
+            if (availableProviders.contains(provider)) {
+                try {
+                    mgr.requestLocationUpdates(
+                        provider,
+                        300L,
+                        0f,
+                        listener,
+                        Looper.getMainLooper()
+                    )
+                } catch (_: SecurityException) {
+                    _locationFlow.value = _locationFlow.value.copy(hasPermission = false)
+                } catch (_: Exception) {}
             }
-            if (mgr.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-                mgr.requestLocationUpdates(
-                    LocationManager.NETWORK_PROVIDER,
-                    5000L,
-                    5f,
-                    listener
-                )
-            }
-        } catch (_: SecurityException) {
-            _locationFlow.value = _locationFlow.value.copy(hasPermission = false)
-        } catch (_: Exception) {
-            // Ignora se provider non disponibili
         }
     }
 
@@ -133,11 +147,11 @@ class CompassLocationManager(private val context: Context) {
     private fun updateFromLocation(location: Location, permitted: Boolean) {
         val lat = location.latitude
         val lon = location.longitude
-        val alt = if (location.hasAltitude()) location.altitude else _locationFlow.value.altitude
+        val alt = if (location.hasAltitude()) location.altitude else 0.0
 
         val (latDms, latCard) = formatCoordinate(lat, isLatitude = true)
         val (lonDms, lonCard) = formatCoordinate(lon, isLatitude = false)
-        val altFmt = "${alt.toInt()}m"
+        val altFmt = "${alt.roundToInt()}m"
 
         _locationFlow.value = _locationFlow.value.copy(
             latitude = lat,
@@ -184,7 +198,7 @@ class CompassLocationManager(private val context: Context) {
                     }
                 }
             } catch (_: Exception) {
-                // Silently fallback se geocoder offline
+                // Fallback trasparente se geocoder offline
             }
         }
     }
