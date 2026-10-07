@@ -191,9 +191,10 @@ class UnitConverterTest {
     }
 
     @Test
-    fun testAllCategoriesHaveIcons() {
+    fun testAllCategoriesHaveMaterialIcons() {
         for (category in UnitConverter.Category.values()) {
-            assertTrue("La categoria ${category.name} deve avere un'icona non vuota", category.icon.isNotEmpty())
+            val icon = com.google.pixel.calculator.ui.toolbox.getCategoryMaterialIcon(category)
+            assertNotNull("La categoria ${category.name} deve avere un'icona Material", icon)
         }
     }
 }

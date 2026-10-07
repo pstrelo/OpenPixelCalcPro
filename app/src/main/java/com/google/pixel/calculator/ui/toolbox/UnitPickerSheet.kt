@@ -7,15 +7,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,9 +27,33 @@ enum class UnitPickerTarget {
 }
 
 /**
+ * Restituisce l'icona vettoriale Material 3 specifica per ciascuna delle 17 categorie.
+ */
+fun getCategoryMaterialIcon(category: UnitConverter.Category): ImageVector = when (category) {
+    UnitConverter.Category.CURRENCY -> Icons.Default.Payments
+    UnitConverter.Category.LENGTH -> Icons.Default.Straighten
+    UnitConverter.Category.MASS -> Icons.Default.Scale
+    UnitConverter.Category.TEMPERATURE -> Icons.Default.Thermostat
+    UnitConverter.Category.AREA -> Icons.Default.GridOn
+    UnitConverter.Category.VOLUME -> Icons.Default.WaterDrop
+    UnitConverter.Category.SPEED -> Icons.Default.Speed
+    UnitConverter.Category.TIME -> Icons.Default.Schedule
+    UnitConverter.Category.PRESSURE -> Icons.Default.Compress
+    UnitConverter.Category.ENERGY -> Icons.Default.Bolt
+    UnitConverter.Category.POWER -> Icons.Default.Lightbulb
+    UnitConverter.Category.DATA -> Icons.Default.Storage
+    UnitConverter.Category.ANGLE -> Icons.Default.ChangeHistory
+    UnitConverter.Category.FUEL -> Icons.Default.LocalGasStation
+    UnitConverter.Category.COOKING -> Icons.Default.Restaurant
+    UnitConverter.Category.TYPOGRAPHY -> Icons.Default.TextFields
+    UnitConverter.Category.FREQUENCY -> Icons.Default.GraphicEq
+}
+
+/**
  * ModalBottomSheet Material 3 Expressive per la selezione rapida delle unità di misura.
  * - Ricerca istantanea con filtro su tutte le grandezze.
- * - Schede scorrevoli con le 17 categorie (senza emoji, design pulito Pixel).
+ * - Schede scorrevoli con testo puro (nessuna emoticon accanto alle scritte).
+ * - Icone Material 3 all'interno dei cerchi del menu.
  * - Evidenziazione dell'unità attualmente attiva con checkmark.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -102,7 +125,7 @@ fun UnitPickerSheet(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Se la barra di ricerca è vuota, mostra le tab delle categorie (senza emoji)
+            // Se la barra di ricerca è vuota, mostra le tab delle categorie con testo puro (nessuna emoticon)
             if (searchQuery.isEmpty()) {
                 ScrollableTabRow(
                     selectedTabIndex = selectedCategory.ordinal,
@@ -125,18 +148,12 @@ fun UnitPickerSheet(
                             selected = isSelected,
                             onClick = { selectedCategory = cat },
                             text = {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Text(text = cat.icon, fontSize = 16.sp)
-                                    Text(
-                                        text = cat.displayName,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                        fontSize = 14.sp,
-                                        color = if (isSelected) CalculatorTheme.colors.onSurface else CalculatorTheme.colors.onSurfaceVariant
-                                    )
-                                }
+                                Text(
+                                    text = cat.displayName,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    fontSize = 14.sp,
+                                    color = if (isSelected) CalculatorTheme.colors.onSurface else CalculatorTheme.colors.onSurfaceVariant
+                                )
                             }
                         )
                     }
@@ -205,7 +222,7 @@ fun UnitPickerSheet(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
@@ -214,13 +231,27 @@ fun UnitPickerSheet(
                                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                                     modifier = Modifier.weight(1f)
                                 ) {
+                                    // Cerchio del menu con icona Material 3
                                     Surface(
                                         shape = CircleShape,
-                                        color = MaterialTheme.colorScheme.surfaceContainerHighest ?: MaterialTheme.colorScheme.surfaceVariant,
-                                        modifier = Modifier.size(36.dp)
+                                        color = if (isCurrent) {
+                                            CalculatorTheme.colors.equalsContainer.copy(alpha = 0.25f)
+                                        } else {
+                                            MaterialTheme.colorScheme.surfaceContainerHighest ?: MaterialTheme.colorScheme.surfaceVariant
+                                        },
+                                        modifier = Modifier.size(38.dp)
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
-                                            Text(text = unit.category.icon, fontSize = 18.sp)
+                                            Icon(
+                                                imageVector = getCategoryMaterialIcon(unit.category),
+                                                contentDescription = null,
+                                                tint = if (isCurrent) {
+                                                    CalculatorTheme.colors.equalsContainer
+                                                } else {
+                                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                                },
+                                                modifier = Modifier.size(20.dp)
+                                            )
                                         }
                                     }
 
