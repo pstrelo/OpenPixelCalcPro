@@ -23,6 +23,8 @@ class CalculatorViewModel(
     private val _uiState = MutableStateFlow(
         CalculatorState(
             themeMode = themePreferences?.themeMode?.value ?: AppThemeMode.SYSTEM_AUTO,
+            appIconMode = themePreferences?.appIconMode?.value ?: AppThemeMode.SYSTEM_AUTO,
+            syncIconWithTheme = themePreferences?.syncIconWithTheme?.value ?: false,
             isHapticEnabled = themePreferences?.isHapticEnabled?.value ?: true
         )
     )
@@ -33,6 +35,16 @@ class CalculatorViewModel(
             viewModelScope.launch {
                 prefs.themeMode.collect { mode ->
                     _uiState.update { it.copy(themeMode = mode) }
+                }
+            }
+            viewModelScope.launch {
+                prefs.appIconMode.collect { iconMode ->
+                    _uiState.update { it.copy(appIconMode = iconMode) }
+                }
+            }
+            viewModelScope.launch {
+                prefs.syncIconWithTheme.collect { sync ->
+                    _uiState.update { it.copy(syncIconWithTheme = sync) }
                 }
             }
             viewModelScope.launch {
@@ -322,7 +334,17 @@ class CalculatorViewModel(
 
     fun setThemeMode(mode: AppThemeMode) {
         themePreferences?.setThemeMode(mode)
-        _uiState.update { it.copy(themeMode = mode, showThemeDialog = false) }
+        _uiState.update { it.copy(themeMode = mode) }
+    }
+
+    fun setAppIconMode(mode: AppThemeMode) {
+        themePreferences?.setAppIconMode(mode)
+        _uiState.update { it.copy(appIconMode = mode) }
+    }
+
+    fun setSyncIconWithTheme(sync: Boolean) {
+        themePreferences?.setSyncIconWithTheme(sync)
+        _uiState.update { it.copy(syncIconWithTheme = sync) }
     }
 
     fun toggleHaptic() {

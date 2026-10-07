@@ -12,21 +12,115 @@
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
-        android:icon="@android:drawable/sym_def_app_icon"
+        android:icon="@mipmap/ic_launcher_system_auto"
         android:label="@string/app_name"
-        android:roundIcon="@android:drawable/sym_def_app_icon"
+        android:roundIcon="@mipmap/ic_launcher_system_auto"
         android:supportsRtl="true"
         android:theme="@style/Theme.PixelCalculator">
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Launcher Activity Aliases per ogni tema -->
+        <activity-alias
+            android:name=".MainActivityAliasSystemAuto"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_system_auto"
+            android:roundIcon="@mipmap/ic_launcher_system_auto"
+            android:label="@string/app_name"
+            android:enabled="true"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".MainActivityAliasSystemLight"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_system_light"
+            android:roundIcon="@mipmap/ic_launcher_system_light"
+            android:label="@string/app_name"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".MainActivityAliasSystemDark"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_system_dark"
+            android:roundIcon="@mipmap/ic_launcher_system_dark"
+            android:label="@string/app_name"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".MainActivityAliasStandardLight"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_standard_light"
+            android:roundIcon="@mipmap/ic_launcher_standard_light"
+            android:label="@string/app_name"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".MainActivityAliasStandardDark"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_standard_dark"
+            android:roundIcon="@mipmap/ic_launcher_standard_dark"
+            android:label="@string/app_name"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".MainActivityAliasCandyPop"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_candy_pop"
+            android:roundIcon="@mipmap/ic_launcher_candy_pop"
+            android:label="@string/app_name"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".MainActivityAliasRetroCyber"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_retro_cyber"
+            android:roundIcon="@mipmap/ic_launcher_retro_cyber"
+            android:label="@string/app_name"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
     </application>
 

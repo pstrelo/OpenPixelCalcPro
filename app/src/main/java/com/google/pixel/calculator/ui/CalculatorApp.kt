@@ -324,12 +324,20 @@ fun CalculatorApp(
         }
     }
 
-    // DIALOG SELEZIONE TEMA (5 temi disponibili)
+    // DIALOG SELEZIONE TEMA E ICONA APPLICAZIONE
     if (state.showThemeDialog) {
         ThemeSelectionDialog(
             currentTheme = state.themeMode,
+            currentAppIcon = state.appIconMode,
+            syncIconWithTheme = state.syncIconWithTheme,
             onSelectTheme = { mode ->
                 vm.setThemeMode(mode)
+            },
+            onSetAppIcon = { mode ->
+                vm.setAppIconMode(mode)
+            },
+            onToggleSyncIcon = { enabled ->
+                vm.setSyncIconWithTheme(enabled)
             },
             onDismiss = { vm.toggleThemeDialog(false) }
         )
