@@ -286,6 +286,12 @@ class CalculatorViewModel(
     }
 
     fun clearAllHistory() {
+        _uiState.update {
+            it.copy(
+                sessionHistory = emptyList(),
+                lastEvaluatedExpression = null
+            )
+        }
         viewModelScope.launch {
             historyStorage?.clearHistory()
         }

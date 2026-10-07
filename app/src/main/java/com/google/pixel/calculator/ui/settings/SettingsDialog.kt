@@ -236,6 +236,47 @@ fun ThemeSelectionDialog(
                                 )
                             }
                         }
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                        )
+
+                        // Voce di sincronizzazione automatica icona-tema in fondo all'elenco dei temi
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f))
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Sync,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Sincronizza icona con tema",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Aggiorna l'icona ogni volta che cambi tema",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = syncIconWithTheme,
+                                onCheckedChange = { onToggleSyncIcon(it) },
+                                modifier = Modifier.scale(0.85f)
+                            )
+                        }
                     }
                 } else {
                     // 2. SOTTOMENU PER IMPOSTARE ANCHE L'ICONA CON QUEL TEMA
@@ -347,9 +388,10 @@ fun ThemeSelectionDialog(
                             )
                         }
 
-                        // Pulsante 2: Applica solo all'app (lascia icona invariata)
+                        // Pulsante 2: Applica solo all'app (disattiva la sincronizzazione prima di cambiare tema)
                         OutlinedButton(
                             onClick = {
+                                onToggleSyncIcon(false)
                                 onSelectTheme(targetSelectedTheme)
                                 onDismiss()
                             },
@@ -360,37 +402,6 @@ fun ThemeSelectionDialog(
                                 text = "Applica solo tema nell'app",
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.SemiBold
-                            )
-                        }
-
-                        // Opzione di sincronizzazione automatica icona-tema
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(14.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
-                                .padding(horizontal = 12.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Sync,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "Sincronizza sempre icona con tema",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                            Switch(
-                                checked = syncIconWithTheme,
-                                onCheckedChange = { onToggleSyncIcon(it) },
-                                modifier = Modifier.scale(0.85f)
                             )
                         }
                     }

@@ -1,5 +1,6 @@
 package com.google.pixel.calculator.ui.toolbox
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -95,143 +96,43 @@ fun LevelView(
     // Colore One UI Green di successo quando la livella è a 0°
     val oneUiSuccessGreen = Color(0xFF2EC866)
 
+    BackHandler { onBack() }
+
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = "Livella Digitale",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        AnimatedContent(
-                            targetState = levelData.mode,
-                            transitionSpec = {
-                                (fadeIn(tween(250)) + slideInVertically { it / 2 })
-                                    .togetherWith(fadeOut(tween(180)) + slideOutVertically { -it / 2 })
-                            },
-                            label = "TopBarSubtitleTransition"
-                        ) { mode ->
-                            Text(
-                                text = if (mode == LevelOrientationMode.HORIZONTAL_SURFACE) {
-                                    "Modalità Superficie (In piano)"
-                                } else {
-                                    "Modalità Parete (Verticale)"
-                                },
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Torna indietro",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer ?: MaterialTheme.colorScheme.surface
-                )
-            )
-        }
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            if (isLandscape) {
-                // Layout Orizzontale (Landscape): Canvas a sinistra, schede e dati ad asse a destra
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 20.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(20.dp)
-                ) {
-                    // Viewport Livella principale a sinistra
-                    Box(
-                        modifier = Modifier
-                            .weight(1.2f)
-                            .fillMaxHeight(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        LevelViewportCard(
-                            levelData = levelData,
-                            isDark = isDark,
-                            successGreen = oneUiSuccessGreen,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
-
-                    // Schede assi e stato One UI a destra
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        OneUiStatusPill(levelData = levelData, successGreen = oneUiSuccessGreen)
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        OneUiAxesCards(
-                            levelData = levelData,
-                            successGreen = oneUiSuccessGreen,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-            } else {
-                // Layout Verticale (Portrait): Top Status Pill, Main Viewport centrale, Schede Assi in basso
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-                    // Pillola superiore descrittiva One UI
-                    OneUiStatusPill(
-                        levelData = levelData,
-                        successGreen = oneUiSuccessGreen,
-                        modifier = Modifier.padding(top = 4.dp)
+            // Viewport a schermo intero fino alla linea del pulsante strumenti con solo il riquadro grafico
+            LevelViewportCard(
+                levelData = levelData,
+                isDark = isDark,
+                successGreen = oneUiSuccessGreen,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        start = if (isLandscape) 20.dp else 16.dp,
+                        end = if (isLandscape) 20.dp else 16.dp,
+                        top = if (isLandscape) 10.dp else 16.dp,
+                        bottom = if (isLandscape) 56.dp else 84.dp
                     )
+            )
 
-                    // Card viewport principale con animazione fluida tra superficie e parete
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                            .padding(vertical = 14.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        LevelViewportCard(
-                            levelData = levelData,
-                            isDark = isDark,
-                            successGreen = oneUiSuccessGreen,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
-
-                    // Schede di controllo per entrambi gli assi (Primario e Riferimento)
-                    OneUiAxesCards(
-                        levelData = levelData,
-                        successGreen = oneUiSuccessGreen,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 76.dp)
-                    )
-                }
+            // Freccia indietro in alto a sinistra
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = if (isLandscape) 24.dp else 20.dp, top = if (isLandscape) 14.dp else 20.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Torna alla calcolatrice",
+                    tint = if (levelData.isLevel) Color.White else MaterialTheme.colorScheme.onSurface
+                )
             }
 
             // Barra degli strumenti fluttuante Material 3 coerente con tutte le schermate
@@ -473,22 +374,6 @@ private fun SurfaceLevelCanvas(
                 )
             }
         }
-
-        // Gradi visualizzati al centro dello schermo (es. -26° o 0°)
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            val displayDeg = if (levelData.isLevel) "0°" else "${levelData.primaryDisplayAngle}°"
-            Text(
-                text = displayDeg,
-                fontSize = if (levelData.isLevel) 52.sp else 46.sp,
-                fontWeight = FontWeight.Bold,
-                color = textColor,
-                letterSpacing = (-1).sp,
-                textAlign = TextAlign.Center
-            )
-        }
     }
 }
 
@@ -547,26 +432,33 @@ private fun VerticalWallLevelCanvas(
                 )
             }
 
-            // 2. Trattini di mira orizzontali fissi di riferimento telaio: `—   ...   —`
-            val dashLength = 36.dp.toPx()
-            val textGap = 52.dp.toPx()
+            // 2. Trattini di mira orizzontali di precisione telaio: `—  o  —`
+            val dashLength = 40.dp.toPx()
+            val reticleGap = 20.dp.toPx()
 
             // Trattino sinistro `—`
             drawLine(
                 color = contentColor,
-                start = Offset(center.x - textGap - dashLength, center.y),
-                end = Offset(center.x - textGap, center.y),
-                strokeWidth = if (levelData.isLevel) 4.5.dp.toPx() else 3.dp.toPx(),
+                start = Offset(center.x - reticleGap - dashLength, center.y),
+                end = Offset(center.x - reticleGap, center.y),
+                strokeWidth = if (levelData.isLevel) 4.dp.toPx() else 2.5.dp.toPx(),
                 cap = StrokeCap.Round
             )
 
             // Trattino destro `—`
             drawLine(
                 color = contentColor,
-                start = Offset(center.x + textGap, center.y),
-                end = Offset(center.x + textGap + dashLength, center.y),
-                strokeWidth = if (levelData.isLevel) 4.5.dp.toPx() else 3.dp.toPx(),
+                start = Offset(center.x + reticleGap, center.y),
+                end = Offset(center.x + reticleGap + dashLength, center.y),
+                strokeWidth = if (levelData.isLevel) 4.dp.toPx() else 2.5.dp.toPx(),
                 cap = StrokeCap.Round
+            )
+
+            // Cerchio centrale di mira
+            drawCircle(
+                color = contentColor,
+                radius = if (levelData.isLevel) 6.dp.toPx() else 4.dp.toPx(),
+                center = center
             )
 
             // 3. Indicatore di riferimento dell'altro asse (Planarità Parete testa-fondo)
@@ -580,150 +472,6 @@ private fun VerticalWallLevelCanvas(
                 color = contentColor.copy(alpha = if (abs(animFrontal) < 1f) 0.9f else 0.4f),
                 radius = bubbleRadius,
                 center = Offset(center.x, bubbleY)
-            )
-        }
-
-        // 4. Testo centrale con i gradi (es. -12° o 0°)
-        val displayAngleText = if (levelData.isLevel) "0°" else "${levelData.primaryDisplayAngle}°"
-        Text(
-            text = displayAngleText,
-            fontSize = if (levelData.isLevel) 52.sp else 46.sp,
-            fontWeight = FontWeight.Bold,
-            color = contentColor,
-            letterSpacing = (-1).sp,
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
-/**
- * Schede informative One UI per ENTRAMBI gli assi di rotazione:
- * - In Orizzontale: Asse Principale Testa-Fondo e Riferimento Destra-Sinistra.
- * - In Verticale: Asse Principale Laterale Destra-Sinistra e Riferimento Parete Testa-Fondo.
- * Ciascuna scheda si colora di verde ed evidenzia l'allineamento quando l'asse raggiunge lo 0.0°.
- */
-@Composable
-private fun OneUiAxesCards(
-    levelData: LevelData,
-    successGreen: Color,
-    modifier: Modifier = Modifier
-) {
-    val isHorizontal = levelData.mode == LevelOrientationMode.HORIZONTAL_SURFACE
-
-    // Definizione etichette e valori per asse primario e asse di riferimento
-    val primaryTitle = if (isHorizontal) "Asse Testa - Fondo" else "Inclinazione Laterale"
-    val primarySubtitle = if (isHorizontal) "Inclinazione longitudinale" else "Destra / Sinistra"
-    val primaryValue = if (isHorizontal) levelData.pitchHeadTail else levelData.verticalLateralAngle
-    val primaryIsAligned = abs(primaryValue) < 0.6f
-
-    val secondaryTitle = if (isHorizontal) "Asse Destra - Sinistra" else "Planarità Parete"
-    val secondarySubtitle = if (isHorizontal) "Riferimento laterale" else "Testa / Fondo (Avanti-Dietro)"
-    val secondaryValue = if (isHorizontal) levelData.rollLeftRight else levelData.verticalFrontalAngle
-    val secondaryIsAligned = abs(secondaryValue) < 0.6f
-
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Scheda 1: Asse Primario
-        AxisCard(
-            title = primaryTitle,
-            subtitle = primarySubtitle,
-            value = primaryValue,
-            isAligned = primaryIsAligned,
-            icon = if (isHorizontal) Icons.Default.Height else Icons.Default.SwapHoriz,
-            successGreen = successGreen,
-            modifier = Modifier.weight(1f)
-        )
-
-        // Scheda 2: Riferimento all'altro asse di rotazione
-        AxisCard(
-            title = secondaryTitle,
-            subtitle = secondarySubtitle,
-            value = secondaryValue,
-            isAligned = secondaryIsAligned,
-            icon = if (isHorizontal) Icons.Default.SwapHoriz else Icons.Default.Height,
-            successGreen = successGreen,
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-/**
- * Singola scheda di un asse con angoli arrotondati 22dp, icone One UI ed evidenziazione verde.
- */
-@Composable
-private fun AxisCard(
-    title: String,
-    subtitle: String,
-    value: Float,
-    isAligned: Boolean,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    successGreen: Color,
-    modifier: Modifier = Modifier
-) {
-    val cardBg = if (isAligned) {
-        successGreen.copy(alpha = 0.12f)
-    } else {
-        MaterialTheme.colorScheme.surfaceContainer ?: MaterialTheme.colorScheme.surface
-    }
-
-    val valueColor = if (isAligned) {
-        successGreen
-    } else {
-        MaterialTheme.colorScheme.onSurface
-    }
-
-    Card(
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = cardBg),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        modifier = modifier
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = if (isAligned) successGreen else MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1
-                )
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = "${"%.1f".format(value)}°",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.ExtraBold,
-                color = valueColor,
-                letterSpacing = (-0.5).sp
-            )
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1
             )
         }
     }

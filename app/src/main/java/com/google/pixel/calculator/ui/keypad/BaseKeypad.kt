@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -64,7 +65,6 @@ fun BaseKeypad(
     onToggleProMode: () -> Unit,
     onToggleShift: () -> Unit,
     onToggleAngleUnit: () -> Unit,
-    onOpenToolbox: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
@@ -601,8 +601,13 @@ fun PixelButton(
         PixelButtonType.SHIFT_ACTIVE -> colors.equalsContent
     }
 
+    val view = LocalView.current
+
     Button(
-        onClick = onClick,
+        onClick = {
+            view.playSoundEffect(android.view.SoundEffectConstants.CLICK)
+            onClick()
+        },
         modifier = modifier.height(height),
         shape = CircleShape,
         colors = ButtonDefaults.buttonColors(
@@ -657,8 +662,13 @@ fun PixelIconButton(
         PixelButtonType.SHIFT_ACTIVE -> colors.equalsContent
     }
 
+    val view = LocalView.current
+
     Button(
-        onClick = onClick,
+        onClick = {
+            view.playSoundEffect(android.view.SoundEffectConstants.CLICK)
+            onClick()
+        },
         modifier = modifier.height(height),
         shape = CircleShape,
         colors = ButtonDefaults.buttonColors(

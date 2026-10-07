@@ -73,9 +73,9 @@ class CompassSensorManager(context: Context) {
                         try {
                             SensorManager.getRotationMatrixFromVector(rMatrix, event.values)
                             SensorManager.getOrientation(rMatrix, orientation)
-                            rawDeg = (Math.toDegrees(orientation[0].toDouble()).toFloat() + 360f) % 360f
                             pitchDeg = Math.toDegrees(orientation[1].toDouble()).toFloat()
                             rollDeg = Math.toDegrees(orientation[2].toDouble()).toFloat()
+                            rawDeg = calculateAzimuth(rMatrix, pitchDeg)
                             lastFusedTimestamp = System.currentTimeMillis()
                         } catch (_: Exception) {}
                     }
@@ -96,9 +96,9 @@ class CompassSensorManager(context: Context) {
                         if (hasGravity && hasGeomagnetic && (System.currentTimeMillis() - lastFusedTimestamp > 500L)) {
                             if (SensorManager.getRotationMatrix(rMatrix, null, gravity, geomagnetic)) {
                                 SensorManager.getOrientation(rMatrix, orientation)
-                                rawDeg = (Math.toDegrees(orientation[0].toDouble()).toFloat() + 360f) % 360f
                                 pitchDeg = Math.toDegrees(orientation[1].toDouble()).toFloat()
                                 rollDeg = Math.toDegrees(orientation[2].toDouble()).toFloat()
+                                rawDeg = calculateAzimuth(rMatrix, pitchDeg)
                             }
                         }
                     }
@@ -109,9 +109,9 @@ class CompassSensorManager(context: Context) {
                         if (hasGravity && hasGeomagnetic && (System.currentTimeMillis() - lastFusedTimestamp > 500L)) {
                             if (SensorManager.getRotationMatrix(rMatrix, null, gravity, geomagnetic)) {
                                 SensorManager.getOrientation(rMatrix, orientation)
-                                rawDeg = (Math.toDegrees(orientation[0].toDouble()).toFloat() + 360f) % 360f
                                 pitchDeg = Math.toDegrees(orientation[1].toDouble()).toFloat()
                                 rollDeg = Math.toDegrees(orientation[2].toDouble()).toFloat()
+                                rawDeg = calculateAzimuth(rMatrix, pitchDeg)
                             }
                         }
                     }
@@ -167,6 +167,18 @@ class CompassSensorManager(context: Context) {
     }
 
     companion object {
+        fun calculateAzimuth(rMatrix: FloatArray, pitchDeg: Float): Float {
+            val pitchRad = Math.toRadians(pitchDeg.toDouble())
+            val cosPitch = kotlin.math.cos(pitchRad).toFloat()
+            val sinPitch = kotlin.math.sin(pitchRad).toFloat()
+
+            // Vettore forward proiettato sul piano orizzontale terrestre: continuo sia in piano che in verticale
+            val east = rMatrix[1] * cosPitch + rMatrix[2] * sinPitch
+            val north = rMatrix[4] * cosPitch + rMatrix[5] * sinPitch
+
+            return (Math.toDegrees(kotlin.math.atan2(east.toDouble(), north.toDouble())).toFloat() + 360f) % 360f
+        }
+
         fun smoothAngle(current: Float, target: Float, alpha: Float = 0.35f): Float {
             var diff = target - current
             while (diff < -180f) diff += 360f

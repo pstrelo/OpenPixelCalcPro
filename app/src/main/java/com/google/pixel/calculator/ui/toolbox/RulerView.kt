@@ -1,5 +1,6 @@
 package com.google.pixel.calculator.ui.toolbox
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -73,6 +74,8 @@ fun RulerView(
     // Stato calibrazione DPI schermo
     var calibrationFactor by rememberSaveable { mutableFloatStateOf(RulerUtils.getCalibrationFactor(context)) }
     var showCalibrationDialog by remember { mutableStateOf(false) }
+
+    BackHandler { onBack() }
 
     val rawDpi = remember { RulerUtils.getRawScreenDpi(context) }
     val effectiveYdpi = rawDpi.second * calibrationFactor
@@ -510,11 +513,12 @@ fun RulerView(
                 }
             }
 
-            // Barra fluttuante degli strumenti ancorata in basso a sinistra (coerente con tutte le altre schermate)
+            // Barra fluttuante degli strumenti ancorata in basso a destra per non coprire il righello graduato
             PixelFloatingToolBar(
                 currentScreen = ActiveScreen.TOOLBOX_RULER,
                 onNavigate = onNavigate,
-                modifier = Modifier.align(Alignment.BottomStart)
+                modifier = Modifier.align(Alignment.BottomEnd),
+                alignRight = true
             )
         }
     }

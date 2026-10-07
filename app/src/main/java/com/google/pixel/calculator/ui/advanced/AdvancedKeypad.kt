@@ -6,7 +6,11 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -1108,18 +1112,19 @@ fun PersistentBottomEditBar(
             // Pillola fluttuante Material 3 SEMPRE fluttuante e della STESSA dimensione fissa
             androidx.compose.animation.AnimatedVisibility(
                 visible = isToolBarExpanded,
-                enter = fadeIn(tween(180)) + expandHorizontally(
-                    expandFrom = Alignment.Start,
+                enter = fadeIn(tween(180)) + scaleIn(
                     animationSpec = androidx.compose.animation.core.spring(
-                        dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+                        dampingRatio = 0.62f,
                         stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow
-                    )
+                    ),
+                    transformOrigin = TransformOrigin(0f, 0.5f)
                 ),
-                exit = fadeOut(tween(140)) + shrinkHorizontally(
-                    shrinkTowards = Alignment.Start,
+                exit = fadeOut(tween(140)) + scaleOut(
                     animationSpec = androidx.compose.animation.core.spring(
-                        stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow
-                    )
+                        dampingRatio = 0.85f,
+                        stiffness = androidx.compose.animation.core.Spring.StiffnessMedium
+                    ),
+                    transformOrigin = TransformOrigin(0f, 0.5f)
                 ),
                 modifier = Modifier.align(Alignment.CenterStart)
             ) {
@@ -1151,12 +1156,16 @@ fun SquircleKey(
     fontSize: androidx.compose.ui.unit.TextUnit = 14.sp,
     onClick: () -> Unit
 ) {
+    val view = LocalView.current
     Box(
         modifier = modifier
             .height(height)
             .clip(RoundedCornerShape(percent = 50))
             .background(bgColor)
-            .clickable { onClick() },
+            .clickable {
+                view.playSoundEffect(android.view.SoundEffectConstants.CLICK)
+                onClick()
+            },
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -1180,6 +1189,7 @@ fun DegRadKey(
     accentColor: Color = Color(0xFF10B981),
     onToggle: () -> Unit
 ) {
+    val view = LocalView.current
     val isDark = CalculatorTheme.colors.isDark
     val isDegActive = !isRadians
     val defaultBg = if (isDark) MathSolverTheme.functionContainer else CalculatorTheme.colors.operatorContainer
@@ -1195,7 +1205,10 @@ fun DegRadKey(
             .clip(RoundedCornerShape(percent = 50))
             .background(bgColor)
             .border(if (isDegActive) 1.5.dp else 0.dp, borderColor, RoundedCornerShape(percent = 50))
-            .clickable { onToggle() },
+            .clickable {
+                view.playSoundEffect(android.view.SoundEffectConstants.CLICK)
+                onToggle()
+            },
         contentAlignment = Alignment.Center
     ) {
         Text(

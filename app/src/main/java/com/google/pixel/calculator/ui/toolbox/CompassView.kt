@@ -3,6 +3,7 @@ package com.google.pixel.calculator.ui.toolbox
 import android.Manifest
 import android.graphics.Paint
 import android.graphics.Typeface
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -127,6 +128,10 @@ fun CompassView(
 
     val isDark = CalculatorTheme.colors.isDark
     val isLandscape = LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+
+    BackHandler {
+        onBack()
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,

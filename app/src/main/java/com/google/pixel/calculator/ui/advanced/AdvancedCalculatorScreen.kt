@@ -44,18 +44,28 @@ fun AdvancedCalculatorScreen(
     val isDark = CalculatorTheme.colors.isDark
     var isToolBarExpanded by rememberSaveable { mutableStateOf(false) }
 
-    if (isToolBarExpanded) {
-        BackHandler { isToolBarExpanded = false }
+    val handleBack: () -> Unit = {
+        if (isToolBarExpanded) {
+            isToolBarExpanded = false
+        } else {
+            when (state.screenViewMode) {
+                ScreenViewMode.FULLSCREEN_GRAPH -> viewModel.setScreenViewMode(ScreenViewMode.SPLIT_SCREEN)
+                ScreenViewMode.SPLIT_SCREEN -> viewModel.setScreenViewMode(ScreenViewMode.CALCULATOR_ONLY)
+                ScreenViewMode.CALCULATOR_ONLY -> onBack()
+            }
+        }
     }
+
+    BackHandler(onBack = handleBack)
 
     Scaffold(
         topBar = {
             TopAppBar(
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = handleBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Torna agli strumenti",
+                            contentDescription = "Torna indietro",
                             tint = CalculatorTheme.colors.onSurface
                         )
                     }
@@ -118,13 +128,6 @@ fun AdvancedCalculatorScreen(
                                 color = Color.White
                             )
                         }
-
-                        // Floating Toolbar in basso a sinistra nel grafico a tutto schermo
-                        PixelFloatingToolBar(
-                            currentScreen = ActiveScreen.ADVANCED_CALCULATOR,
-                            onNavigate = onNavigate,
-                            modifier = Modifier.align(Alignment.BottomStart)
-                        )
                     }
                 }
 

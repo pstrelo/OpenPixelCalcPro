@@ -28,9 +28,9 @@ data class CompassLocationData(
     val longitude: Double = 120.033611,
     val altitude: Double = 991.0,
     val latitudeDms: String = "40°5'35\"",
-    val latitudeCardinal: String = "NL",
+    val latitudeCardinal: String = "N",
     val longitudeDms: String = "120°2'1\"",
-    val longitudeCardinal: String = "EL",
+    val longitudeCardinal: String = "E",
     val altitudeFormatted: String = "991m",
     val locationName: String = "Posizione GPS",
     val hasPermission: Boolean = false,
@@ -48,9 +48,9 @@ class CompassLocationManager(private val context: Context) {
             longitude = 120.033611,
             altitude = 991.0,
             latitudeDms = "40°5'35\"",
-            latitudeCardinal = "NL",
+            latitudeCardinal = "N",
             longitudeDms = "120°2'1\"",
-            longitudeCardinal = "EL",
+            longitudeCardinal = "E",
             altitudeFormatted = "991m",
             locationName = "Posizione GPS",
             hasPermission = hasPermission()
@@ -214,9 +214,9 @@ class CompassLocationManager(private val context: Context) {
             val seconds = (remainder % 60).toInt()
 
             val cardinal = if (isLatitude) {
-                if (isPositive) "NL" else "SL"
+                if (isPositive) "N" else "S"
             } else {
-                if (isPositive) "EL" else "WL"
+                if (isPositive) "E" else "W"
             }
 
             return Pair("${degrees}°${minutes}'${seconds}\"", cardinal)

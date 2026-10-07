@@ -10,7 +10,11 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -183,8 +187,11 @@ fun PixelToolToggleButton(
         label = "ToolButtonContentColor"
     )
 
+    val view = LocalView.current
+
     Surface(
         onClick = {
+            view.playSoundEffect(android.view.SoundEffectConstants.CLICK)
             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             onClick()
         },
@@ -237,9 +244,7 @@ fun PixelToolPillBar(
         ?: CalculatorTheme.colors.onSurfaceVariant
 
     Surface(
-        modifier = modifier
-            .height(height)
-            .shadow(6.dp, shape = CircleShape),
+        modifier = modifier.height(height),
         shape = CircleShape,
         color = pillContainer,
         contentColor = pillContent,
@@ -274,15 +279,16 @@ fun PixelToolPillBar(
 }
 
 /**
- * Barra fluttuante ancorata in basso a sinistra per le schermate secondarie
+ * Barra fluttuante ancorata in basso per le schermate secondarie
  * (Livella, Bussola, Righello, Schermo intero grafico).
- * Posizionata e dimensionata in modo IDENTICO alla schermata principale.
+ * Posizionata a sinistra o a destra in base ad alignRight.
  */
 @Composable
 fun PixelFloatingToolBar(
     currentScreen: ActiveScreen,
     onNavigate: (ActiveScreen) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    alignRight: Boolean = false
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     val dims = rememberToolBarDimensions()
@@ -303,45 +309,91 @@ fun PixelFloatingToolBar(
         )
     }
 
-    Box(
-        modifier = modifier
-            .padding(start = dims.horizontalPadding, bottom = dims.bottomPadding)
-    ) {
+    val paddingModifier = if (alignRight) {
+        modifier.padding(end = dims.horizontalPadding, bottom = dims.bottomPadding)
+    } else {
+        modifier.padding(start = dims.horizontalPadding, bottom = dims.bottomPadding)
+    }
+
+    val origin = if (alignRight) TransformOrigin(1f, 0.5f) else TransformOrigin(0f, 0.5f)
+
+    Box(modifier = paddingModifier) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(dims.spacing)
         ) {
-            PixelToolToggleButton(
-                currentScreen = currentScreen,
-                isExpanded = isExpanded,
-                height = dims.height,
-                onClick = { isExpanded = !isExpanded },
-                modifier = Modifier.size(width = dims.btnWidth, height = dims.height)
-            )
-
-            androidx.compose.animation.AnimatedVisibility(
-                visible = isExpanded,
-                enter = fadeIn(tween(180)) + expandHorizontally(
-                    expandFrom = Alignment.Start,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMediumLow
+            if (alignRight) {
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = isExpanded,
+                    enter = fadeIn(tween(180)) + scaleIn(
+                        animationSpec = spring(
+                            dampingRatio = 0.62f,
+                            stiffness = Spring.StiffnessMediumLow
+                        ),
+                        transformOrigin = origin
+                    ),
+                    exit = fadeOut(tween(140)) + scaleOut(
+                        animationSpec = spring(
+                            dampingRatio = 0.85f,
+                            stiffness = Spring.StiffnessMedium
+                        ),
+                        transformOrigin = origin
                     )
-                ),
-                exit = fadeOut(tween(140)) + shrinkHorizontally(
-                    shrinkTowards = Alignment.Start,
-                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
-                )
-            ) {
-                PixelToolPillBar(
+                ) {
+                    PixelToolPillBar(
+                        currentScreen = currentScreen,
+                        height = dims.height,
+                        onNavigate = { screen ->
+                            isExpanded = false
+                            onNavigate(screen)
+                        },
+                        modifier = Modifier.size(width = dims.pillWidth, height = dims.height)
+                    )
+                }
+
+                PixelToolToggleButton(
                     currentScreen = currentScreen,
+                    isExpanded = isExpanded,
                     height = dims.height,
-                    onNavigate = { screen ->
-                        isExpanded = false
-                        onNavigate(screen)
-                    },
-                    modifier = Modifier.size(width = dims.pillWidth, height = dims.height)
+                    onClick = { isExpanded = !isExpanded },
+                    modifier = Modifier.size(width = dims.btnWidth, height = dims.height)
                 )
+            } else {
+                PixelToolToggleButton(
+                    currentScreen = currentScreen,
+                    isExpanded = isExpanded,
+                    height = dims.height,
+                    onClick = { isExpanded = !isExpanded },
+                    modifier = Modifier.size(width = dims.btnWidth, height = dims.height)
+                )
+
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = isExpanded,
+                    enter = fadeIn(tween(180)) + scaleIn(
+                        animationSpec = spring(
+                            dampingRatio = 0.62f,
+                            stiffness = Spring.StiffnessMediumLow
+                        ),
+                        transformOrigin = origin
+                    ),
+                    exit = fadeOut(tween(140)) + scaleOut(
+                        animationSpec = spring(
+                            dampingRatio = 0.85f,
+                            stiffness = Spring.StiffnessMedium
+                        ),
+                        transformOrigin = origin
+                    )
+                ) {
+                    PixelToolPillBar(
+                        currentScreen = currentScreen,
+                        height = dims.height,
+                        onNavigate = { screen ->
+                            isExpanded = false
+                            onNavigate(screen)
+                        },
+                        modifier = Modifier.size(width = dims.pillWidth, height = dims.height)
+                    )
+                }
             }
         }
     }
@@ -430,16 +482,19 @@ fun PixelKeypadToolRow(
             // Pillola fluttuante: fluttua sopra i tasti alla STESSA dimensione fissa
             androidx.compose.animation.AnimatedVisibility(
                 visible = isExpanded,
-                enter = fadeIn(tween(180)) + expandHorizontally(
-                    expandFrom = Alignment.Start,
+                enter = fadeIn(tween(180)) + scaleIn(
                     animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        dampingRatio = 0.62f,
                         stiffness = Spring.StiffnessMediumLow
-                    )
+                    ),
+                    transformOrigin = TransformOrigin(0f, 0.5f)
                 ),
-                exit = fadeOut(tween(140)) + shrinkHorizontally(
-                    shrinkTowards = Alignment.Start,
-                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                exit = fadeOut(tween(140)) + scaleOut(
+                    animationSpec = spring(
+                        dampingRatio = 0.85f,
+                        stiffness = Spring.StiffnessMedium
+                    ),
+                    transformOrigin = TransformOrigin(0f, 0.5f)
                 ),
                 modifier = Modifier.align(Alignment.CenterStart)
             ) {

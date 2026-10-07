@@ -8,7 +8,6 @@ enum class ActiveScreen {
     MAIN_CALCULATOR,
     HISTORY,
     SETTINGS,
-    TOOLBOX_MENU,
     TOOLBOX_CONVERTER,
     TOOLBOX_LEVEL,
     TOOLBOX_COMPASS,

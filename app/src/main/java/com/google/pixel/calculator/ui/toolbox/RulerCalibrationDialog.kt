@@ -32,10 +32,17 @@ import androidx.compose.ui.window.Dialog
 import com.google.pixel.calculator.core.utils.RulerUtils
 import com.google.pixel.calculator.ui.theme.CalculatorTheme
 
-enum class CalibrationPreset(val label: String, val sizeMm: Float, val description: String) {
-    CREDIT_CARD("Carta di Credito", RulerUtils.CREDIT_CARD_WIDTH_MM, "Larghezza standard ISO: 85.6 mm"),
-    EURO_2("Moneta 2€", RulerUtils.EURO_2_COIN_MM, "Diametro moneta 2 Euro: 25.75 mm"),
-    EURO_1("Moneta 1€", RulerUtils.EURO_1_COIN_MM, "Diametro moneta 1 Euro: 23.25 mm")
+enum class CalibrationPreset(
+    val label: String,
+    val sizeMm: Float,
+    val widthMm: Float,
+    val heightMm: Float,
+    val isCircle: Boolean,
+    val description: String
+) {
+    CREDIT_CARD("Carta di Credito", RulerUtils.CREDIT_CARD_WIDTH_MM, 70f, 44.15f, false, "Proporzione reale carta ISO (85.6 mm × 54.0 mm)"),
+    EURO_2("Moneta 2€", RulerUtils.EURO_2_COIN_MM, RulerUtils.EURO_2_COIN_MM, RulerUtils.EURO_2_COIN_MM, true, "Diametro moneta 2 Euro: 25.75 mm"),
+    EURO_1("Moneta 1€", RulerUtils.EURO_1_COIN_MM, RulerUtils.EURO_1_COIN_MM, RulerUtils.EURO_1_COIN_MM, true, "Diametro moneta 1 Euro: 23.25 mm")
 }
 
 /**
@@ -152,18 +159,17 @@ fun RulerCalibrationDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Area Sagoma di Riferimento Visivo (Renderizzata con i DPI correnti)
-                val targetMm = selectedPreset.sizeMm
                 val currentDpi = rawYdpi * factor
-                val targetHeightPx = RulerUtils.mmToPixels(targetMm, currentDpi)
-
-                // Convertiamo pixel in dp per l'altezza del riquadro su schermo
                 val density = androidx.compose.ui.platform.LocalDensity.current
-                val boxHeightDp = with(density) { targetHeightPx.toDp() }
+                val targetWidthPx = RulerUtils.mmToPixels(selectedPreset.widthMm, currentDpi)
+                val targetHeightPx = RulerUtils.mmToPixels(selectedPreset.heightMm, currentDpi)
+                val cardWidthDp = with(density) { targetWidthPx.toDp() }
+                val cardHeightDp = with(density) { targetHeightPx.toDp() }
 
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 90.dp, max = 160.dp)
+                        .heightIn(min = 140.dp, max = 210.dp)
                         .background(
                             color = MaterialTheme.colorScheme.surfaceContainerLowest,
                             shape = RoundedCornerShape(18.dp)
@@ -175,31 +181,30 @@ fun RulerCalibrationDialog(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        // Sagoma di riferimento con dimensioni reali proporzionate
+                        // Sagoma di riferimento con dimensioni reali proporzionate reattive al factor
                         Box(
                             modifier = Modifier
-                                .height(boxHeightDp.coerceAtMost(110.dp))
-                                .fillMaxWidth(if (selectedPreset == CalibrationPreset.CREDIT_CARD) 0.88f else 0.45f)
+                                .size(width = cardWidthDp, height = cardHeightDp)
                                 .border(
                                     width = 2.dp,
                                     color = MaterialTheme.colorScheme.primary,
-                                    shape = RoundedCornerShape(if (selectedPreset == CalibrationPreset.CREDIT_CARD) 10.dp else 50.dp)
+                                    shape = if (selectedPreset.isCircle) CircleShape else RoundedCornerShape(10.dp)
                                 )
                                 .background(
                                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
-                                    shape = RoundedCornerShape(if (selectedPreset == CalibrationPreset.CREDIT_CARD) 10.dp else 50.dp)
+                                    shape = if (selectedPreset.isCircle) CircleShape else RoundedCornerShape(10.dp)
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "${"%.1f".format(targetMm)} mm",
+                                text = "${"%.1f".format(selectedPreset.sizeMm)} mm",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
                         Text(
                             text = selectedPreset.description,
                             style = MaterialTheme.typography.labelSmall,
@@ -210,7 +215,7 @@ fun RulerCalibrationDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Controlli di regolazione fine (- / +)
+                // Controlli di regolazione fine (- / +) con step 1%
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -218,7 +223,7 @@ fun RulerCalibrationDialog(
                 ) {
                     IconButton(
                         onClick = {
-                            factor = (factor - 0.005f).coerceAtLeast(0.70f)
+                            factor = (factor - 0.01f).coerceAtLeast(0.70f)
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         },
                         modifier = Modifier
@@ -244,7 +249,7 @@ fun RulerCalibrationDialog(
 
                     IconButton(
                         onClick = {
-                            factor = (factor + 0.005f).coerceAtMost(1.30f)
+                            factor = (factor + 0.01f).coerceAtMost(1.30f)
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         },
                         modifier = Modifier

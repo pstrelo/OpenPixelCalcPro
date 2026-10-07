@@ -50,8 +50,12 @@ fun ConverterCalculatorView(
 
     var isToolBarExpanded by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
 
-    if (isToolBarExpanded) {
-        BackHandler { isToolBarExpanded = false }
+    BackHandler {
+        if (isToolBarExpanded) {
+            isToolBarExpanded = false
+        } else {
+            onBack()
+        }
     }
 
     val currencyRepo = remember { CurrencyRateRepository(context) }
@@ -369,8 +373,7 @@ fun ConverterCalculatorView(
                     },
                     onToggleProMode = { isProMode = !isProMode },
                     onToggleShift = { isShiftActive = !isShiftActive },
-                    onToggleAngleUnit = { isRadians = !isRadians },
-                    onOpenToolbox = onBack
+                    onToggleAngleUnit = { isRadians = !isRadians }
                 )
             }
 

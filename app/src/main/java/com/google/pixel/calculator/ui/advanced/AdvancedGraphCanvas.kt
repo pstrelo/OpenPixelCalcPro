@@ -8,6 +8,8 @@ import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CloseFullscreen
@@ -43,12 +45,14 @@ fun AdvancedGraphCanvas(
 
     Box(
         modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
             .background(Color(0xFF222533), RoundedCornerShape(16.dp))
             .fillMaxSize()
     ) {
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
+                .clipToBounds()
                 .pointerInput(Unit) {
                     detectTransformGestures { _, pan, zoom, _ ->
                         onTransform(zoom, pan)

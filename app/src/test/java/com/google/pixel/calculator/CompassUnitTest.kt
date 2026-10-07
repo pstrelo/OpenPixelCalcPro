@@ -13,22 +13,22 @@ class CompassUnitTest {
         // Test Latitudine (Florida / 40.093056)
         val (latDms, latCard) = CompassLocationManager.formatCoordinate(40.093056, isLatitude = true)
         assertEquals("40°5'35\"", latDms)
-        assertEquals("NL", latCard)
+        assertEquals("N", latCard)
 
         // Test Longitudine (120.033611)
         val (lonDms, lonCard) = CompassLocationManager.formatCoordinate(120.033611, isLatitude = false)
         assertEquals("120°2'1\"", lonDms)
-        assertEquals("EL", lonCard)
+        assertEquals("E", lonCard)
 
         // Test Sud Latitudine
         val (sLatDms, sLatCard) = CompassLocationManager.formatCoordinate(-33.8688, isLatitude = true)
         assertEquals("33°52'8\"", sLatDms)
-        assertEquals("SL", sLatCard)
+        assertEquals("S", sLatCard)
 
         // Test Ovest Longitudine
         val (wLonDms, wLonCard) = CompassLocationManager.formatCoordinate(-74.0060, isLatitude = false)
         assertEquals("74°0'22\"", wLonDms)
-        assertEquals("WL", wLonCard)
+        assertEquals("W", wLonCard)
     }
 
     @Test
