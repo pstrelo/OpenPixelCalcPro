@@ -77,13 +77,13 @@ fun BaseKeypad(
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    val btnHeight = if (isLandscape) 42.dp else if (isProMode) 46.dp else 60.dp
-    val spacing = if (isLandscape) 6.dp else if (isProMode) 8.dp else 10.dp
+    val btnHeight = if (isLandscape) 46.dp else if (isProMode) 56.dp else 78.dp
+    val spacing = if (isLandscape) 6.dp else if (isProMode) 6.dp else 8.dp
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = if (isLandscape) 10.dp else 16.dp, vertical = if (isLandscape) 2.dp else 8.dp),
+            .padding(horizontal = if (isLandscape) 10.dp else 8.dp, vertical = if (isLandscape) 2.dp else 6.dp),
         verticalArrangement = Arrangement.spacedBy(spacing)
     ) {
         // LEVA / FRECCIA DI ESPANSIONE SCIENTIFICA STILE GOOGLE PIXEL (posta sopra la prima fila a sinistra)
@@ -100,14 +100,14 @@ fun BaseKeypad(
                     triggerHaptic()
                     onToggleProMode()
                 },
-                modifier = Modifier.size(if (isLandscape) 28.dp else 36.dp)
+                modifier = Modifier.size(if (isLandscape) 28.dp else if (isProMode) 32.dp else 36.dp)
             ) {
                 Icon(
                     imageVector = if (isProMode) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = if (isProMode) "Riduci calcolatrice" else "Espandi funzioni scientifiche",
                     tint = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.8f),
                     modifier = Modifier
-                        .size(if (isLandscape) 20.dp else 24.dp)
+                        .size(if (isLandscape) 20.dp else if (isProMode) 22.dp else 26.dp)
                         .rotate(if (isLandscape) -90f else 0f)
                 )
             }
@@ -328,7 +328,7 @@ fun BaseKeypad(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Backspace,
                     contentDescription = "Cancella cifra",
-                    modifier = Modifier.size(if (isProMode) 20.dp else 24.dp)
+                    modifier = Modifier.size(if (isProMode) 22.dp else 26.dp)
                 )
             }
         }
@@ -578,7 +578,7 @@ fun PixelButton(
     text: String,
     modifier: Modifier = Modifier,
     type: PixelButtonType = PixelButtonType.NUMERIC,
-    height: Dp = 68.dp,
+    height: Dp = 78.dp,
     onClick: () -> Unit
 ) {
     val colors = CalculatorTheme.colors
@@ -618,10 +618,10 @@ fun PixelButton(
         contentPadding = PaddingValues(0.dp)
     ) {
         val fontSize = when {
-            type == PixelButtonType.SCIENTIFIC -> if (text.length > 3) 14.sp else if (height <= 44.dp) 14.sp else 16.sp
-            type == PixelButtonType.NUMERIC -> if (height <= 44.dp) 22.sp else if (height < 58.dp) 26.sp else 30.sp
-            type == PixelButtonType.OPERATOR || type == PixelButtonType.EQUALS -> if (height <= 44.dp) 24.sp else if (height < 58.dp) 28.sp else 32.sp
-            else -> if (text.length > 2) 18.sp else if (height <= 44.dp) 18.sp else 24.sp
+            type == PixelButtonType.SCIENTIFIC -> if (text.length > 3) 14.sp else if (height <= 46.dp) 14.sp else if (height < 65.dp) 16.sp else 18.sp
+            type == PixelButtonType.NUMERIC -> if (height <= 46.dp) 22.sp else if (height < 65.dp) 26.sp else 32.sp
+            type == PixelButtonType.OPERATOR || type == PixelButtonType.EQUALS -> if (height <= 46.dp) 24.sp else if (height < 65.dp) 28.sp else 34.sp
+            else -> if (text.length > 2) 18.sp else if (height <= 46.dp) 18.sp else if (height < 65.dp) 22.sp else 26.sp
         }
         val isNumeric = type == PixelButtonType.NUMERIC || text.all { it.isDigit() || it == '.' || it == ',' }
         val isOperator = type == PixelButtonType.OPERATOR
@@ -638,7 +638,7 @@ fun PixelButton(
 fun PixelIconButton(
     modifier: Modifier = Modifier,
     type: PixelButtonType = PixelButtonType.CONTROL,
-    height: Dp = 68.dp,
+    height: Dp = 78.dp,
     onClick: () -> Unit,
     icon: @Composable () -> Unit
 ) {
