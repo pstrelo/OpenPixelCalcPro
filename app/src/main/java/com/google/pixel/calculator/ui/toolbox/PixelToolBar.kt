@@ -111,15 +111,15 @@ fun rememberToolBarDimensions(): ToolBarDimensions {
     val screenWidth = configuration.screenWidthDp.dp
 
     val hPadding = if (isLandscape) 10.dp else 16.dp
-    val bPadding = if (isLandscape) 2.dp else 6.dp
+    val bPadding = if (isLandscape) 2.dp else 4.dp
     val spacing = if (isLandscape) 6.dp else 12.dp
-    val height = if (isLandscape) 48.dp else 82.dp
+    val height = if (isLandscape) 56.dp else 96.dp
 
     // Larghezza del primo tasto della calcolatrice principale (1 colonna su 4)
     val btnWidth = if (isLandscape) {
         height * 1.5f
     } else {
-        ((screenWidth - (hPadding * 2) - (spacing * 3)) / 4).coerceAtLeast(82.dp)
+        ((screenWidth - (hPadding * 2) - (spacing * 3)) / 4).coerceAtLeast(96.dp)
     }
 
     // Larghezza della pillola (copre esattamente le 3 colonne rimanenti)
