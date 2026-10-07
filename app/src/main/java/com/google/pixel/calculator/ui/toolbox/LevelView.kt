@@ -93,8 +93,11 @@ fun LevelView(
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
-    // Colore One UI Green di successo quando la livella è a 0°
-    val oneUiSuccessGreen = Color(0xFF2EC866)
+    // Colore accento del tema attivo come colore principale della livella
+    val themeAccent = CalculatorTheme.colors.equalsContainer.takeIf { it != Color.Unspecified }
+        ?: MaterialTheme.colorScheme.primary
+    val onThemeAccent = CalculatorTheme.colors.equalsContent.takeIf { it != Color.Unspecified }
+        ?: MaterialTheme.colorScheme.onPrimary
 
     BackHandler { onBack() }
 
@@ -110,7 +113,8 @@ fun LevelView(
             LevelViewportCard(
                 levelData = levelData,
                 isDark = isDark,
-                successGreen = oneUiSuccessGreen,
+                accentColor = themeAccent,
+                onAccentColor = onThemeAccent,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(
@@ -131,7 +135,7 @@ fun LevelView(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Torna alla calcolatrice",
-                    tint = if (levelData.isLevel) Color.White else MaterialTheme.colorScheme.onSurface
+                    tint = if (levelData.isLevel) onThemeAccent else MaterialTheme.colorScheme.onSurface
                 )
             }
 
@@ -146,80 +150,28 @@ fun LevelView(
 }
 
 /**
- * Pillola informativa di stato in stile One UI.
- * Mostra con icona e testo chiaro la posizione fisica del dispositivo e lo stato di allineamento.
- */
-@Composable
-private fun OneUiStatusPill(
-    levelData: LevelData,
-    successGreen: Color,
-    modifier: Modifier = Modifier
-) {
-    val pillBg = if (levelData.isLevel) {
-        successGreen.copy(alpha = 0.15f)
-    } else {
-        MaterialTheme.colorScheme.surfaceContainerHigh ?: MaterialTheme.colorScheme.surfaceVariant
-    }
-
-    val pillTextColor = if (levelData.isLevel) {
-        successGreen
-    } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
-    }
-
-    Surface(
-        shape = RoundedCornerShape(percent = 50),
-        color = pillBg,
-        modifier = modifier
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = when {
-                    levelData.isLevel -> Icons.Default.Check
-                    levelData.mode == LevelOrientationMode.HORIZONTAL_SURFACE -> Icons.Default.ViewInAr
-                    else -> Icons.Default.Wallpaper
-                },
-                contentDescription = null,
-                tint = pillTextColor,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = when {
-                    levelData.isLevel -> "Perfettamente allineato (0°)"
-                    levelData.mode == LevelOrientationMode.HORIZONTAL_SURFACE -> "Appoggiato su superficie piana"
-                    else -> "In posizione verticale su parete"
-                },
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.SemiBold,
-                color = pillTextColor
-            )
-        }
-    }
-}
-
-/**
  * Card contenitrice principale della Livella:
- * - In modalità Orizzontale (Surface): renderizza i due cerchi simmetrici con il grado centrale (Foto 2).
- * - In modalità Verticale (Wall): renderizza l'orizzonte artificiale con i trattini di livello (Foto 1).
- * - Lo sfondo si colora fluidamente di One UI Green quando si raggiunge lo 0°.
+ * - In modalità Orizzontale (Surface): renderizza i due cerchi simmetrici con il grado centrale.
+ * - In modalità Verticale (Wall): renderizza l'orizzonte artificiale con i trattini e il grado centrale.
+ * - Colori sincronizzati con il tema attivo: lo sfondo si colora fluidamente del colore d'accento a 0°.
  */
 @Composable
 private fun LevelViewportCard(
     levelData: LevelData,
     isDark: Boolean,
-    successGreen: Color,
+    accentColor: Color,
+    onAccentColor: Color,
     modifier: Modifier = Modifier
 ) {
-    // Transizione fluida del colore dello sfondo (diventa verde brillante a 0°)
+    // Sfondo del container dal tema attivo quando non allineato
+    val defaultContainerBg = MaterialTheme.colorScheme.surfaceContainer
+        ?: if (isDark) Color(0xFF1E2025) else Color(0xFFF1F3F8)
+
+    // A 0° (perfetto allineamento), lo sfondo si illumina in modo fluido del colore d'accento del tema
     val targetBgColor = if (levelData.isLevel) {
-        successGreen
+        accentColor
     } else {
-        if (isDark) Color(0xFF101216) else Color(0xFFF1F3F8)
+        defaultContainerBg
     }
 
     val animatedBgColor by animateColorAsState(
@@ -254,14 +206,16 @@ private fun LevelViewportCard(
                         SurfaceLevelCanvas(
                             levelData = levelData,
                             isDark = isDark,
-                            successGreen = successGreen
+                            accentColor = accentColor,
+                            onAccentColor = onAccentColor
                         )
                     }
                     LevelOrientationMode.VERTICAL_WALL -> {
                         VerticalWallLevelCanvas(
                             levelData = levelData,
                             isDark = isDark,
-                            successGreen = successGreen
+                            accentColor = accentColor,
+                            onAccentColor = onAccentColor
                         )
                     }
                 }
@@ -271,18 +225,18 @@ private fun LevelViewportCard(
 }
 
 /**
- * MODALITÀ ORIZZONTALE (Superficie / Tavolo - Fedele alla Foto 2 utente):
- * - Due cerchi bianchi/chiari che si muovono nello spazio.
- * - Asse Y: controlla l'inclinazione testa-fondo (Pitch).
- * - Asse X: riferimento all'altro asse destra-sinistra (Roll).
- * - I cerchi si allontanano in modo simmetrico con il grado di inclinazione al centro (es. -26°).
- * - A 0° si uniscono perfettamente al centro in un unico cerchio verde con 0°.
+ * MODALITÀ ORIZZONTALE (Superficie / Tavolo):
+ * - Due cerchi simmetrici guidati dagli assi testa-fondo (Pitch) e destra-sinistra (Roll).
+ * - Valore dei gradi reintrodotto al centro dello schermo (es. -26° o 0°).
+ * - Colori sincronizzati con il tema attivo, con l'accento come colore principale.
+ * - A 0° i cerchi si fondono esattamente al centro e lo sfondo si accende con l'accento del tema.
  */
 @Composable
 private fun SurfaceLevelCanvas(
     levelData: LevelData,
     isDark: Boolean,
-    successGreen: Color
+    accentColor: Color,
+    onAccentColor: Color
 ) {
     // Animazione fluida a 120Hz degli assi di inclinazione con spring reattivo
     val animRoll by animateFloatAsState(
@@ -296,17 +250,21 @@ private fun SurfaceLevelCanvas(
         label = "SurfaceAnimPitch"
     )
 
-    // Colore testo e cerchi
-    val circleFillColor = when {
-        levelData.isLevel -> Color.White.copy(alpha = 0.96f)
-        isDark -> Color.White
-        else -> Color.White
-    }
+    // Luminanza dell'accento per garantire sempre contrasto perfetto
+    val isLightAccent = (0.299f * accentColor.red + 0.587f * accentColor.green + 0.114f * accentColor.blue) > 0.5f
 
-    val textColor = when {
-        levelData.isLevel -> Color(0xFF0F5A27) // Verde scuro a contrasto perfetto sul cerchio bianco
-        isDark -> Color.White
-        else -> Color(0xFF191C20)
+    // A 0° il cerchio fuso centrale a contrasto
+    val levelMergedCircleColor = if (isLightAccent) Color.White.copy(alpha = 0.96f) else onAccentColor
+
+    // Colore del testo dei gradi al centro:
+    val centerTextColorAtZero = if (isLightAccent) onAccentColor else Color.White
+    val centerTextColorTilted = if (!isDark && isLightAccent) MaterialTheme.colorScheme.onSurface else accentColor
+    val centerDegreeTextColor = if (levelData.isLevel) centerTextColorAtZero else centerTextColorTilted
+
+    val tiltedCircleFill = if (isDark) {
+        (MaterialTheme.colorScheme.surfaceContainerHighest ?: MaterialTheme.colorScheme.surfaceVariant).copy(alpha = 0.92f)
+    } else {
+        Color.White.copy(alpha = 0.95f)
     }
 
     Box(
@@ -317,8 +275,8 @@ private fun SurfaceLevelCanvas(
             val center = Offset(size.width / 2f, size.height / 2f)
             val minDim = size.minDimension
 
-            // Raggio dei due cerchi (proporzionato al display, circa ~50-65dp)
-            val circleRadius = (minDim * 0.17f).coerceIn(40.dp.toPx(), 72.dp.toPx())
+            // Raggio dei cerchi proporzionato al display (~44-72dp)
+            val circleRadius = (minDim * 0.17f).coerceIn(42.dp.toPx(), 72.dp.toPx())
 
             // Massima escursione consentita per mantenere i cerchi visibili
             val maxTravel = (minDim / 2f) - circleRadius - 8.dp.toPx()
@@ -332,63 +290,134 @@ private fun SurfaceLevelCanvas(
 
             // Cerchio 1 (polo positivo: testa e destra)
             val c1Center = Offset(center.x + offsetX, center.y + offsetY)
-            // Cerchio 2 (polo simmetrico opposto: fondo e sinistra, come nella foto 2)
+            // Cerchio 2 (polo simmetrico opposto: fondo e sinistra)
             val c2Center = Offset(center.x - offsetX, center.y - offsetY)
 
             if (levelData.isLevel) {
                 // Quando è in piano (0°): i due cerchi si fondono esattamente al centro
                 drawCircle(
-                    color = Color.White.copy(alpha = 0.25f),
+                    color = (if (isLightAccent) Color.White else onAccentColor).copy(alpha = 0.25f),
                     radius = circleRadius + 14.dp.toPx(),
                     center = center
                 )
                 drawCircle(
-                    color = circleFillColor,
+                    color = levelMergedCircleColor,
                     radius = circleRadius,
                     center = center
                 )
             } else {
-                // Quando è inclinato: due cerchi distinti e simmetrici
-                // Cerchio 1 con ombra/alone
+                // Cerchio di mira guida centrale di riferimento
+                drawCircle(
+                    color = accentColor.copy(alpha = 0.25f),
+                    radius = circleRadius,
+                    center = center,
+                    style = Stroke(width = 1.5.dp.toPx())
+                )
+                val reticleTick = 10.dp.toPx()
+                drawLine(
+                    color = accentColor.copy(alpha = 0.35f),
+                    start = Offset(center.x - circleRadius - reticleTick, center.y),
+                    end = Offset(center.x - circleRadius + 4.dp.toPx(), center.y),
+                    strokeWidth = 2.dp.toPx(),
+                    cap = StrokeCap.Round
+                )
+                drawLine(
+                    color = accentColor.copy(alpha = 0.35f),
+                    start = Offset(center.x + circleRadius - 4.dp.toPx(), center.y),
+                    end = Offset(center.x + circleRadius + reticleTick, center.y),
+                    strokeWidth = 2.dp.toPx(),
+                    cap = StrokeCap.Round
+                )
+                drawLine(
+                    color = accentColor.copy(alpha = 0.35f),
+                    start = Offset(center.x, center.y - circleRadius - reticleTick),
+                    end = Offset(center.x, center.y - circleRadius + 4.dp.toPx()),
+                    strokeWidth = 2.dp.toPx(),
+                    cap = StrokeCap.Round
+                )
+                drawLine(
+                    color = accentColor.copy(alpha = 0.35f),
+                    start = Offset(center.x, center.y + circleRadius - 4.dp.toPx()),
+                    end = Offset(center.x, center.y + circleRadius + reticleTick),
+                    strokeWidth = 2.dp.toPx(),
+                    cap = StrokeCap.Round
+                )
+
+                // Cerchio 1 con bordo accento e riempimento tema
                 drawCircle(
                     color = Color.Black.copy(alpha = if (isDark) 0.35f else 0.08f),
                     radius = circleRadius + 4.dp.toPx(),
                     center = c1Center
                 )
                 drawCircle(
-                    color = circleFillColor,
+                    color = tiltedCircleFill,
                     radius = circleRadius,
                     center = c1Center
                 )
+                drawCircle(
+                    color = accentColor,
+                    radius = circleRadius,
+                    center = c1Center,
+                    style = Stroke(width = 3.dp.toPx())
+                )
+                drawCircle(
+                    color = accentColor,
+                    radius = 5.dp.toPx(),
+                    center = c1Center
+                )
 
-                // Cerchio 2 con ombra/alone
+                // Cerchio 2 simmetrico
                 drawCircle(
                     color = Color.Black.copy(alpha = if (isDark) 0.35f else 0.08f),
                     radius = circleRadius + 4.dp.toPx(),
                     center = c2Center
                 )
                 drawCircle(
-                    color = circleFillColor,
+                    color = tiltedCircleFill,
                     radius = circleRadius,
+                    center = c2Center
+                )
+                drawCircle(
+                    color = accentColor,
+                    radius = circleRadius,
+                    center = c2Center,
+                    style = Stroke(width = 3.dp.toPx())
+                )
+                drawCircle(
+                    color = accentColor,
+                    radius = 5.dp.toPx(),
                     center = c2Center
                 )
             }
         }
+
+        // Valore dei gradi reintrodotto al centro dello schermo
+        val displayDeg = if (levelData.isLevel) "0°" else "${levelData.primaryDisplayAngle}°"
+        Text(
+            text = displayDeg,
+            fontSize = if (levelData.isLevel) 52.sp else 46.sp,
+            fontWeight = FontWeight.Bold,
+            color = centerDegreeTextColor,
+            letterSpacing = (-1).sp,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
 /**
- * MODALITÀ VERTICALE (Parete / Bordo - Fedele alla Foto 1 utente):
+ * MODALITÀ VERTICALE (Parete / Bordo):
  * - Orizzonte artificiale che ruota con l'inclinazione destra-sinistra (Roll).
- * - Indicatore con trattini di mira centrali: `—   -12°   —`.
+ * - Indicatore con trattini di mira e valore dei gradi reintrodotto al centro: `—   -12°   —`.
  * - Riferimento all'altro asse: inclinazione frontale testa-fondo (avanti/indietro rispetto alla parete).
- * - A 0° lo sfondo si illumina di One UI Green e la linea si unisce in modo continuo: `—  0°  —`.
+ * - Colori sincronizzati con il tema attivo, con l'accento come colore principale.
+ * - A 0° lo sfondo si illumina con l'accento del tema e gli indicatori passano a onAccent: `—  0°  —`.
  */
 @Composable
 private fun VerticalWallLevelCanvas(
     levelData: LevelData,
     isDark: Boolean,
-    successGreen: Color
+    accentColor: Color,
+    onAccentColor: Color
 ) {
     // Animazione dell'inclinazione laterale (destra/sinistra)
     val animLateral by animateFloatAsState(
@@ -404,8 +433,19 @@ private fun VerticalWallLevelCanvas(
         label = "WallAnimFrontal"
     )
 
-    val contentColor = if (levelData.isLevel) Color.White else if (isDark) Color.White else Color(0xFF191C20)
-    val horizonLineColor = if (levelData.isLevel) Color.White else if (isDark) Color.White.copy(alpha = 0.45f) else Color(0xFF2B303A).copy(alpha = 0.35f)
+    val isLightAccent = (0.299f * accentColor.red + 0.587f * accentColor.green + 0.114f * accentColor.blue) > 0.5f
+
+    val contentColor = if (levelData.isLevel) {
+        if (isLightAccent) onAccentColor else Color.White
+    } else {
+        if (!isDark && isLightAccent) MaterialTheme.colorScheme.onSurface else accentColor
+    }
+
+    val horizonLineColor = if (levelData.isLevel) {
+        (if (isLightAccent) onAccentColor else Color.White).copy(alpha = 0.85f)
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.40f)
+    }
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -432,47 +472,49 @@ private fun VerticalWallLevelCanvas(
                 )
             }
 
-            // 2. Trattini di mira orizzontali di precisione telaio: `—  o  —`
-            val dashLength = 40.dp.toPx()
-            val reticleGap = 20.dp.toPx()
+            // 2. Trattini di mira orizzontali con spazio centrale per il testo dei gradi: `—   [Gradi]   —`
+            val dashLength = 36.dp.toPx()
+            val textGap = 54.dp.toPx()
 
             // Trattino sinistro `—`
             drawLine(
                 color = contentColor,
-                start = Offset(center.x - reticleGap - dashLength, center.y),
-                end = Offset(center.x - reticleGap, center.y),
-                strokeWidth = if (levelData.isLevel) 4.dp.toPx() else 2.5.dp.toPx(),
+                start = Offset(center.x - textGap - dashLength, center.y),
+                end = Offset(center.x - textGap, center.y),
+                strokeWidth = if (levelData.isLevel) 4.5.dp.toPx() else 3.dp.toPx(),
                 cap = StrokeCap.Round
             )
 
             // Trattino destro `—`
             drawLine(
                 color = contentColor,
-                start = Offset(center.x + reticleGap, center.y),
-                end = Offset(center.x + reticleGap + dashLength, center.y),
-                strokeWidth = if (levelData.isLevel) 4.dp.toPx() else 2.5.dp.toPx(),
+                start = Offset(center.x + textGap, center.y),
+                end = Offset(center.x + textGap + dashLength, center.y),
+                strokeWidth = if (levelData.isLevel) 4.5.dp.toPx() else 3.dp.toPx(),
                 cap = StrokeCap.Round
             )
 
-            // Cerchio centrale di mira
-            drawCircle(
-                color = contentColor,
-                radius = if (levelData.isLevel) 6.dp.toPx() else 4.dp.toPx(),
-                center = center
-            )
-
             // 3. Indicatore di riferimento dell'altro asse (Planarità Parete testa-fondo)
-            // Se il telefono è inclinato avanti o indietro rispetto alla parete verticale,
-            // un piccolo arco o bolla di planarità mostra lo scostamento frontale
             val bubbleRadius = 4.dp.toPx()
             val bubbleY = (center.y + (animFrontal / 30f).coerceIn(-1f, 1f) * 36.dp.toPx()).coerceIn(center.y - 36.dp.toPx(), center.y + 36.dp.toPx())
 
             // Indicatore di planarità frontale sulla mezzeria
             drawCircle(
-                color = contentColor.copy(alpha = if (abs(animFrontal) < 1f) 0.9f else 0.4f),
+                color = contentColor.copy(alpha = if (abs(animFrontal) < 1f) 0.95f else 0.45f),
                 radius = bubbleRadius,
                 center = Offset(center.x, bubbleY)
             )
         }
+
+        // 4. Valore dei gradi reintrodotto al centro dello schermo (es. -12° o 0°)
+        val displayAngleText = if (levelData.isLevel) "0°" else "${levelData.primaryDisplayAngle}°"
+        Text(
+            text = displayAngleText,
+            fontSize = if (levelData.isLevel) 52.sp else 46.sp,
+            fontWeight = FontWeight.Bold,
+            color = contentColor,
+            letterSpacing = (-1).sp,
+            textAlign = TextAlign.Center
+        )
     }
 }

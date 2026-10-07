@@ -77,13 +77,13 @@ fun BaseKeypad(
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    val btnHeight = if (isLandscape) 40.dp else if (isProMode) 50.dp else 68.dp
+    val btnHeight = if (isLandscape) 48.dp else if (isProMode) 60.dp else 82.dp
     val spacing = if (isLandscape) 6.dp else if (isProMode) 8.dp else 12.dp
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = if (isLandscape) 10.dp else 16.dp, vertical = if (isLandscape) 2.dp else 8.dp),
+            .padding(horizontal = if (isLandscape) 10.dp else 16.dp, vertical = if (isLandscape) 2.dp else 6.dp),
         verticalArrangement = Arrangement.spacedBy(spacing)
     ) {
         // LEVA / FRECCIA DI ESPANSIONE SCIENTIFICA STILE GOOGLE PIXEL (posta sopra la prima fila a sinistra)
@@ -100,14 +100,14 @@ fun BaseKeypad(
                     triggerHaptic()
                     onToggleProMode()
                 },
-                modifier = Modifier.size(if (isLandscape) 28.dp else 36.dp)
+                modifier = Modifier.size(if (isLandscape) 32.dp else 40.dp)
             ) {
                 Icon(
                     imageVector = if (isProMode) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = if (isProMode) "Riduci calcolatrice" else "Espandi funzioni scientifiche",
                     tint = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.8f),
                     modifier = Modifier
-                        .size(if (isLandscape) 20.dp else 24.dp)
+                        .size(if (isLandscape) 22.dp else 28.dp)
                         .rotate(if (isLandscape) -90f else 0f)
                 )
             }
@@ -141,7 +141,7 @@ fun BaseKeypad(
                         Icon(
                             imageVector = Icons.Default.ArrowUpward,
                             contentDescription = "Shift",
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     }
 
@@ -578,7 +578,7 @@ fun PixelButton(
     text: String,
     modifier: Modifier = Modifier,
     type: PixelButtonType = PixelButtonType.NUMERIC,
-    height: Dp = 68.dp,
+    height: Dp = 82.dp,
     onClick: () -> Unit
 ) {
     val colors = CalculatorTheme.colors
@@ -618,10 +618,10 @@ fun PixelButton(
         contentPadding = PaddingValues(0.dp)
     ) {
         val fontSize = when {
-            type == PixelButtonType.SCIENTIFIC -> if (text.length > 3) 13.sp else if (height <= 44.dp) 14.sp else 16.sp
-            type == PixelButtonType.NUMERIC -> if (height <= 44.dp) 20.sp else if (height < 55.dp) 24.sp else 28.sp
-            type == PixelButtonType.OPERATOR || type == PixelButtonType.EQUALS -> if (height <= 44.dp) 22.sp else if (height < 55.dp) 26.sp else 30.sp
-            else -> if (text.length > 2) 16.sp else if (height <= 44.dp) 18.sp else 22.sp
+            type == PixelButtonType.SCIENTIFIC -> if (text.length > 3) 15.sp else if (height <= 48.dp) 15.sp else 18.sp
+            type == PixelButtonType.NUMERIC -> if (height <= 48.dp) 22.sp else if (height < 65.dp) 28.sp else 33.sp
+            type == PixelButtonType.OPERATOR || type == PixelButtonType.EQUALS -> if (height <= 48.dp) 24.sp else if (height < 65.dp) 30.sp else 35.sp
+            else -> if (text.length > 2) 18.sp else if (height <= 48.dp) 20.sp else 25.sp
         }
         val isNumeric = type == PixelButtonType.NUMERIC || text.all { it.isDigit() || it == '.' || it == ',' }
         val isOperator = type == PixelButtonType.OPERATOR
@@ -638,7 +638,7 @@ fun PixelButton(
 fun PixelIconButton(
     modifier: Modifier = Modifier,
     type: PixelButtonType = PixelButtonType.CONTROL,
-    height: Dp = 68.dp,
+    height: Dp = 82.dp,
     onClick: () -> Unit,
     icon: @Composable () -> Unit
 ) {
