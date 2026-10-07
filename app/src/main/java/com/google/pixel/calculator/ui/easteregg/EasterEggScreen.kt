@@ -5,7 +5,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -15,13 +14,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -79,15 +75,7 @@ fun EasterEggScreen(
                         )
                     }
                 },
-                title = {
-                    Text(
-                        text = "Easter Egg",
-                        fontFamily = QuicksandFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 20.sp,
-                        color = textPrimary
-                    )
-                }
+                title = {}
             )
         }
     ) { paddingValues ->
@@ -96,61 +84,19 @@ fun EasterEggScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(scrollState)
-                .padding(horizontal = 24.dp, vertical = 12.dp),
+                .padding(horizontal = 24.dp, vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Badge Easter Egg sbloccato
-            Surface(
-                color = Color(0xFF1D2433),
-                shape = CircleShape,
-                border = BorderStroke(1.dp, Color(0xFF323F5D)),
-                modifier = Modifier.padding(bottom = 20.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AutoAwesome,
-                        contentDescription = null,
-                        tint = accentBlue,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "26 + 04 • Easter Egg sbloccato",
-                        fontFamily = QuicksandFontFamily,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 13.sp,
-                        color = accentBlue
-                    )
-                }
-            }
-
-            // Foto / Illustrazione Autore con cornice elegante
-            Box(
-                contentAlignment = Alignment.Center,
+            // Immagine mostrata per intero senza riquadro/cornice
+            Image(
+                painter = painterResource(id = R.drawable.easter_egg_author),
+                contentDescription = "Lorenzo Trinati",
+                contentScale = ContentScale.Fit,
                 modifier = Modifier
-                    .size(208.dp)
-                    .background(
-                        brush = Brush.radialGradient(
-                            colors = listOf(Color(0xFF2B3A5A), Color.Transparent)
-                        ),
-                        shape = CircleShape
-                    )
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.easter_egg_author),
-                    contentDescription = "Lorenzo Trinati",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(196.dp)
-                        .clip(CircleShape)
-                        .border(2.5.dp, Color(0xFF384766), CircleShape)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
+                    .fillMaxWidth(0.78f)
+                    .aspectRatio(686f / 1024f)
+                    .padding(bottom = 12.dp)
+            )
 
             // Nome
             Text(
@@ -230,12 +176,12 @@ fun EasterEggScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            // Piccolo footer
+            // Footer
             Text(
-                text = "Pixel Calculator • Made with care",
+                text = "Made with care",
                 fontFamily = QuicksandFontFamily,
                 fontWeight = FontWeight.Normal,
-                fontSize = 12.sp,
+                fontSize = 13.sp,
                 color = Color(0xFF6B7080)
             )
 
