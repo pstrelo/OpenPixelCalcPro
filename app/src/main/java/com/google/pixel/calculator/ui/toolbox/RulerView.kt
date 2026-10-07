@@ -13,7 +13,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -71,14 +70,10 @@ fun RulerView(
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
-    // Stato calibrazione DPI schermo
-    var calibrationFactor by rememberSaveable { mutableFloatStateOf(RulerUtils.getCalibrationFactor(context)) }
-    var showCalibrationDialog by remember { mutableStateOf(false) }
-
     BackHandler { onBack() }
 
     val rawDpi = remember { RulerUtils.getRawScreenDpi(context) }
-    val effectiveYdpi = rawDpi.second * calibrationFactor
+    val effectiveYdpi = rawDpi.second
 
     // Impostazioni unità e visualizzazione
     var selectedUnit by rememberSaveable { mutableStateOf(RulerUnit.CM) }
@@ -207,15 +202,6 @@ fun RulerView(
                         modifier = Modifier.padding(end = 4.dp)
                     )
 
-                    // Pulsante calibrazione fisica
-                    IconButton(onClick = { showCalibrationDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Default.Straighten,
-                            contentDescription = "Calibra dimensioni schermo",
-                            tint = onSurfaceColor
-                        )
-                    }
-
                     // Menu opzioni aggiuntive
                     var showMenu by remember { mutableStateOf(false) }
                     Box {
@@ -242,13 +228,6 @@ fun RulerView(
                                 onClick = {
                                     useClassicYellow = !useClassicYellow
                                     showMenu = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Calibra dimensioni effettive...") },
-                                onClick = {
-                                    showMenu = false
-                                    showCalibrationDialog = true
                                 }
                             )
                         }
@@ -521,17 +500,5 @@ fun RulerView(
                 alignRight = true
             )
         }
-    }
-
-    // Dialog di calibrazione fisica
-    if (showCalibrationDialog) {
-        RulerCalibrationDialog(
-            rawYdpi = rawDpi.second,
-            initialFactor = calibrationFactor,
-            onSaveCalibration = { newFactor ->
-                calibrationFactor = newFactor
-            },
-            onDismiss = { showCalibrationDialog = false }
-        )
     }
 }

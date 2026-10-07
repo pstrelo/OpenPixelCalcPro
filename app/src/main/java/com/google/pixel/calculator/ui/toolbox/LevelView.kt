@@ -115,13 +115,14 @@ fun LevelView(
                 isDark = isDark,
                 accentColor = themeAccent,
                 onAccentColor = onThemeAccent,
+                isLandscape = isLandscape,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(
-                        start = if (isLandscape) 20.dp else 16.dp,
-                        end = if (isLandscape) 20.dp else 16.dp,
-                        top = if (isLandscape) 10.dp else 16.dp,
-                        bottom = if (isLandscape) 56.dp else 84.dp
+                        start = if (isLandscape) 16.dp else 16.dp,
+                        end = if (isLandscape) 16.dp else 16.dp,
+                        top = if (isLandscape) 8.dp else 16.dp,
+                        bottom = if (isLandscape) 0.dp else 16.dp
                     )
             )
 
@@ -161,6 +162,7 @@ private fun LevelViewportCard(
     isDark: Boolean,
     accentColor: Color,
     onAccentColor: Color,
+    isLandscape: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     // Sfondo del container dal tema attivo quando non allineato
@@ -180,11 +182,17 @@ private fun LevelViewportCard(
         label = "LevelViewportBackground"
     )
 
+    val cardShape = if (isLandscape) {
+        RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 0.dp, bottomEnd = 0.dp)
+    } else {
+        RoundedCornerShape(28.dp)
+    }
+
     Card(
         modifier = modifier
-            .shadow(if (levelData.isLevel) 12.dp else 4.dp, shape = RoundedCornerShape(28.dp))
-            .clip(RoundedCornerShape(28.dp)),
-        shape = RoundedCornerShape(28.dp),
+            .shadow(if (levelData.isLevel) 12.dp else 4.dp, shape = cardShape)
+            .clip(cardShape),
+        shape = cardShape,
         colors = CardDefaults.cardColors(containerColor = animatedBgColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {

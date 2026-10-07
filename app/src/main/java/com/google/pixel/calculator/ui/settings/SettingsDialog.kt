@@ -47,49 +47,42 @@ fun ThemeSelectionDialog(
         ThemeOption(
             mode = AppThemeMode.SYSTEM_AUTO,
             title = "Predefinito di sistema (Auto)",
-            subtitle = "Segue chiaro/scuro e colori dinamici Monet (Icona dinamica)",
             colors = listOf(Color(0xFF4285F4), Color(0xFF34A853), Color(0xFFFBBC05), Color(0xFFEA4335)),
             isDynamic = true
         ),
         ThemeOption(
             mode = AppThemeMode.SYSTEM_LIGHT,
             title = "Colori di sistema (Sempre chiaro)",
-            subtitle = "Accenti dinamici Monet su base chiara",
             colors = listOf(Color(0xFF4285F4), Color(0xFFF1F2F6), Color(0xFFE2E3EC), Color(0xFF041E49)),
             isDynamic = true
         ),
         ThemeOption(
             mode = AppThemeMode.SYSTEM_DARK,
             title = "Colori di sistema (Sempre scuro)",
-            subtitle = "Accenti dinamici Monet su base scura",
             colors = listOf(Color(0xFF131418), Color(0xFF26282E), Color(0xFF4285F4), Color(0xFFD3E3FD)),
             isDynamic = true
         ),
         ThemeOption(
             mode = AppThemeMode.STANDARD_LIGHT,
             title = "Chiaro Standard",
-            subtitle = "Google Pixel Light con tasto uguale ardesia",
             colors = listOf(Color(0xFFFFFFFF), Color(0xFFF1F2F6), Color(0xFFE2E3EC), Color(0xFF354558)),
             isDynamic = false
         ),
         ThemeOption(
             mode = AppThemeMode.STANDARD_DARK,
             title = "Scuro Standard",
-            subtitle = "Google Pixel Dark con tasto uguale azzurro",
             colors = listOf(Color(0xFF131418), Color(0xFF26282E), Color(0xFF373942), Color(0xFFD3E3FD)),
             isDynamic = false
         ),
         ThemeOption(
             mode = AppThemeMode.CANDY_POP,
             title = "Candy Pop (Vivace)",
-            subtitle = "Menta pastello, rosa corallo e giallo sole",
             colors = listOf(Color(0xFFD8F3DC), Color(0xFFFFCCD5), Color(0xFFFF6B8B), Color(0xFFFFD152)),
             isDynamic = false
         ),
         ThemeOption(
             mode = AppThemeMode.RETRO_CYBER,
             title = "Retro Cyber (Vivace Scuro)",
-            subtitle = "Chassis grafite, ciano neon, fucsia e giallo fluo",
             colors = listOf(Color(0xFF1E222C), Color(0xFF34D399), Color(0xFFFF3366), Color(0xFFFACC15)),
             isDynamic = false
         )
@@ -221,11 +214,6 @@ fun ThemeSelectionDialog(
                                             }
                                         }
                                     }
-                                    Text(
-                                        text = option.subtitle,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
                                 }
                                 Spacer(modifier = Modifier.width(6.dp))
                                 // Piccola miniatura anteprima icona
@@ -440,7 +428,6 @@ fun ThemeSelectionDialog(
 private data class ThemeOption(
     val mode: AppThemeMode,
     val title: String,
-    val subtitle: String,
     val colors: List<Color>,
     val isDynamic: Boolean
 )
