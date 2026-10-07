@@ -224,19 +224,34 @@ fun CompassView(
                 .padding(padding)
         ) {
             if (isLandscape) {
-                // Layout Orizzontale (Landscape)
+                // Layout Orizzontale (Landscape): Bussola a SINISTRA, tutte le scritte a DESTRA
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 24.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    // Colonna Sinistra: Località, Angolo e Schede Coordinate
-                    Column(
+                    // Colonna Sinistra: Quadrante Bussola
+                    Box(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        PixelCompassDial(
+                            azimuth = compassData.azimuthDegrees,
+                            isDark = isDark,
+                            dialSize = 250.dp
+                        )
+                    }
+
+                    // Colonna Destra: Tutte le scritte (Località, Angolo e Schede Coordinate)
+                    Column(
+                        modifier = Modifier
+                            .weight(1.15f)
+                            .fillMaxHeight()
+                            .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
@@ -255,7 +270,7 @@ fun CompassView(
                             }
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(14.dp))
 
                         CompassCoordinateCards(
                             locationData = locationData,
@@ -265,20 +280,6 @@ fun CompassView(
                                 clipboardManager.setText(AnnotatedString(coordsText))
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             }
-                        )
-                    }
-
-                    // Colonna Destra: Quadrante Bussola
-                    Box(
-                        modifier = Modifier
-                            .weight(1.2f)
-                            .fillMaxHeight(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        PixelCompassDial(
-                            azimuth = compassData.azimuthDegrees,
-                            isDark = isDark,
-                            dialSize = 250.dp
                         )
                     }
                 }
@@ -643,8 +644,9 @@ private fun PixelCompassDial(
 }
 
 /**
- * Tre schede informative in basso per Latitudine, Altitudine e Longitudine
- * perfettamente allineate allo stile mostrato nell'immagine di riferimento.
+ * Sezione informativa in basso:
+ * - Coordinate (Latitudine e Longitudine) disposte entrambe sullo STESSO livello orizzontale.
+ * - Altitudine posizionata al di sotto delle coordinate in una scheda/badge dedicato.
  */
 @Composable
 private fun CompassCoordinateCards(
@@ -656,114 +658,111 @@ private fun CompassCoordinateCards(
     val latValue = if (useDecimalFormat) "%.4f°".format(locationData.latitude) else locationData.latitudeDms
     val lonValue = if (useDecimalFormat) "%.4f°".format(locationData.longitude) else locationData.longitudeDms
 
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onCardClick),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Scheda Sinistra: Latitudine (es. 40°5'35" NL)
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-            modifier = Modifier.weight(1f)
+        // 1. Riga Coordinate sullo STESSO livello (Latitudine e Longitudine affiancate)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 14.dp, horizontal = 10.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            // Scheda Sinistra: Latitudine (es. 40°5'35" NL)
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                modifier = Modifier.weight(1f)
             ) {
-                Text(
-                    text = latValue,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = locationData.latitudeCardinal,
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        // Elemento Centrale: Altitudine (es. ↓ 991m)
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-            modifier = Modifier.weight(0.85f)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 14.dp, horizontal = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp, horizontal = 10.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowDownward,
-                        contentDescription = "Altitudine",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(3.dp))
                     Text(
-                        text = locationData.altitudeFormatted,
+                        text = latValue,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1
                     )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = locationData.latitudeCardinal,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "ALT",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            }
+
+            // Scheda Destra: Longitudine (es. 120°2'1" EL) sullo stesso identico livello
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp, horizontal = 10.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = lonValue,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = locationData.longitudeCardinal,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
 
-        // Scheda Destra: Longitudine (es. 120°2'1" EL)
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-            modifier = Modifier.weight(1f)
+        // 2. Elemento SOTTO: Altitudine (es. ↓ 991m • ALT)
+        Surface(
+            shape = RoundedCornerShape(percent = 50),
+            color = MaterialTheme.colorScheme.surfaceContainer,
+            modifier = Modifier.wrapContentWidth()
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 14.dp, horizontal = 10.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Row(
+                modifier = Modifier.padding(horizontal = 18.dp, vertical = 7.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             ) {
-                Text(
-                    text = lonValue,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1
+                Icon(
+                    imageVector = Icons.Default.ArrowDownward,
+                    contentDescription = "Altitudine",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
                 )
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = locationData.longitudeCardinal,
+                    text = locationData.altitudeFormatted,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "•  ALT",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
