@@ -12,7 +12,8 @@ enum class ActiveScreen {
     TOOLBOX_LEVEL,
     TOOLBOX_COMPASS,
     TOOLBOX_RULER,
-    ADVANCED_CALCULATOR
+    ADVANCED_CALCULATOR,
+    EASTER_EGG
 }
 
 data class CalculatorState(

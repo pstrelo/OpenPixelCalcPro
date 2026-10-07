@@ -27,6 +27,7 @@ import com.google.pixel.calculator.ui.settings.ClearHistoryConfirmDialog
 import com.google.pixel.calculator.ui.settings.ThemeSelectionDialog
 import com.google.pixel.calculator.ui.theme.CalculatorTheme
 import com.google.pixel.calculator.ui.toolbox.*
+import com.google.pixel.calculator.ui.easteregg.EasterEggScreen
 
 import androidx.compose.runtime.saveable.rememberSaveable
 
@@ -93,6 +94,11 @@ fun CalculatorApp(
                 RulerView(
                     onBack = { vm.navigateTo(ActiveScreen.MAIN_CALCULATOR) },
                     onNavigate = { vm.navigateTo(it) }
+                )
+            }
+            ActiveScreen.EASTER_EGG -> {
+                EasterEggScreen(
+                    onBack = { vm.navigateTo(ActiveScreen.MAIN_CALCULATOR) }
                 )
             }
             else -> {

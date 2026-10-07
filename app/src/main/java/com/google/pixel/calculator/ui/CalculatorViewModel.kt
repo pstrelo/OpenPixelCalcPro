@@ -253,6 +253,12 @@ class CalculatorViewModel(
         val expr = state.expression
         if (expr.isBlank()) return
 
+        val cleanExpr = expr.replace("\\s+".toRegex(), "")
+        if (cleanExpr == "26+04" || cleanExpr == "26+4") {
+            navigateTo(ActiveScreen.EASTER_EGG)
+            return
+        }
+
         val closedExpr = evaluator.autoCloseParentheses(expr)
         val evalResult = evaluator.evaluate(
             closedExpr,
