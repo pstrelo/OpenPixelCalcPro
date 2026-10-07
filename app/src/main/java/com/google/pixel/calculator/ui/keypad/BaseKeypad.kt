@@ -77,13 +77,13 @@ fun BaseKeypad(
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    val btnHeight = if (isLandscape) 44.dp else if (isProMode) 52.dp else 68.dp
-    val spacing = if (isLandscape) 6.dp else if (isProMode) 8.dp else 12.dp
+    val btnHeight = if (isLandscape) 42.dp else if (isProMode) 46.dp else 60.dp
+    val spacing = if (isLandscape) 6.dp else if (isProMode) 8.dp else 10.dp
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = if (isLandscape) 10.dp else 12.dp, vertical = if (isLandscape) 2.dp else 8.dp),
+            .padding(horizontal = if (isLandscape) 10.dp else 16.dp, vertical = if (isLandscape) 2.dp else 8.dp),
         verticalArrangement = Arrangement.spacedBy(spacing)
     ) {
         // LEVA / FRECCIA DI ESPANSIONE SCIENTIFICA STILE GOOGLE PIXEL (posta sopra la prima fila a sinistra)

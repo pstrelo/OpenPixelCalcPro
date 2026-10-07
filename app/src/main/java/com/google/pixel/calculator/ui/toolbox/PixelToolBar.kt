@@ -110,16 +110,16 @@ fun rememberToolBarDimensions(): ToolBarDimensions {
     val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
     val screenWidth = configuration.screenWidthDp.dp
 
-    val hPadding = if (isLandscape) 10.dp else 12.dp
+    val hPadding = if (isLandscape) 10.dp else 16.dp
     val bPadding = if (isLandscape) 2.dp else 8.dp
-    val spacing = if (isLandscape) 6.dp else 12.dp
-    val height = if (isLandscape) 44.dp else 68.dp
+    val spacing = if (isLandscape) 6.dp else 10.dp
+    val height = if (isLandscape) 42.dp else 60.dp
 
     // Larghezza del primo tasto della calcolatrice principale (1 colonna su 4)
     val btnWidth = if (isLandscape) {
         height * 1.5f
     } else {
-        ((screenWidth - (hPadding * 2) - (spacing * 3)) / 4).coerceAtLeast(68.dp)
+        ((screenWidth - (hPadding * 2) - (spacing * 3)) / 4).coerceAtLeast(60.dp)
     }
 
     // Larghezza della pillola (copre esattamente le 3 colonne rimanenti)
