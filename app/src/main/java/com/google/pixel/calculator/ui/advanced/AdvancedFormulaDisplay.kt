@@ -80,7 +80,13 @@ fun AdvancedFormulaDisplay(
                         .padding(horizontal = 8.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Badge colorato interattivo della curva (es. y₁, y₂, ... cliccabile per cambiare colore)
+                    // Badge colorato interattivo della curva o costante (es. y₁, y₂ o a, b cliccabile per cambiare colore)
+                    val isAssignment = AdvancedMathEngine().isVariableAssignment(eq.expression)
+                    val badgeText = if (isAssignment) {
+                        eq.expression.substringBefore("=").trim()
+                    } else {
+                        "y${index + 1}"
+                    }
                     Box(
                         modifier = Modifier
                             .size(28.dp)
@@ -91,8 +97,8 @@ fun AdvancedFormulaDisplay(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "y${index + 1}",
-                            fontSize = 11.sp,
+                            text = badgeText,
+                            fontSize = if (badgeText.length > 2) 9.sp else 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = eq.color
                         )

@@ -359,6 +359,32 @@ class AdvancedCalculatorViewModel(
     // 5. RISOLUZIONE ESEGUITA ESCLUSIVAMENTE DA '➤'
     // ==========================================
 
+    fun getCustomVariables(): Map<String, java.math.BigDecimal> {
+        val vars = mutableMapOf<String, java.math.BigDecimal>()
+        val isRad = _uiState.value.isRadians
+        for (eq in _uiState.value.equations) {
+            val expr = eq.expression.trim()
+            if (engine.isVariableAssignment(expr)) {
+                val parts = expr.split("=")
+                if (parts.size == 2) {
+                    val varName = parts[0].trim()
+                    val rhs = parts[1].trim()
+                    try {
+                        val ast = com.google.pixel.calculator.core.math.ExpressionParser().parse(rhs)
+                        val ctx = com.google.pixel.calculator.core.math.EvaluationContext(
+                            variables = com.google.pixel.calculator.core.math.EvaluationContext.DEFAULT_VARIABLES + vars,
+                            isRadians = isRad,
+                            mathContext = java.math.MathContext(18, java.math.RoundingMode.HALF_UP)
+                        )
+                        val evaluated = ast.evaluate(ctx)
+                        vars[varName] = evaluated
+                    } catch (_: Exception) {}
+                }
+            }
+        }
+        return vars
+    }
+
     fun executeSolve() {
         val curIndex = _uiState.value.activeEquationIndex
         val eq = _uiState.value.equations.getOrNull(curIndex) ?: return
@@ -366,10 +392,23 @@ class AdvancedCalculatorViewModel(
 
         viewModelScope.launch(dispatcher) {
             val isRad = _uiState.value.isRadians
-            val result = engine.solve(eq.expression, isRad)
+            val customVars = getCustomVariables()
+            val result = engine.solve(eq.expression, isRad, customVars)
             val format = eq.formatMode
 
             when (result) {
+                is AdvancedMathEngine.SolveResult.VariableAssignment -> {
+                    val formatted = "${result.variableName} = ${engine.formatNumber(result.value, format, isRad)}"
+                    updateEquationAt(curIndex) {
+                        it.copy(
+                            formattedResult = formatted,
+                            lastSolveResult = result,
+                            roots = emptyList(),
+                            isError = false
+                        )
+                    }
+                    updateAllGraphPoints()
+                }
                 is AdvancedMathEngine.SolveResult.SingleValue -> {
                     val formatted = if (result.formatted.startsWith("f(0)") || result.formatted.startsWith("f'(") || result.formatted.startsWith("lim(")) {
                         result.formatted
@@ -448,6 +487,9 @@ class AdvancedCalculatorViewModel(
         val isRad = _uiState.value.isRadians
 
         val newFormatted = when (val res = eq.lastSolveResult) {
+            is AdvancedMathEngine.SolveResult.VariableAssignment -> {
+                "${res.variableName} = ${engine.formatNumber(res.value, newFormat, isRad)}"
+            }
             is AdvancedMathEngine.SolveResult.SingleValue -> {
                 "= ${engine.formatNumber(res.raw, newFormat, isRad)}"
             }
@@ -632,6 +674,11 @@ class AdvancedCalculatorViewModel(
         val eq = _uiState.value.equations.getOrNull(curIndex) ?: return
         if (eq.expression.isBlank()) return
 
+        if (engine.isVariableAssignment(eq.expression)) {
+            updateAllGraphPoints()
+            return
+        }
+
         viewModelScope.launch(dispatcher) {
             val state = _uiState.value
             val scale = state.graphViewport.scaleX
@@ -641,8 +688,13 @@ class AdvancedCalculatorViewModel(
             val xMin = centerX - halfSpan
             val xMax = centerX + halfSpan
 
+            val customVars = getCustomVariables()
             val plotExpr = preparePlotExpression(eq.expression)
-            val points = engine.sampleFunction(plotExpr, xMin, xMax, 550, state.isRadians)
+            val points = if (plotExpr.isNotBlank()) {
+                engine.sampleFunction(plotExpr, xMin, xMax, 550, state.isRadians, customVars)
+            } else {
+                emptyList()
+            }
 
             updateEquationAt(curIndex) { it.copy(sampledPoints = points) }
         }
@@ -658,10 +710,11 @@ class AdvancedCalculatorViewModel(
             val xMin = centerX - halfSpan
             val xMax = centerX + halfSpan
 
+            val customVars = getCustomVariables()
             val updated = state.equations.map { entry ->
-                if (entry.expression.isNotBlank()) {
-                    val plotExpr = preparePlotExpression(entry.expression)
-                    val pts = engine.sampleFunction(plotExpr, xMin, xMax, 550, state.isRadians)
+                val plotExpr = preparePlotExpression(entry.expression)
+                if (plotExpr.isNotBlank()) {
+                    val pts = engine.sampleFunction(plotExpr, xMin, xMax, 550, state.isRadians, customVars)
                     entry.copy(sampledPoints = pts)
                 } else {
                     entry.copy(sampledPoints = emptyList())
@@ -672,9 +725,20 @@ class AdvancedCalculatorViewModel(
     }
 
     private fun preparePlotExpression(expr: String): String {
+        if (engine.isVariableAssignment(expr)) {
+            return ""
+        }
         return if (expr.contains("=")) {
             val parts = expr.split("=")
-            if (parts.size == 2) "(${parts[0].trim()}) - (${parts[1].trim()})" else expr
+            if (parts.size == 2) {
+                val lhs = parts[0].trim()
+                val rhs = parts[1].trim()
+                if (lhs.equals("y", ignoreCase = true) || Regex("^y[0-9]+$", RegexOption.IGNORE_CASE).matches(lhs)) {
+                    rhs
+                } else {
+                    "(${lhs}) - (${rhs})"
+                }
+            } else expr
         } else {
             expr
         }

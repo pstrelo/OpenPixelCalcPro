@@ -94,6 +94,27 @@ class ExpressionParser {
         return s
     }
 
+    companion object {
+        val KNOWN_FUNCTIONS = listOf(
+            "binompdf", "binomcdf", "normpdf", "normcdf", "randint", "median",
+            "arcsin", "arccos", "arctan", "arccsc", "arcsec", "arccot",
+            "arsinh", "arcosh", "artanh",
+            "asinh", "acosh", "atanh", "acsch", "asech", "acoth",
+            "sinh", "cosh", "tanh", "csch", "sech", "coth",
+            "sign", "sqrt", "cbrt", "root", "nroot", "log10", "log2", "logn", "log_n",
+            "diff", "integral", "defint", "lim",
+            "binom", "perm", "comb", "frac", "mean", "rand",
+            "sin", "cos", "tan", "cot", "sec", "csc",
+            "asin", "acos", "atan", "acot", "asec", "acsc",
+            "log", "ln", "lg", "exp", "abs", "ncr", "npr", "var", "std"
+        ).sortedByDescending { it.length }
+
+        val KNOWN_CONSTANTS = listOf(
+            "g_grav", "r_gas", "eps_0", "eps0", "mu_0", "mu0",
+            "hbar", "sigma", "phi", "pi", "kb", "na", "qe", "me", "mp"
+        ).sortedByDescending { it.length }
+    }
+
     private fun tokenize(expr: String): List<Token> {
         val tokens = mutableListOf<Token>()
         var i = 0
@@ -179,38 +200,49 @@ class ExpressionParser {
                     i++
                     continue
                 }
-                c.isLetter() || c == 'π' -> {
+                c.isLetter() || c == 'π' || c in "αβγδεζηθικλμνξοπρστυφχψωΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ" -> {
+                    val remaining = expr.substring(i)
+
+                    // 1. Match funzioni note multi-carattere (es. sin, cos, binom, ecc.)
+                    val matchedFn = KNOWN_FUNCTIONS.firstOrNull { remaining.startsWith(it, ignoreCase = true) }
+                    if (matchedFn != null) {
+                        if (tokens.isNotEmpty() && shouldInsertImplicitMul(tokens.last())) {
+                            tokens.add(Token.Operator("*", 2))
+                        }
+                        tokens.add(Token.Function(matchedFn.lowercase()))
+                        i += matchedFn.length
+                        continue
+                    }
+
+                    // 2. Match costanti note multi-carattere (es. pi, phi, hbar, eps0, ecc.)
+                    val matchedConst = KNOWN_CONSTANTS.firstOrNull { remaining.startsWith(it, ignoreCase = true) }
+                    if (matchedConst != null) {
+                        if (tokens.isNotEmpty() && shouldInsertImplicitMul(tokens.last())) {
+                            tokens.add(Token.Operator("*", 2))
+                        }
+                        tokens.add(Token.Variable(matchedConst.lowercase()))
+                        i += matchedConst.length
+                        continue
+                    }
+
+                    // 3. Singola lettera / variabile algebrica (es. a, b, c, x, y, z) con supporto a pedici (es. v_0, a_1)
                     val sb = StringBuilder()
-                    if (c == 'π') {
-                        sb.append(c)
+                    sb.append(c)
+                    i++
+                    if (i < len && expr[i] == '_') {
+                        sb.append(expr[i])
                         i++
-                    } else {
-                        while (i < len && (expr[i].isLetter() || expr[i].isDigit())) {
+                        while (i < len && expr[i].isLetterOrDigit()) {
                             sb.append(expr[i])
                             i++
                         }
                     }
-                    val name = sb.toString()
 
-                    // Moltiplicazione implicita prima di una funzione/variabile (es: 3x, 4sin(x))
+                    val varName = sb.toString()
                     if (tokens.isNotEmpty() && shouldInsertImplicitMul(tokens.last())) {
                         tokens.add(Token.Operator("*", 2))
                     }
-
-                    when (name.lowercase()) {
-                        "sin", "cos", "tan", "cot", "sec", "csc",
-                        "asin", "acos", "atan", "acot", "asec", "acsc",
-                        "sinh", "cosh", "tanh", "coth", "sech", "csch",
-                        "asinh", "acosh", "atanh", "acoth", "asech", "acsch",
-                        "sign", "sqrt", "cbrt", "root", "nroot", "ln", "log", "log10", "log2", "lg", "logn", "log_n", "exp", "abs", "frac",
-                        "binom", "ncr", "comb", "perm", "npr", "binompdf", "binomcdf", "normpdf", "normcdf",
-                        "mean", "var", "std", "median", "rand", "randint" -> {
-                            tokens.add(Token.Function(name.lowercase()))
-                        }
-                        else -> {
-                            tokens.add(Token.Variable(name))
-                        }
-                    }
+                    tokens.add(Token.Variable(varName))
                     continue
                 }
                 else -> {

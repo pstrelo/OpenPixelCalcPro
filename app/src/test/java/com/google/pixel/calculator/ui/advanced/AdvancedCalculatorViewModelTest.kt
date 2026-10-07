@@ -279,4 +279,30 @@ class AdvancedCalculatorViewModelTest {
         }
         assertEquals(initialColor, viewModel.uiState.value.equations[0].color)
     }
+
+    @Test
+    fun testMultiEquationVariableDefinitionAndGraphUpdate() {
+        viewModel.onClearAll()
+
+        // Equation 1: 5ax
+        viewModel.insertText("5ax")
+
+        // Add Equation 2: a = 5
+        viewModel.addEquation()
+        viewModel.insertText("a = 5")
+        viewModel.executeSolve()
+
+        val eq2 = viewModel.uiState.value.equations[1]
+        assertEquals("a = 5", eq2.formattedResult)
+        assertFalse(eq2.isError)
+
+        // Select Equation 1 and solve
+        viewModel.selectEquation(0)
+        viewModel.executeSolve()
+
+        val eq1 = viewModel.uiState.value.equations[0]
+        assertFalse("Equation 1 should not error when a is defined", eq1.isError)
+        assertTrue("Equation 1 roots should be x = 0", eq1.roots.contains(0.0))
+        assertTrue("Equation 1 should sample curve points", eq1.sampledPoints.isNotEmpty())
+    }
 }

@@ -204,5 +204,43 @@ class AdvancedMathEngineTest {
         val secZero = engine.evaluateExpression("sec(0)", isRadians = true)
         assertEquals("1", secZero)
     }
+
+    @Test
+    fun testVariableAssignmentAndSolving() {
+        // Assegnazione: a = 5
+        val assignRes = engine.solve("a = 5")
+        assertTrue(assignRes is AdvancedMathEngine.SolveResult.VariableAssignment)
+        val assign = assignRes as AdvancedMathEngine.SolveResult.VariableAssignment
+        assertEquals("a", assign.variableName)
+        assertEquals(5.0, assign.value, 1e-6)
+        assertEquals("a = 5", assign.formattedText)
+
+        // Risoluzione con variabile definita custom: 5ax = 0 con a = 5 -> 25x = 0 -> root x = 0
+        val customVars = mapOf("a" to java.math.BigDecimal("5"))
+        val solveRes = engine.solve("5ax", isRadians = true, customVariables = customVars)
+        assertTrue("5ax with a=5 should find root x=0", solveRes is AdvancedMathEngine.SolveResult.EquationRoots)
+        val roots = (solveRes as AdvancedMathEngine.SolveResult.EquationRoots).roots
+        assertEquals(1, roots.size)
+        assertEquals(0.0, roots[0], 1e-4)
+
+        // Equazione lineare con parametro: a * x = 20 con a = 5 -> x = 4
+        val eqParamRes = engine.solve("a*x = 20", isRadians = true, customVariables = customVars)
+        assertTrue(eqParamRes is AdvancedMathEngine.SolveResult.EquationRoots)
+        val eqRoots = (eqParamRes as AdvancedMathEngine.SolveResult.EquationRoots).roots
+        assertEquals(1, eqRoots.size)
+        assertEquals(4.0, eqRoots[0], 1e-3)
+    }
+
+    @Test
+    fun testImplicitMultiplicationWithVariables() {
+        val customVars = mapOf("a" to java.math.BigDecimal("3"), "b" to java.math.BigDecimal("4"))
+        val exprVal = engine.evaluateExpression("5ab", isRadians = true, customVariables = customVars)
+        // 5 * 3 * 4 = 60
+        assertEquals("60", exprVal)
+
+        val polyVal = engine.evaluateExpression("ax^2", isRadians = true, customVariables = mapOf("a" to java.math.BigDecimal("2"), "x" to java.math.BigDecimal("3")))
+        // 2 * (3^2) = 18
+        assertEquals("18", polyVal)
+    }
 }
 

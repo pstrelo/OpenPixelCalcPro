@@ -18,7 +18,9 @@ sealed class MathNode {
 
     data class Variable(val name: String) : MathNode() {
         override fun evaluate(context: EvaluationContext): BigDecimal {
-            return context.variables[name] 
+            return context.variables[name]
+                ?: context.variables[name.lowercase()]
+                ?: context.variables[name.uppercase()]
                 ?: throw IllegalArgumentException("Variabile non definita: $name")
         }
     }

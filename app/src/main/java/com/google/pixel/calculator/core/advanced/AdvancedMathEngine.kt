@@ -41,11 +41,16 @@ class AdvancedMathEngine(
         data class EquationRoots(val roots: List<Double>, val formattedText: String) : SolveResult()
         data class InequalityIntervals(val text: String, val intervals: List<ShadedInterval>) : SolveResult()
         data class SystemSolution(val solutions: Map<String, Double>, val formattedText: String) : SolveResult()
+        data class VariableAssignment(val variableName: String, val value: Double, val formattedText: String) : SolveResult()
         data class Error(val message: String) : SolveResult()
 
         fun formatAs(format: ResultFormat, isRadians: Boolean = true, engine: AdvancedMathEngine): String {
             return when (this) {
                 is SingleValue -> engine.formatNumber(raw, format, isRadians)
+                is VariableAssignment -> {
+                    val formattedVal = engine.formatNumber(value, format, isRadians)
+                    "$variableName = $formattedVal"
+                }
                 is EquationRoots -> {
                     if (roots.isEmpty()) formattedText
                     else roots.mapIndexed { idx, r ->
@@ -65,6 +70,21 @@ class AdvancedMathEngine(
     // 1. VALUTAZIONE GENERALE DI UN'ESPRESSIONE
     // ==========================================
 
+    fun isVariableAssignment(expr: String): Boolean {
+        val clean = expr.trim()
+        if (!clean.contains("=")) return false
+        val parts = clean.split("=")
+        if (parts.size != 2) return false
+        val lhs = parts[0].trim()
+        val isSimpleVar = Regex("^[a-zA-Zα-ωΑ-Ω][a-zA-Z0-9_]*$").matches(lhs)
+        val isFunctionLhs = lhs.equals("x", ignoreCase = true) || 
+                            lhs.equals("y", ignoreCase = true) || 
+                            Regex("^y[0-9]+$", RegexOption.IGNORE_CASE).matches(lhs) ||
+                            lhs.equals("f", ignoreCase = true) ||
+                            lhs.equals("f(x)", ignoreCase = true)
+        return isSimpleVar && !isFunctionLhs
+    }
+
     fun autoCloseParentheses(expression: String): String {
         val trimmed = expression.trim()
         if (trimmed.isEmpty()) return ""
@@ -76,12 +96,17 @@ class AdvancedMathEngine(
         } else trimmed
     }
 
-    fun evaluateExpression(expr: String, isRadians: Boolean = true): String {
+    fun evaluateExpression(
+        expr: String,
+        isRadians: Boolean = true,
+        customVariables: Map<String, BigDecimal> = emptyMap()
+    ): String {
         val clean = autoCloseParentheses(expr)
         if (clean.isBlank()) return ""
         return try {
             val ast = parser.parse(clean)
             val ctx = EvaluationContext(
+                variables = EvaluationContext.DEFAULT_VARIABLES + customVariables,
                 isRadians = isRadians,
                 mathContext = defaultMc
             )
@@ -96,47 +121,77 @@ class AdvancedMathEngine(
     // 2. DISPATCHER RISOLUTORE AUTOMATICO
     // ==========================================
 
-    fun solve(input: String, isRadians: Boolean = true): SolveResult {
+    fun solve(
+        input: String,
+        isRadians: Boolean = true,
+        customVariables: Map<String, BigDecimal> = emptyMap()
+    ): SolveResult {
         val clean = autoCloseParentheses(input).trim()
         if (clean.isBlank()) return SolveResult.Error("Espressione vuota")
 
         // 1. Derivata: d/dx o f'(x) o diff
         if (clean.startsWith("d/dx", ignoreCase = true) || clean.startsWith("diff", ignoreCase = true)) {
-            return solveDerivative(clean, isRadians)
+            return solveDerivative(clean, isRadians, customVariables)
         }
 
         // 2. Integrale: ∫ o integral
         if (clean.contains("∫") || clean.startsWith("integral", ignoreCase = true)) {
-            return solveIntegral(clean, isRadians)
+            return solveIntegral(clean, isRadians, customVariables)
         }
 
         // 3. Limite: lim
         if (clean.startsWith("lim", ignoreCase = true)) {
-            return solveLimit(clean, isRadians)
+            return solveLimit(clean, isRadians, customVariables)
         }
 
         // 4. Disequazione: <=, >=, <, >
         val ineqOps = listOf("<=", ">=", "≤", "≥", "<", ">")
         val foundIneq = ineqOps.firstOrNull { clean.contains(it) }
         if (foundIneq != null) {
-            return solveInequality(clean, foundIneq, isRadians)
+            return solveInequality(clean, foundIneq, isRadians, customVariables)
         }
 
-        // 5. Equazione con '='
+        // 5. Assegnazione Costante o Equazione con '='
         if (clean.contains("=")) {
-            return solveEquation(clean, isRadians)
+            val parts = clean.split("=")
+            if (parts.size == 2 && isVariableAssignment(clean)) {
+                val lhs = parts[0].trim()
+                val rhs = parts[1].trim()
+                return try {
+                    val ast = parser.parse(rhs)
+                    val ctx = EvaluationContext(
+                        variables = EvaluationContext.DEFAULT_VARIABLES + customVariables,
+                        isRadians = isRadians,
+                        mathContext = defaultMc
+                    )
+                    val resNum = ast.evaluate(ctx).toDouble()
+                    val formatted = "$lhs = ${formatNumber(resNum)}"
+                    SolveResult.VariableAssignment(lhs, resNum, formatted)
+                } catch (e: Exception) {
+                    SolveResult.Error("Impossibile definire $lhs: ${e.message ?: "sintassi non valida"}")
+                }
+            }
+            return solveEquation(clean, isRadians, customVariables)
         }
 
-        // 6. Espressione con incognita x non azzerata (es. "x^2 - 25" o "cos(x)")
-        val hasVariableX = Regex("(?<![a-zA-Z])x(?![a-zA-Z])", RegexOption.IGNORE_CASE).containsMatchIn(clean)
-        if (hasVariableX) {
-            return findRootsOfFunction(clean, isRadians)
+        // 6. Parsing AST e controllo presenza incognita x
+        val ast = try {
+            parser.parse(clean)
+        } catch (e: Exception) {
+            return SolveResult.Error(e.message ?: "Sintassi non valida")
+        }
+
+        if (hasVariableInAst(ast, "x")) {
+            return findRootsOfFunction(clean, isRadians, customVariables)
         }
 
         // 7. Semplice calcolo numerico
         return try {
-            val ast = parser.parse(clean)
-            val ctx = EvaluationContext(isRadians = isRadians, mathContext = defaultMc)
+            val ctx = EvaluationContext(
+                variables = EvaluationContext.DEFAULT_VARIABLES + customVariables,
+                isRadians = isRadians,
+                mathContext = defaultMc
+            )
             val num = ast.evaluate(ctx).toDouble()
             SolveResult.SingleValue(formatNumber(num), num)
         } catch (e: Exception) {
@@ -144,31 +199,59 @@ class AdvancedMathEngine(
         }
     }
 
+    private fun hasVariableInAst(node: MathNode, varName: String = "x"): Boolean {
+        return when (node) {
+            is MathNode.Variable -> node.name.equals(varName, ignoreCase = true)
+            is MathNode.BinaryOp -> hasVariableInAst(node.left, varName) || hasVariableInAst(node.right, varName)
+            is MathNode.UnaryOp -> hasVariableInAst(node.operand, varName)
+            is MathNode.Fraction -> hasVariableInAst(node.numerator, varName) || hasVariableInAst(node.denominator, varName)
+            is MathNode.FunctionCall -> node.arguments.any { hasVariableInAst(it, varName) }
+            else -> false
+        }
+    }
+
     // ==========================================
     // 3. RISOLUTORE EQUAZIONI: f(x) = 0 o f(x) = g(x)
     // ==========================================
 
-    fun solveEquation(expr: String, isRadians: Boolean = true): SolveResult {
+    fun solveEquation(
+        expr: String,
+        isRadians: Boolean = true,
+        customVariables: Map<String, BigDecimal> = emptyMap()
+    ): SolveResult {
         val parts = expr.split("=")
         if (parts.size != 2) return SolveResult.Error("Formato equazione non valido: usare lhs = rhs")
         val lhs = parts[0].trim()
         val rhs = parts[1].trim()
 
-        val diffExpr = if (rhs == "0" || rhs.isEmpty()) lhs else "($lhs) - ($rhs)"
-        return findRootsOfFunction(diffExpr, isRadians)
+        val isLhsY = lhs.equals("y", ignoreCase = true) || Regex("^y[0-9]+$", RegexOption.IGNORE_CASE).matches(lhs)
+        val diffExpr = if (isLhsY) {
+            rhs
+        } else if (rhs == "0" || rhs.isEmpty()) {
+            lhs
+        } else {
+            "($lhs) - ($rhs)"
+        }
+        return findRootsOfFunction(diffExpr, isRadians, customVariables)
     }
 
-    fun findRootsOfFunction(functionExpr: String, isRadians: Boolean = true): SolveResult {
+    fun findRootsOfFunction(
+        functionExpr: String,
+        isRadians: Boolean = true,
+        customVariables: Map<String, BigDecimal> = emptyMap()
+    ): SolveResult {
         val ast = try {
             parser.parse(functionExpr)
         } catch (e: Exception) {
             return SolveResult.Error("Errore sintassi funzione: ${e.message}")
         }
 
+        val baseVariables = EvaluationContext.DEFAULT_VARIABLES + customVariables
+
         fun f(x: Double): Double {
             return try {
                 val ctx = EvaluationContext(
-                    variables = mapOf("x" to BigDecimal(x.toString(), defaultMc)),
+                    variables = baseVariables + ("x" to BigDecimal(x.toString(), defaultMc)),
                     isRadians = isRadians,
                     mathContext = defaultMc
                 )
@@ -312,7 +395,12 @@ class AdvancedMathEngine(
     // 4. RISOLUTORE DISEQUAZIONI
     // ==========================================
 
-    fun solveInequality(expr: String, op: String, isRadians: Boolean = true): SolveResult {
+    fun solveInequality(
+        expr: String,
+        op: String,
+        isRadians: Boolean = true,
+        customVariables: Map<String, BigDecimal> = emptyMap()
+    ): SolveResult {
         val parts = expr.split(op)
         if (parts.size != 2) return SolveResult.Error("Formato disequazione non valido")
         val lhs = parts[0].trim()
@@ -323,10 +411,12 @@ class AdvancedMathEngine(
             return SolveResult.Error("Sintassi non valida: ${e.message}")
         }
 
+        val baseVariables = EvaluationContext.DEFAULT_VARIABLES + customVariables
+
         fun f(x: Double): Double {
             return try {
                 val ctx = EvaluationContext(
-                    variables = mapOf("x" to BigDecimal(x.toString(), defaultMc)),
+                    variables = baseVariables + ("x" to BigDecimal(x.toString(), defaultMc)),
                     isRadians = isRadians,
                     mathContext = defaultMc
                 )
@@ -337,7 +427,7 @@ class AdvancedMathEngine(
         }
 
         // Troviamo i punti critici (zeri)
-        val rootsResult = findRootsOfFunction(diffExpr, isRadians)
+        val rootsResult = findRootsOfFunction(diffExpr, isRadians, customVariables)
         val criticalPoints = when (rootsResult) {
             is SolveResult.EquationRoots -> rootsResult.roots.sorted()
             else -> emptyList()
@@ -392,7 +482,11 @@ class AdvancedMathEngine(
     // 5. DERIVATA NUMERICA PUNTUALE
     // ==========================================
 
-    fun solveDerivative(expr: String, isRadians: Boolean = true): SolveResult {
+    fun solveDerivative(
+        expr: String,
+        isRadians: Boolean = true,
+        customVariables: Map<String, BigDecimal> = emptyMap()
+    ): SolveResult {
         // Formato atteso: d/dx(f(x), x0) oppure d/dx(f(x)) con default x0=0 o punto dato
         val content = expr.substringAfter("(").substringBeforeLast(")")
         val parts = content.split(",")
@@ -403,10 +497,12 @@ class AdvancedMathEngine(
             return SolveResult.Error("Funzione non valida: ${e.message}")
         }
 
+        val baseVariables = EvaluationContext.DEFAULT_VARIABLES + customVariables
+
         fun f(x: Double): Double {
             return try {
                 val ctx = EvaluationContext(
-                    variables = mapOf("x" to BigDecimal(x.toString(), defaultMc)),
+                    variables = baseVariables + ("x" to BigDecimal(x.toString(), defaultMc)),
                     isRadians = isRadians,
                     mathContext = defaultMc
                 )
@@ -437,7 +533,11 @@ class AdvancedMathEngine(
     // 6. INTEGRALE DEFINITO (QUADRATURA SIMPSON)
     // ==========================================
 
-    fun solveIntegral(expr: String, isRadians: Boolean = true): SolveResult {
+    fun solveIntegral(
+        expr: String,
+        isRadians: Boolean = true,
+        customVariables: Map<String, BigDecimal> = emptyMap()
+    ): SolveResult {
         // Formato atteso: ∫(f(x), a, b)
         val content = expr.substringAfter("(").substringBeforeLast(")")
         val parts = content.split(",")
@@ -452,10 +552,12 @@ class AdvancedMathEngine(
             return SolveResult.Error("Funzione non valida: ${e.message}")
         }
 
+        val baseVariables = EvaluationContext.DEFAULT_VARIABLES + customVariables
+
         fun f(x: Double): Double {
             return try {
                 val ctx = EvaluationContext(
-                    variables = mapOf("x" to BigDecimal(x.toString(), defaultMc)),
+                    variables = baseVariables + ("x" to BigDecimal(x.toString(), defaultMc)),
                     isRadians = isRadians,
                     mathContext = defaultMc
                 )
@@ -513,7 +615,11 @@ class AdvancedMathEngine(
     // 7. LIMITE NUMERICO
     // ==========================================
 
-    fun solveLimit(expr: String, isRadians: Boolean = true): SolveResult {
+    fun solveLimit(
+        expr: String,
+        isRadians: Boolean = true,
+        customVariables: Map<String, BigDecimal> = emptyMap()
+    ): SolveResult {
         // Formato: lim(f(x), x0)
         val content = expr.substringAfter("(").substringBeforeLast(")")
         val parts = content.split(",")
@@ -524,10 +630,12 @@ class AdvancedMathEngine(
             return SolveResult.Error("Funzione non valida: ${e.message}")
         }
 
+        val baseVariables = EvaluationContext.DEFAULT_VARIABLES + customVariables
+
         fun f(x: Double): Double {
             return try {
                 val ctx = EvaluationContext(
-                    variables = mapOf("x" to BigDecimal(x.toString(), defaultMc)),
+                    variables = baseVariables + ("x" to BigDecimal(x.toString(), defaultMc)),
                     isRadians = isRadians,
                     mathContext = defaultMc
                 )
@@ -559,7 +667,8 @@ class AdvancedMathEngine(
         xMin: Float,
         xMax: Float,
         steps: Int = 500,
-        isRadians: Boolean = true
+        isRadians: Boolean = true,
+        customVariables: Map<String, BigDecimal> = emptyMap()
     ): List<Point?> {
         val clean = autoCloseParentheses(expr)
         if (clean.isBlank()) return emptyList()
@@ -568,6 +677,7 @@ class AdvancedMathEngine(
         val points = mutableListOf<Point?>()
         val totalSteps = steps.coerceAtLeast(2)
         val stepSize = (xMax - xMin) / totalSteps
+        val baseVariables = EvaluationContext.DEFAULT_VARIABLES + customVariables
 
         var prevY: Double? = null
 
@@ -575,7 +685,7 @@ class AdvancedMathEngine(
             val x = xMin + i * stepSize
             try {
                 val ctx = EvaluationContext(
-                    variables = mapOf("x" to BigDecimal(x.toDouble().toString(), defaultMc)),
+                    variables = baseVariables + ("x" to BigDecimal(x.toDouble().toString(), defaultMc)),
                     isRadians = isRadians,
                     mathContext = defaultMc
                 )
