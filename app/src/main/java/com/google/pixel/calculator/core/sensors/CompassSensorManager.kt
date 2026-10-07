@@ -69,36 +69,32 @@ class CompassSensorManager(context: Context) {
 
                 when (event.sensor.type) {
                     Sensor.TYPE_ROTATION_VECTOR, Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR -> {
-                        // Standard Google: calcolo matrice di rotazione da quaternione 3D
                         try {
                             SensorManager.getRotationMatrixFromVector(rMatrix, event.values)
                             SensorManager.getOrientation(rMatrix, orientation)
                             pitchDeg = Math.toDegrees(orientation[1].toDouble()).toFloat()
                             rollDeg = Math.toDegrees(orientation[2].toDouble()).toFloat()
-                            rawDeg = calculateAzimuth(rMatrix, pitchDeg)
+                            rawDeg = calculateAzimuth(rMatrix)
                             lastFusedTimestamp = System.currentTimeMillis()
                         } catch (_: Exception) {}
                     }
 
                     @Suppress("DEPRECATION")
                     Sensor.TYPE_ORIENTATION -> {
-                        // Se non abbiamo ancora ricevuto dati da ROTATION_VECTOR negli ultimi 500ms
-                        if (System.currentTimeMillis() - lastFusedTimestamp > 500L) {
-                            rawDeg = (event.values[0] + 360f) % 360f
-                            pitchDeg = event.values[1]
-                            rollDeg = event.values[2]
-                        }
+                        rawDeg = (event.values[0] + 360f) % 360f
+                        pitchDeg = event.values[1]
+                        rollDeg = event.values[2]
                     }
 
                     Sensor.TYPE_ACCELEROMETER -> {
                         System.arraycopy(event.values, 0, gravity, 0, 3)
                         hasGravity = true
-                        if (hasGravity && hasGeomagnetic && (System.currentTimeMillis() - lastFusedTimestamp > 500L)) {
+                        if (hasGravity && hasGeomagnetic) {
                             if (SensorManager.getRotationMatrix(rMatrix, null, gravity, geomagnetic)) {
                                 SensorManager.getOrientation(rMatrix, orientation)
                                 pitchDeg = Math.toDegrees(orientation[1].toDouble()).toFloat()
                                 rollDeg = Math.toDegrees(orientation[2].toDouble()).toFloat()
-                                rawDeg = calculateAzimuth(rMatrix, pitchDeg)
+                                rawDeg = calculateAzimuth(rMatrix)
                             }
                         }
                     }
@@ -106,12 +102,12 @@ class CompassSensorManager(context: Context) {
                     Sensor.TYPE_MAGNETIC_FIELD -> {
                         System.arraycopy(event.values, 0, geomagnetic, 0, 3)
                         hasGeomagnetic = true
-                        if (hasGravity && hasGeomagnetic && (System.currentTimeMillis() - lastFusedTimestamp > 500L)) {
+                        if (hasGravity && hasGeomagnetic) {
                             if (SensorManager.getRotationMatrix(rMatrix, null, gravity, geomagnetic)) {
                                 SensorManager.getOrientation(rMatrix, orientation)
                                 pitchDeg = Math.toDegrees(orientation[1].toDouble()).toFloat()
                                 rollDeg = Math.toDegrees(orientation[2].toDouble()).toFloat()
-                                rawDeg = calculateAzimuth(rMatrix, pitchDeg)
+                                rawDeg = calculateAzimuth(rMatrix)
                             }
                         }
                     }
@@ -124,7 +120,7 @@ class CompassSensorManager(context: Context) {
                         smoothedAzimuth = rawDeg
                         isFirstReading = false
                     } else {
-                        smoothedAzimuth = smoothAngle(smoothedAzimuth, rawDeg, alpha = 0.35f)
+                        smoothedAzimuth = smoothAngle(smoothedAzimuth, rawDeg)
                     }
 
                     val cardinal = getCardinal(smoothedAzimuth)
@@ -154,12 +150,23 @@ class CompassSensorManager(context: Context) {
             }
         }
 
-        // Registrazione su tutti i sensori disponibili
-        rotationVector?.let { sm.registerListener(listener, it, SensorManager.SENSOR_DELAY_UI) }
-        geomagneticVector?.let { sm.registerListener(listener, it, SensorManager.SENSOR_DELAY_UI) }
-        orientationSensor?.let { sm.registerListener(listener, it, SensorManager.SENSOR_DELAY_UI) }
-        accelerometer?.let { sm.registerListener(listener, it, SensorManager.SENSOR_DELAY_UI) }
-        magnetometer?.let { sm.registerListener(listener, it, SensorManager.SENSOR_DELAY_UI) }
+        // Registrazione prioritaria del sensore migliore per evitare crosstalk e tremolii tra pipeline concorrenti
+        when {
+            rotationVector != null -> {
+                sm.registerListener(listener, rotationVector, SensorManager.SENSOR_DELAY_UI)
+            }
+            geomagneticVector != null -> {
+                sm.registerListener(listener, geomagneticVector, SensorManager.SENSOR_DELAY_UI)
+            }
+            orientationSensor != null -> {
+                @Suppress("DEPRECATION")
+                sm.registerListener(listener, orientationSensor, SensorManager.SENSOR_DELAY_UI)
+            }
+            accelerometer != null && magnetometer != null -> {
+                sm.registerListener(listener, accelerometer, SensorManager.SENSOR_DELAY_UI)
+                sm.registerListener(listener, magnetometer, SensorManager.SENSOR_DELAY_UI)
+            }
+        }
 
         awaitClose {
             sm.unregisterListener(listener)
@@ -167,23 +174,46 @@ class CompassSensorManager(context: Context) {
     }
 
     companion object {
-        fun calculateAzimuth(rMatrix: FloatArray, pitchDeg: Float): Float {
-            val pitchRad = Math.toRadians(pitchDeg.toDouble())
-            val cosPitch = kotlin.math.cos(pitchRad).toFloat()
-            val sinPitch = kotlin.math.sin(pitchRad).toFloat()
+        /**
+         * Calcola l'azimut in gradi (0° = Nord, 90° = Est, 180° = Sud, 270° = Ovest).
+         * Utilizza una proiezione continua 3D:
+         * - In orizzontale (cosTilt = 1, sinTilt = 0): orientato lungo il lato superiore (+Y, componenti R[1] e R[4]).
+         * - In verticale (cosTilt = 0, sinTilt = 1): orientato lungo la linea di vista della fotocamera posteriore (-Z, componenti -R[2] e -R[5]).
+         * Garantisce che la bussola non sballi né salti passando dall'uso in piano a quello in verticale.
+         */
+        fun calculateAzimuth(rMatrix: FloatArray): Float {
+            val cosTilt = rMatrix[8].coerceIn(0f, 1f)
+            val sinTilt = kotlin.math.sqrt(1f - cosTilt * cosTilt)
 
-            // Vettore forward proiettato sul piano orizzontale terrestre: continuo sia in piano che in verticale
-            val east = rMatrix[1] * cosPitch + rMatrix[2] * sinPitch
-            val north = rMatrix[4] * cosPitch + rMatrix[5] * sinPitch
+            val east = rMatrix[1] * cosTilt - rMatrix[2] * sinTilt
+            val north = rMatrix[4] * cosTilt - rMatrix[5] * sinTilt
 
-            return (Math.toDegrees(kotlin.math.atan2(east.toDouble(), north.toDouble())).toFloat() + 360f) % 360f
+            val deg = Math.toDegrees(kotlin.math.atan2(east.toDouble(), north.toDouble())).toFloat()
+            return (deg + 360f) % 360f
         }
 
-        fun smoothAngle(current: Float, target: Float, alpha: Float = 0.35f): Float {
+        /**
+         * Filtro anti-tremolio con deadband e smoothing adattivo:
+         * - Deadband: ignora micro-vibrazioni del sensore (< 0.25°) quando il telefono è fermo.
+         * - Smoothing adattivo: fluido per micro-movimenti, reattivo per rotazioni decise.
+         */
+        fun smoothAngle(current: Float, target: Float, alpha: Float? = null): Float {
             var diff = target - current
             while (diff < -180f) diff += 360f
             while (diff > 180f) diff -= 360f
-            return (current + diff * alpha + 360f) % 360f
+
+            val effectiveAlpha = if (alpha != null) {
+                alpha
+            } else {
+                if (abs(diff) < 0.25f) return current
+                when {
+                    abs(diff) < 2f -> 0.12f
+                    abs(diff) < 10f -> 0.25f
+                    else -> 0.45f
+                }
+            }
+
+            return (current + diff * effectiveAlpha + 360f) % 360f
         }
 
         fun getCardinal(azimuth: Float): String {

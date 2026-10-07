@@ -7,6 +7,9 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
@@ -117,6 +120,26 @@ fun CompassView(
     var showMenu by remember { mutableStateOf(false) }
     var showCalibrationDialog by remember { mutableStateOf(false) }
     var useDecimalFormat by remember { mutableStateOf(false) }
+
+    // Calcolo dell'azimut continuo per rotazione fluida a 360° senza scatti al passaggio da 359° a 0°
+    var continuousAzimuth by remember { mutableFloatStateOf(compassData.azimuthDegrees) }
+
+    LaunchedEffect(compassData.azimuthDegrees) {
+        val target = compassData.azimuthDegrees
+        var diff = target - (continuousAzimuth % 360f)
+        while (diff < -180f) diff += 360f
+        while (diff > 180f) diff -= 360f
+        continuousAzimuth += diff
+    }
+
+    val animatedAzimuth by animateFloatAsState(
+        targetValue = continuousAzimuth,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "CompassSmoothRotation"
+    )
 
     // Dialog di Ricalibrazione a Figura di 8
     if (showCalibrationDialog) {
@@ -259,7 +282,7 @@ fun CompassView(
                         contentAlignment = Alignment.Center
                     ) {
                         PixelCompassDial(
-                            azimuth = compassData.azimuthDegrees,
+                            azimuth = animatedAzimuth,
                             isDark = isDark,
                             dialSize = 250.dp
                         )
@@ -277,7 +300,7 @@ fun CompassView(
                         CompassHeader(
                             locationName = locationData.locationName,
                             hasPermission = locationData.hasPermission,
-                            azimuthDegrees = compassData.azimuthDegrees,
+                            azimuthDegrees = animatedAzimuth,
                             cardinalDirection = compassData.cardinalDirection,
                             onRequestPermission = {
                                 locationPermissionLauncher.launch(
@@ -315,7 +338,7 @@ fun CompassView(
                     CompassHeader(
                         locationName = locationData.locationName,
                         hasPermission = locationData.hasPermission,
-                        azimuthDegrees = compassData.azimuthDegrees,
+                        azimuthDegrees = animatedAzimuth,
                         cardinalDirection = compassData.cardinalDirection,
                         onRequestPermission = {
                             locationPermissionLauncher.launch(
@@ -335,7 +358,7 @@ fun CompassView(
                         contentAlignment = Alignment.Center
                     ) {
                         PixelCompassDial(
-                            azimuth = compassData.azimuthDegrees,
+                            azimuth = animatedAzimuth,
                             isDark = isDark,
                             dialSize = 310.dp
                         )
@@ -430,7 +453,9 @@ private fun CompassHeader(
         Spacer(modifier = Modifier.height(2.dp))
 
         // Grande visualizzazione numerica dei gradi e direzione (es. 0°N)
-        val headingText = "${azimuthDegrees.toInt()}°$cardinalDirection"
+        val normalizedDeg = ((azimuthDegrees % 360f) + 360f) % 360f
+        val currentCardinal = CompassSensorManager.getCardinal(normalizedDeg)
+        val headingText = "${normalizedDeg.toInt()}°$currentCardinal"
         Text(
             text = headingText,
             style = MaterialTheme.typography.displayMedium,

@@ -60,4 +60,82 @@ class CompassUnitTest {
         val normalSmooth = CompassSensorManager.smoothAngle(10f, 20f, alpha = 0.5f)
         assertEquals(15f, normalSmooth, 0.1f)
     }
+
+    @Test
+    fun testCalculateAzimuthFlatAndVertical() {
+        // Flat facing North
+        val flatNorth = floatArrayOf(
+            1f, 0f, 0f,
+            0f, 1f, 0f,
+            0f, 0f, 1f
+        )
+        assertEquals(0f, CompassSensorManager.calculateAzimuth(flatNorth), 0.1f)
+
+        // Vertical facing North
+        val verticalNorth = floatArrayOf(
+            1f, 0f, 0f,
+            0f, 0f, -1f,
+            0f, 1f, 0f
+        )
+        assertEquals(0f, CompassSensorManager.calculateAzimuth(verticalNorth), 0.1f)
+
+        // Flat facing East
+        val flatEast = floatArrayOf(
+            0f, 1f, 0f,
+            -1f, 0f, 0f,
+            0f, 0f, 1f
+        )
+        assertEquals(90f, CompassSensorManager.calculateAzimuth(flatEast), 0.1f)
+
+        // Vertical facing East
+        val verticalEast = floatArrayOf(
+            0f, 0f, -1f,
+            -1f, 0f, 0f,
+            0f, 1f, 0f
+        )
+        assertEquals(90f, CompassSensorManager.calculateAzimuth(verticalEast), 0.1f)
+
+        // Flat facing South
+        val flatSouth = floatArrayOf(
+            -1f, 0f, 0f,
+            0f, -1f, 0f,
+            0f, 0f, 1f
+        )
+        assertEquals(180f, CompassSensorManager.calculateAzimuth(flatSouth), 0.1f)
+
+        // Vertical facing South
+        val verticalSouth = floatArrayOf(
+            -1f, 0f, 0f,
+            0f, 0f, 1f,
+            0f, 1f, 0f
+        )
+        assertEquals(180f, CompassSensorManager.calculateAzimuth(verticalSouth), 0.1f)
+
+        // Flat facing West
+        val flatWest = floatArrayOf(
+            0f, -1f, 0f,
+            1f, 0f, 0f,
+            0f, 0f, 1f
+        )
+        assertEquals(270f, CompassSensorManager.calculateAzimuth(flatWest), 0.1f)
+
+        // Vertical facing West
+        val verticalWest = floatArrayOf(
+            0f, 0f, 1f,
+            1f, 0f, 0f,
+            0f, 1f, 0f
+        )
+        assertEquals(270f, CompassSensorManager.calculateAzimuth(verticalWest), 0.1f)
+    }
+
+    @Test
+    fun testDeadbandSmoothingEliminatesTremor() {
+        // Differenza minuscola inferiore a 0.25°: il filtro deadband deve mantenere l'angolo precedente fermo
+        val unchanged = CompassSensorManager.smoothAngle(45.0f, 45.15f)
+        assertEquals(45.0f, unchanged, 0.001f)
+
+        // Movimento effettivo: deve applicare lo smoothing dinamico
+        val moved = CompassSensorManager.smoothAngle(45.0f, 50.0f)
+        assertTrue(moved > 45.0f && moved < 50.0f)
+    }
 }
