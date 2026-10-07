@@ -84,18 +84,18 @@ fun EasterEggScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(scrollState)
-                .padding(horizontal = 24.dp, vertical = 8.dp),
+                .padding(horizontal = 20.dp, vertical = 4.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Immagine mostrata per intero senza riquadro/cornice
+            // Immagine mostrata per intero con proporzioni naturali e senza riquadro
             Image(
                 painter = painterResource(id = R.drawable.easter_egg_author),
                 contentDescription = "Lorenzo Trinati",
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
-                    .fillMaxWidth(0.78f)
-                    .aspectRatio(686f / 1024f)
-                    .padding(bottom = 12.dp)
+                    .heightIn(min = 170.dp, max = 215.dp)
+                    .aspectRatio(842f / 1024f)
+                    .padding(bottom = 8.dp)
             )
 
             // Nome
@@ -103,7 +103,7 @@ fun EasterEggScreen(
                 text = "Lorenzo Trinati",
                 fontFamily = QuicksandFontFamily,
                 fontWeight = FontWeight.Bold,
-                fontSize = 26.sp,
+                fontSize = 24.sp,
                 color = textPrimary,
                 letterSpacing = 0.5.sp
             )
@@ -113,58 +113,58 @@ fun EasterEggScreen(
                 text = "Creatore dell'applicazione",
                 fontFamily = QuicksandFontFamily,
                 fontWeight = FontWeight.Medium,
-                fontSize = 15.sp,
+                fontSize = 14.sp,
                 color = accentBlue,
-                modifier = Modifier.padding(top = 4.dp, bottom = 18.dp)
+                modifier = Modifier.padding(top = 2.dp, bottom = 12.dp)
             )
 
             // Scheda con descrizione rielaborata e sintetica
             Surface(
                 color = cardBackground,
-                shape = RoundedCornerShape(24.dp),
+                shape = RoundedCornerShape(20.dp),
                 border = BorderStroke(1.dp, cardBorder),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(20.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
                         text = "Il progetto nasce dall'esigenza di migliorare la calcolatrice stock di Google Pixel. Nato per uso personale, ho voluto condividerlo con tutti nella speranza che sia utile e possa continuare a crescere ed evolversi.",
                         fontFamily = QuicksandFontFamily,
                         fontWeight = FontWeight.Normal,
-                        fontSize = 15.sp,
-                        lineHeight = 22.sp,
+                        fontSize = 14.sp,
+                        lineHeight = 20.sp,
                         color = Color(0xFFD6DAE3),
                         textAlign = TextAlign.Center
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             // Sezione Link Social
             Text(
                 text = "CONTATTI & PROGETTI",
                 fontFamily = QuicksandFontFamily,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 12.sp,
+                fontSize = 11.sp,
                 letterSpacing = 1.2.sp,
                 color = textSecondary,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 6.dp, bottom = 12.dp)
+                    .padding(start = 4.dp, bottom = 8.dp)
             )
 
-            // Pulsante Instagram
+            // Pulsante Instagram (@lorenzotrinati senza punto)
             SocialButton(
                 iconRes = R.drawable.ic_instagram,
                 title = "Instagram",
-                handle = "@lorenzo.trinati",
-                onClick = { openLink("https://www.instagram.com/lorenzo.trinati") }
+                handle = "@lorenzotrinati",
+                onClick = { openLink("https://www.instagram.com/lorenzotrinati") }
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Pulsante GitHub
             SocialButton(
@@ -174,18 +174,18 @@ fun EasterEggScreen(
                 onClick = { openLink("https://github.com/trinatilorenzo") }
             )
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             // Footer
             Text(
                 text = "Made with care",
                 fontFamily = QuicksandFontFamily,
                 fontWeight = FontWeight.Normal,
-                fontSize = 13.sp,
+                fontSize = 12.sp,
                 color = Color(0xFF6B7080)
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }
@@ -207,7 +207,7 @@ private fun SocialButton(
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
