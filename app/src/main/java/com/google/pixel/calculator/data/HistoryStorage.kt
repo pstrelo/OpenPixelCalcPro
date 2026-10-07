@@ -97,4 +97,21 @@ class HistoryStorage(context: Context) {
         }
         prefs.edit().putString("items", array.toString()).apply()
     }
+
+    companion object {
+        @Volatile
+        private var instance: HistoryStorage? = null
+
+        fun getInstance(context: Context): HistoryStorage {
+            return instance ?: synchronized(this) {
+                instance ?: HistoryStorage(context.applicationContext).also { instance = it }
+            }
+        }
+
+        fun getInstanceOrNull(): HistoryStorage? = instance
+
+        fun setInstanceForTesting(storage: HistoryStorage?) {
+            instance = storage
+        }
+    }
 }

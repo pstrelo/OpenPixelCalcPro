@@ -18,7 +18,7 @@ import com.google.pixel.calculator.ui.theme.PixelCalculatorTheme
 
 class MainActivity : ComponentActivity() {
 
-    private val historyStorage by lazy { HistoryStorage(applicationContext) }
+    private val historyStorage by lazy { HistoryStorage.getInstance(applicationContext) }
     private val themePreferences by lazy { ThemePreferences(applicationContext) }
 
     private val viewModel: CalculatorViewModel by viewModels {

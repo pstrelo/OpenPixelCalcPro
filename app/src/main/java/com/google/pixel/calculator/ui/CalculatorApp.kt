@@ -40,12 +40,12 @@ fun CalculatorApp(
     historyStorage: HistoryStorage? = null
 ) {
     val context = LocalContext.current
-    val storage = historyStorage ?: remember { HistoryStorage(context) }
+    val storage = historyStorage ?: remember { HistoryStorage.getInstance(context) }
     val themePrefs = remember { ThemePreferences(context) }
     val vm = viewModel ?: remember { CalculatorViewModel(storage, themePrefs) }
 
     val state by vm.uiState.collectAsState()
-    val historyList by storage.historyFlow.collectAsState()
+    val historyList by vm.historyFlow.collectAsState()
 
     var showHistorySheet by rememberSaveable { mutableStateOf(false) }
     var isToolBarExpanded by rememberSaveable { mutableStateOf(false) }

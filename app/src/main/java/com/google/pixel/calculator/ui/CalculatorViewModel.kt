@@ -14,9 +14,15 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class CalculatorViewModel(
-    private val historyStorage: HistoryStorage? = null,
+    historyStorage: HistoryStorage? = null,
     private val themePreferences: ThemePreferences? = null
 ) : ViewModel() {
+
+    private val activeHistoryStorage: HistoryStorage? =
+        historyStorage ?: HistoryStorage.getInstanceOrNull()
+
+    val historyFlow: StateFlow<List<com.google.pixel.calculator.data.HistoryItem>> =
+        activeHistoryStorage?.historyFlow ?: MutableStateFlow(emptyList())
 
     private val evaluator = MathEvaluator()
 
@@ -31,6 +37,12 @@ class CalculatorViewModel(
     val uiState: StateFlow<CalculatorState> = _uiState.asStateFlow()
 
     init {
+        val initialHistory = activeHistoryStorage?.historyFlow?.value ?: emptyList()
+        if (initialHistory.isNotEmpty()) {
+            val recent = initialHistory.take(2).reversed().map { Pair(it.expression, it.result) }
+            _uiState.update { it.copy(sessionHistory = recent) }
+        }
+
         themePreferences?.let { prefs ->
             viewModelScope.launch {
                 prefs.themeMode.collect { mode ->
@@ -264,7 +276,7 @@ class CalculatorViewModel(
             }
             // Salva nella cronologia persistente
             viewModelScope.launch {
-                historyStorage?.addItem(closedExpr, evalResult.formattedResult)
+                activeHistoryStorage?.addItem(closedExpr, evalResult.formattedResult)
             }
         } else {
             _uiState.update {
@@ -281,7 +293,7 @@ class CalculatorViewModel(
 
     fun deleteHistoryItem(id: String) {
         viewModelScope.launch {
-            historyStorage?.deleteItem(id)
+            activeHistoryStorage?.deleteItem(id)
         }
     }
 
@@ -293,7 +305,7 @@ class CalculatorViewModel(
             )
         }
         viewModelScope.launch {
-            historyStorage?.clearHistory()
+            activeHistoryStorage?.clearHistory()
         }
     }
 

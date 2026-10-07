@@ -54,6 +54,12 @@ fun PixelHistoryPanel(
     val listState = rememberLazyListState()
     val colors = CalculatorTheme.colors
 
+    LaunchedEffect(historyList.size) {
+        if (historyList.isNotEmpty()) {
+            listState.animateScrollToItem(0)
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
