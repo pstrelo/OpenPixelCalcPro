@@ -1,11 +1,5 @@
 package com.google.pixel.calculator.ui.settings
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,9 +9,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.*
@@ -90,330 +81,158 @@ fun ThemeSelectionDialog(
         )
     )
 
-    // Submenu state: populated when a theme is selected for confirmation
-    var selectedThemeForSubmenu by remember { mutableStateOf<AppThemeMode?>(null) }
-
     AlertDialog(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh ?: MaterialTheme.colorScheme.surface,
         title = {
-            if (selectedThemeForSubmenu == null) {
-                Text(
-                    text = stringResource(R.string.choose_theme),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            } else {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    IconButton(
-                        onClick = { selectedThemeForSubmenu = null },
-                        modifier = Modifier.size(36.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back_to_themes),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(R.string.set_app_icon),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
+            Text(
+                text = stringResource(R.string.choose_theme),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
         },
         text = {
-            AnimatedContent(
-                targetState = selectedThemeForSubmenu,
-                transitionSpec = {
-                    if (targetState != null) {
-                        (slideInHorizontally { it } + fadeIn()).togetherWith(slideOutHorizontally { -it } + fadeOut())
-                    } else {
-                        (slideInHorizontally { -it } + fadeIn()).togetherWith(slideOutHorizontally { it } + fadeOut())
-                    }
-                },
-                label = "ThemeSubmenuTransition"
-            ) { targetSelectedTheme ->
-                if (targetSelectedTheme == null) {
-                    // 1. MAIN THEME LIST
-                    val scrollState = rememberScrollState()
-                    Column(
+            val scrollState = rememberScrollState()
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(scrollState)
+                    .padding(vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                themeOptions.forEach { option ->
+                    val isSelected = option.mode == currentTheme
+                    val isIconActive = option.mode == currentAppIcon
+                    val itemBg = if (isSelected) {
+                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+                    } else Color.Transparent
+
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .verticalScroll(scrollState)
-                            .padding(vertical = 4.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        themeOptions.forEach { option ->
-                            val isSelected = option.mode == currentTheme
-                            val isIconActive = option.mode == currentAppIcon
-                            val itemBg = if (isSelected) {
-                                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
-                            } else Color.Transparent
-
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(18.dp))
-                                    .background(itemBg)
-                                    .clickable {
-                                        selectedThemeForSubmenu = option.mode
-                                    }
-                                    .padding(horizontal = 10.dp, vertical = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = isSelected,
-                                    onClick = {
-                                        selectedThemeForSubmenu = option.mode
-                                    }
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                    ) {
-                                        Text(
-                                            text = stringResource(option.titleRes),
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                        if (isIconActive) {
-                                            Surface(
-                                                shape = RoundedCornerShape(percent = 50),
-                                                color = MaterialTheme.colorScheme.primaryContainer,
-                                                modifier = Modifier.padding(start = 2.dp)
-                                            ) {
-                                                Row(
-                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.spacedBy(2.dp)
-                                                ) {
-                                                    Icon(
-                                                        imageVector = Icons.Default.Smartphone,
-                                                        contentDescription = null,
-                                                        modifier = Modifier.size(10.dp),
-                                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
-                                                    )
-                                                    Text(
-                                                        text = stringResource(R.string.icon_badge),
-                                                        fontSize = 10.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(itemBg)
+                            .clickable {
+                                onSelectTheme(option.mode)
+                                if (syncIconWithTheme) {
+                                    onSetAppIcon(option.mode)
                                 }
-                                Spacer(modifier = Modifier.width(6.dp))
-                                PixelAppIconPreview(
-                                    themeMode = option.mode,
-                                    size = 28.dp,
-                                    elevation = 1.dp
-                                )
                             }
-                        }
-
-                        HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 4.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                        )
-
-                        // Automatic icon-theme synchronization switch
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f))
-                                .padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Sync,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = stringResource(R.string.sync_icon_with_theme),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = stringResource(R.string.sync_icon_desc),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            Switch(
-                                checked = syncIconWithTheme,
-                                onCheckedChange = { onToggleSyncIcon(it) },
-                                modifier = Modifier.scale(0.85f)
-                            )
-                        }
-                    }
-                } else {
-                    // 2. SUBMENU TO SET APP ICON ALONGSIDE THEME
-                    val themeOption = themeOptions.first { it.mode == targetSelectedTheme }
-                    val isAlreadyIcon = targetSelectedTheme == currentAppIcon
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                            .padding(horizontal = 10.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.6f))
-                                .padding(vertical = 16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                        RadioButton(
+                            selected = isSelected,
+                            onClick = {
+                                onSelectTheme(option.mode)
+                                if (syncIconWithTheme) {
+                                    onSetAppIcon(option.mode)
+                                }
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
-                                PixelAppIconPreview(
-                                    themeMode = targetSelectedTheme,
-                                    size = 80.dp,
-                                    elevation = 6.dp
-                                )
                                 Text(
-                                    text = stringResource(themeOption.titleRes),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
+                                    text = stringResource(option.titleRes),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
-                                if (isAlreadyIcon) {
+                                if (isIconActive) {
                                     Surface(
                                         shape = RoundedCornerShape(percent = 50),
-                                        color = MaterialTheme.colorScheme.primaryContainer
+                                        color = MaterialTheme.colorScheme.primaryContainer,
+                                        modifier = Modifier.padding(start = 2.dp)
                                     ) {
                                         Row(
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                             verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                            horizontalArrangement = Arrangement.spacedBy(2.dp)
                                         ) {
                                             Icon(
-                                                imageVector = Icons.Default.Check,
+                                                imageVector = Icons.Default.Smartphone,
                                                 contentDescription = null,
-                                                modifier = Modifier.size(12.dp),
+                                                modifier = Modifier.size(10.dp),
                                                 tint = MaterialTheme.colorScheme.onPrimaryContainer
                                             )
                                             Text(
-                                                text = stringResource(R.string.icon_currently_active),
-                                                style = MaterialTheme.typography.labelSmall,
-                                                fontWeight = FontWeight.SemiBold,
+                                                text = stringResource(R.string.icon_badge),
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
                                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                                             )
                                         }
                                     }
-                                } else {
-                                    Text(
-                                        text = if (themeOption.isDynamic) {
-                                            stringResource(R.string.icon_material_you_desc)
-                                        } else {
-                                            stringResource(R.string.icon_theme_palette_desc)
-                                        },
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
                                 }
                             }
                         }
-
-                        Text(
-                            text = stringResource(R.string.prompt_set_app_icon),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Medium
+                        Spacer(modifier = Modifier.width(6.dp))
+                        PixelAppIconPreview(
+                            themeMode = option.mode,
+                            size = 28.dp,
+                            elevation = 1.dp
                         )
-
-                        Button(
-                            onClick = {
-                                onSelectTheme(targetSelectedTheme)
-                                onSetAppIcon(targetSelectedTheme)
-                                onDismiss()
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(percent = 50),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = stringResource(R.string.btn_set_app_icon),
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-
-                        OutlinedButton(
-                            onClick = {
-                                onToggleSyncIcon(false)
-                                onSelectTheme(targetSelectedTheme)
-                                onDismiss()
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(percent = 50)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.btn_apply_theme_only),
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
                     }
+                }
+
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                )
+
+                // Automatic icon-theme synchronization switch
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f))
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Sync,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.sync_icon_with_theme),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = stringResource(R.string.sync_icon_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = syncIconWithTheme,
+                        onCheckedChange = { onToggleSyncIcon(it) },
+                        modifier = Modifier.scale(0.85f)
+                    )
                 }
             }
         },
         confirmButton = {
-            if (selectedThemeForSubmenu == null) {
-                TextButton(
-                    onClick = onDismiss,
-                    shape = RoundedCornerShape(percent = 50)
-                ) {
-                    Text(
-                        text = stringResource(R.string.close),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            } else {
-                TextButton(
-                    onClick = { selectedThemeForSubmenu = null },
-                    shape = RoundedCornerShape(percent = 50)
-                ) {
-                    Text(
-                        text = stringResource(R.string.back),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
+            TextButton(
+                onClick = onDismiss,
+                shape = RoundedCornerShape(percent = 50)
+            ) {
+                Text(
+                    text = stringResource(R.string.close),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     )
