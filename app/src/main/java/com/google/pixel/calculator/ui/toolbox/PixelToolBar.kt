@@ -157,7 +157,8 @@ fun rememberToolBarDimensions(): ToolBarDimensions {
 
 /**
  * Material 3 tool trigger button:
- * - Squircle (RoundedCornerShape 18dp) matching calculator keys in all themes.
+ * - When collapsed: circular / rounded (height / 2), shows icon of active tool.
+ * - When expanded: squircle (RoundedCornerShape 18dp) with system primary container color.
  */
 @Composable
 fun PixelToolToggleButton(
@@ -172,7 +173,14 @@ fun PixelToolToggleButton(
         AllToolDestinations.firstOrNull { it.screen == currentScreen } ?: AllToolDestinations[0]
     }
 
-    val cornerRadius = 18.dp
+    val cornerRadius by animateDpAsState(
+        targetValue = if (isExpanded) 18.dp else (height / 2),
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "ToolButtonCornerAnimation"
+    )
 
     val isDark = CalculatorTheme.colors.isDark
     val activeContainer = MaterialTheme.colorScheme.primaryContainer.takeIf { it != Color.Unspecified }
