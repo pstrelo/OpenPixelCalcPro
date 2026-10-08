@@ -79,9 +79,10 @@ fun BaseKeypad(
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val effectiveProMode = if (isLandscape) true else isProMode
 
-    val btnHeight = if (isLandscape) 48.dp else if (isProMode) 60.dp else 82.dp
-    val spacing = if (isLandscape) 6.dp else if (isProMode) 8.dp else 12.dp
+    val btnHeight = if (isLandscape) 48.dp else if (effectiveProMode) 52.dp else 82.dp
+    val spacing = if (isLandscape) 6.dp else if (effectiveProMode) 6.dp else 12.dp
 
     Column(
         modifier = modifier
@@ -89,37 +90,36 @@ fun BaseKeypad(
             .padding(horizontal = if (isLandscape) 10.dp else 16.dp, vertical = if (isLandscape) 2.dp else 6.dp),
         verticalArrangement = Arrangement.spacedBy(spacing)
     ) {
-        // Scientific expansion lever/arrow (placed above the first row on the left)
-        // In landscape it rotates 90 degrees for horizontal expansion
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 4.dp, vertical = if (isLandscape) 0.dp else 2.dp),
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(
-                onClick = {
-                    triggerHaptic()
-                    onToggleProMode()
-                },
-                modifier = Modifier.size(if (isLandscape) 32.dp else 40.dp)
+        // Scientific expansion lever/arrow (only in portrait, hidden in landscape)
+        if (!isLandscape) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = if (isProMode) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = if (isProMode) stringResource(R.string.reduce_calc) else stringResource(R.string.expand_scientific),
-                    tint = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.8f),
-                    modifier = Modifier
-                        .size(if (isLandscape) 22.dp else 28.dp)
-                        .rotate(if (isLandscape) -90f else 0f)
-                )
+                IconButton(
+                    onClick = {
+                        triggerHaptic()
+                        onToggleProMode()
+                    },
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = if (effectiveProMode) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
+                        contentDescription = if (effectiveProMode) stringResource(R.string.reduce_calc) else stringResource(R.string.expand_scientific),
+                        tint = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.8f),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
             }
         }
 
         if (!isLandscape) {
             // Scientific section (3 rows visible in Pro / Expanded mode)
             AnimatedVisibility(
-                visible = isProMode,
+                visible = effectiveProMode,
                 enter = expandVertically() + fadeIn(),
                 exit = shrinkVertically() + fadeOut()
             ) {
@@ -331,7 +331,7 @@ fun BaseKeypad(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Backspace,
                     contentDescription = stringResource(R.string.delete_digit),
-                    modifier = Modifier.size(if (isProMode) 24.dp else 28.dp)
+                    modifier = Modifier.size(if (effectiveProMode) 24.dp else 28.dp)
                 )
             }
         }
@@ -390,7 +390,7 @@ fun BaseKeypad(
             ) {
                 // 1. [Extra symbols (if active)] (3 Columns x 4 Rows: 12 scientific keys)
                 AnimatedVisibility(
-                    visible = isProMode,
+                    visible = effectiveProMode,
                     enter = expandHorizontally() + fadeIn(),
                     exit = shrinkHorizontally() + fadeOut(),
                     modifier = Modifier.weight(3f)
@@ -605,7 +605,7 @@ fun PixelButton(
     }
 
     val view = LocalView.current
-    val buttonShape = if (colors.isSquircle) RoundedCornerShape(18.dp) else RoundedCornerShape(height / 2)
+    val buttonShape = RoundedCornerShape(18.dp)
 
     Surface(
         onClick = {
@@ -668,7 +668,7 @@ fun PixelIconButton(
     }
 
     val view = LocalView.current
-    val buttonShape = if (colors.isSquircle) RoundedCornerShape(18.dp) else RoundedCornerShape(height / 2)
+    val buttonShape = RoundedCornerShape(18.dp)
 
     Surface(
         onClick = {

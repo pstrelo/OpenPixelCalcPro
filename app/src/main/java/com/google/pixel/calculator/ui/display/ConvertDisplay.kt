@@ -55,6 +55,7 @@ fun ConvertDisplay(
     topUnit: UnitConverter.UnitDefinition,
     bottomUnit: UnitConverter.UnitDefinition,
     activeField: ActiveConverterField,
+    isProMode: Boolean = false,
     isHapticEnabled: Boolean = true,
     onFocusField: (ActiveConverterField) -> Unit,
     onSwap: () -> Unit,
@@ -69,6 +70,9 @@ fun ConvertDisplay(
         }
     }
 
+    val isLandscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    val isCompact = isProMode || isLandscape
+
     val topScrollState = rememberScrollState()
     val bottomScrollState = rememberScrollState()
 
@@ -82,30 +86,38 @@ fun ConvertDisplay(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = if (isCompact) 2.dp else 6.dp),
         verticalArrangement = Arrangement.Center
     ) {
         // --- TOP BOX ---
-        ConverterBox(
-            valueStr = topValueStr,
-            unit = topUnit,
-            isActive = activeField == ActiveConverterField.TOP,
-            scrollState = topScrollState,
-            onBoxClick = {
-                triggerHaptic()
-                onFocusField(ActiveConverterField.TOP)
-            },
-            onUnitChipClick = {
-                triggerHaptic()
-                onSelectTopUnit()
-            }
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f, fill = false),
+            contentAlignment = Alignment.Center
+        ) {
+            ConverterBox(
+                valueStr = topValueStr,
+                unit = topUnit,
+                isActive = activeField == ActiveConverterField.TOP,
+                isCompact = isCompact,
+                scrollState = topScrollState,
+                onBoxClick = {
+                    triggerHaptic()
+                    onFocusField(ActiveConverterField.TOP)
+                },
+                onUnitChipClick = {
+                    triggerHaptic()
+                    onSelectTopUnit()
+                }
+            )
+        }
 
         // --- CENTER BAR: DIVIDER AND SWAP BUTTON (⇅) ---
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 4.dp),
+                .padding(vertical = if (isCompact) 1.dp else 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(
@@ -114,7 +126,7 @@ fun ConvertDisplay(
                     onSwap()
                 },
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(if (isCompact) 32.dp else 40.dp)
                     .background(
                         color = CalculatorTheme.colors.equalsContainer.copy(alpha = 0.20f),
                         shape = CircleShape
@@ -124,11 +136,11 @@ fun ConvertDisplay(
                     imageVector = Icons.Default.SwapVert,
                     contentDescription = stringResource(R.string.swap_units),
                     tint = CalculatorTheme.colors.equalsContainer,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(if (isCompact) 18.dp else 24.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(8.dp))
 
             HorizontalDivider(
                 color = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.15f),
@@ -138,20 +150,28 @@ fun ConvertDisplay(
         }
 
         // --- BOTTOM BOX ---
-        ConverterBox(
-            valueStr = bottomValueStr,
-            unit = bottomUnit,
-            isActive = activeField == ActiveConverterField.BOTTOM,
-            scrollState = bottomScrollState,
-            onBoxClick = {
-                triggerHaptic()
-                onFocusField(ActiveConverterField.BOTTOM)
-            },
-            onUnitChipClick = {
-                triggerHaptic()
-                onSelectBottomUnit()
-            }
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f, fill = false),
+            contentAlignment = Alignment.Center
+        ) {
+            ConverterBox(
+                valueStr = bottomValueStr,
+                unit = bottomUnit,
+                isActive = activeField == ActiveConverterField.BOTTOM,
+                isCompact = isCompact,
+                scrollState = bottomScrollState,
+                onBoxClick = {
+                    triggerHaptic()
+                    onFocusField(ActiveConverterField.BOTTOM)
+                },
+                onUnitChipClick = {
+                    triggerHaptic()
+                    onSelectBottomUnit()
+                }
+            )
+        }
     }
 }
 
@@ -160,6 +180,7 @@ private fun ConverterBox(
     valueStr: String,
     unit: UnitConverter.UnitDefinition,
     isActive: Boolean,
+    isCompact: Boolean,
     scrollState: androidx.compose.foundation.ScrollState,
     onBoxClick: () -> Unit,
     onUnitChipClick: () -> Unit
@@ -170,8 +191,6 @@ private fun ConverterBox(
         CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.40f) // Faded when not selected
     }
 
-    val isLandscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = Color.Transparent,
@@ -180,12 +199,12 @@ private fun ConverterBox(
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .clickable { onBoxClick() }
-            .padding(horizontal = 4.dp, vertical = if (isLandscape) 1.dp else 4.dp)
+            .padding(horizontal = 4.dp, vertical = if (isCompact) 1.dp else 4.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = if (isLandscape) 4.dp else 10.dp),
+                .padding(horizontal = 12.dp, vertical = if (isCompact) 2.dp else 8.dp),
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -196,12 +215,12 @@ private fun ConverterBox(
                     .horizontalScroll(scrollState),
                 contentAlignment = Alignment.CenterEnd
             ) {
-                val fontSize = if (isLandscape) {
+                val fontSize = if (isCompact) {
                     when {
-                        valueStr.length > 14 -> 20.sp
-                        valueStr.length > 10 -> 24.sp
-                        valueStr.length > 7 -> 28.sp
-                        else -> 32.sp
+                        valueStr.length > 14 -> 16.sp
+                        valueStr.length > 10 -> 20.sp
+                        valueStr.length > 7 -> 24.sp
+                        else -> 28.sp
                     }
                 } else {
                     when {
@@ -229,7 +248,7 @@ private fun ConverterBox(
                 }
             }
 
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(if (isCompact) 6.dp else 10.dp))
 
             // Unit chip (clickable to change only this box's unit)
             Surface(
@@ -241,13 +260,13 @@ private fun ConverterBox(
                     .clickable { onUnitChipClick() }
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    modifier = Modifier.padding(horizontal = if (isCompact) 8.dp else 10.dp, vertical = if (isCompact) 4.dp else 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
                         text = unit.code,
-                        fontSize = 15.sp,
+                        fontSize = if (isCompact) 13.sp else 15.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = SystemFontFamily
                     )
@@ -255,7 +274,7 @@ private fun ConverterBox(
                         imageVector = Icons.Default.UnfoldMore,
                         contentDescription = stringResource(R.string.change_unit),
                         tint = CalculatorTheme.colors.onSurfaceVariant,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(if (isCompact) 14.dp else 16.dp)
                     )
                 }
             }

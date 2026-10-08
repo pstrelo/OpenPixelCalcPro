@@ -64,20 +64,20 @@ val AllToolDestinations: List<ToolDestination> = listOf(
         descRes = R.string.tool_main_calc_desc
     ),
     ToolDestination(
-        screen = ActiveScreen.ADVANCED_CALCULATOR,
-        icon = Icons.AutoMirrored.Filled.ShowChart,
-        title = "Avanzata",
-        contentDescription = "Calcolatrice avanzata e grafici",
-        titleRes = R.string.tool_advanced,
-        descRes = R.string.tool_advanced_desc
-    ),
-    ToolDestination(
         screen = ActiveScreen.TOOLBOX_CONVERTER,
         icon = Icons.Default.SwapHoriz,
         title = "Convertitore",
         contentDescription = "Convertitore di unità",
         titleRes = R.string.tool_converter,
         descRes = R.string.tool_converter_desc
+    ),
+    ToolDestination(
+        screen = ActiveScreen.ADVANCED_CALCULATOR,
+        icon = Icons.AutoMirrored.Filled.ShowChart,
+        title = "Avanzata",
+        contentDescription = "Calcolatrice avanzata e grafici",
+        titleRes = R.string.tool_advanced,
+        descRes = R.string.tool_advanced_desc
     ),
     ToolDestination(
         screen = ActiveScreen.TOOLBOX_LEVEL,
@@ -129,18 +129,16 @@ fun rememberToolBarDimensions(): ToolBarDimensions {
     val spacing = if (isLandscape) 6.dp else 12.dp
     val height = if (isLandscape) 48.dp else 82.dp
 
-    // Width of the first calculator key (1 column out of 4 in portrait, 1 out of 3 numeric keys in landscape)
+    // Width of floating tool button
     val btnWidth = if (isLandscape) {
-        val numbersSectionWidth = (screenWidth - (hPadding * 2) - spacing) * (3f / 5f)
-        ((numbersSectionWidth - (spacing * 2)) / 3).coerceAtLeast(48.dp)
+        48.dp
     } else {
         ((screenWidth - (hPadding * 2) - (spacing * 3)) / 4).coerceAtLeast(82.dp)
     }
 
-    // Width of pill bar (covers exactly the 3 remaining columns in portrait, 2 remaining columns in landscape)
+    // Width of pill bar
     val pillWidth = if (isLandscape) {
-        val numbersSectionWidth = (screenWidth - (hPadding * 2) - spacing) * (3f / 5f)
-        (numbersSectionWidth - btnWidth - spacing).coerceAtLeast(180.dp)
+        260.dp
     } else {
         (screenWidth - (hPadding * 2) - btnWidth - spacing).coerceAtLeast(240.dp)
     }
@@ -159,8 +157,7 @@ fun rememberToolBarDimensions(): ToolBarDimensions {
 
 /**
  * Material 3 tool trigger button:
- * - When collapsed: circular (CircleShape), shows icon of active tool.
- * - When expanded: squircle (RoundedCornerShape 18dp) with system primary container color.
+ * - Squircle (RoundedCornerShape 18dp) matching calculator keys in all themes.
  */
 @Composable
 fun PixelToolToggleButton(
@@ -175,14 +172,7 @@ fun PixelToolToggleButton(
         AllToolDestinations.firstOrNull { it.screen == currentScreen } ?: AllToolDestinations[0]
     }
 
-    val cornerRadius by animateDpAsState(
-        targetValue = if (isExpanded) 18.dp else (height / 2),
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMediumLow
-        ),
-        label = "ToolButtonCornerAnimation"
-    )
+    val cornerRadius = 18.dp
 
     val isDark = CalculatorTheme.colors.isDark
     val activeContainer = MaterialTheme.colorScheme.primaryContainer.takeIf { it != Color.Unspecified }
@@ -436,6 +426,8 @@ fun PixelKeypadToolRow(
 ) {
     val haptic = LocalHapticFeedback.current
 
+    val pillWeight = if (!isLandscape && onEquals != null) 3f else 2f
+
     Box(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -451,38 +443,69 @@ fun PixelKeypadToolRow(
                 modifier = Modifier.weight(1f)
             )
 
-            // Regular keypad buttons
-            PixelButton(
-                text = "0",
-                type = PixelButtonType.NUMERIC,
-                height = btnHeight,
-                modifier = Modifier.weight(1f),
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onDigit("0")
-                }
-            )
-            PixelButton(
-                text = ".",
-                type = PixelButtonType.NUMERIC,
-                height = btnHeight,
-                modifier = Modifier.weight(1f),
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onDigit(".")
-                }
-            )
-            if (!isLandscape && onEquals != null) {
-                PixelButton(
-                    text = "=",
-                    type = PixelButtonType.EQUALS,
-                    height = btnHeight,
-                    modifier = Modifier.weight(1f),
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onEquals()
+            // Keys under the pill container with exit/enter animation
+            Box(
+                modifier = Modifier
+                    .weight(pillWeight)
+                    .height(btnHeight),
+                contentAlignment = Alignment.Center
+            ) {
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = !isExpanded,
+                    enter = fadeIn(tween(180)) + scaleIn(
+                        animationSpec = spring(
+                            dampingRatio = 0.62f,
+                            stiffness = Spring.StiffnessMediumLow
+                        ),
+                        transformOrigin = TransformOrigin(0f, 0.5f)
+                    ),
+                    exit = fadeOut(tween(140)) + scaleOut(
+                        animationSpec = spring(
+                            dampingRatio = 0.85f,
+                            stiffness = Spring.StiffnessMedium
+                        ),
+                        transformOrigin = TransformOrigin(0f, 0.5f)
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(spacing),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        PixelButton(
+                            text = "0",
+                            type = PixelButtonType.NUMERIC,
+                            height = btnHeight,
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onDigit("0")
+                            }
+                        )
+                        PixelButton(
+                            text = ".",
+                            type = PixelButtonType.NUMERIC,
+                            height = btnHeight,
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onDigit(".")
+                            }
+                        )
+                        if (!isLandscape && onEquals != null) {
+                            PixelButton(
+                                text = "=",
+                                type = PixelButtonType.EQUALS,
+                                height = btnHeight,
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    onEquals()
+                                }
+                            )
+                        }
                     }
-                )
+                }
             }
         }
 
@@ -510,7 +533,7 @@ fun PixelKeypadToolRow(
                     ),
                     transformOrigin = TransformOrigin(0f, 0.5f)
                 ),
-                modifier = Modifier.weight(if (!isLandscape && onEquals != null) 3f else 2f)
+                modifier = Modifier.weight(pillWeight)
             ) {
                 PixelToolPillBar(
                     currentScreen = currentScreen,

@@ -121,13 +121,6 @@ fun getThemeIconColors(themeMode: AppThemeMode): ThemeIconColors {
             equalsCircle = Color(0xFFD3E3FD),
             equalsSign = Color(0xFF041E49)
         )
-        AppThemeMode.PIXEL_SQUIRCLE -> ThemeIconColors(
-            background = Color(0xFF131418),
-            flower = Color(0xFF26282E),
-            symbols = Color(0xFFE2E2E6),
-            equalsCircle = Color(0xFF7FCFFF),
-            equalsSign = Color(0xFF00344F)
-        )
         AppThemeMode.CANDY_POP -> ThemeIconColors(
             background = Color(0xFFFAF7F5),
             flower = Color(0xFFD8F3DC),

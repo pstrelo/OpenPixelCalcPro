@@ -409,7 +409,8 @@ fun CompassView(
             PixelFloatingToolBar(
                 currentScreen = ActiveScreen.TOOLBOX_COMPASS,
                 onNavigate = onNavigate,
-                modifier = Modifier.align(Alignment.BottomStart)
+                alignRight = isLandscape,
+                modifier = Modifier.align(if (isLandscape) Alignment.BottomEnd else Alignment.BottomStart)
             )
         }
     }

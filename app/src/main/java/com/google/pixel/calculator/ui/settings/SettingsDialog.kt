@@ -87,12 +87,6 @@ fun ThemeSelectionDialog(
             titleRes = R.string.theme_retro_cyber,
             colors = listOf(Color(0xFF1E222C), Color(0xFF34D399), Color(0xFFFF3366), Color(0xFFFACC15)),
             isDynamic = false
-        ),
-        ThemeOption(
-            mode = AppThemeMode.PIXEL_SQUIRCLE,
-            titleRes = R.string.theme_pixel_squircle,
-            colors = listOf(Color(0xFF131418), Color(0xFF26282E), Color(0xFF373942), Color(0xFF7FCFFF)),
-            isDynamic = false
         )
     )
 

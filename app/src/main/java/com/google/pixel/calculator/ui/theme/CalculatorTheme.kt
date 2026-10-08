@@ -133,28 +133,6 @@ private val RetroCyberCalculatorColors = CalculatorColors(
     isDark = true
 )
 
-// 5. PIXEL SQUIRCLE THEME (SQUIRCLE / TASTI SQUADRATI)
-private val PixelSquircleCalculatorColors = CalculatorColors(
-    background = Color(0xFF131418),
-    surface = Color(0xFF131418),
-    onSurface = Color(0xFFE2E2E6),
-    onSurfaceVariant = Color(0xFF8E9099),
-    numericContainer = Color(0xFF26282E),
-    numericContent = Color(0xFFE2E2E6),
-    operatorContainer = Color(0xFF373942),
-    operatorContent = Color(0xFFE2E2E6),
-    controlContainer = Color(0xFF373942),
-    controlContent = Color(0xFFE2E2E6),
-    equalsContainer = Color(0xFF7FCFFF), // Pixel Light Blue / Monet Accent
-    equalsContent = Color(0xFF00344F),
-    scientificContainer = Color(0xFF26282E),
-    scientificContent = Color(0xFFE2E2E6),
-    historyBackground = Color(0xFF191A20),
-    historyDivider = Color(0xFF2B2D35),
-    isDark = true,
-    isSquircle = true
-)
-
 @Composable
 fun PixelCalculatorTheme(
     themeMode: AppThemeMode = AppThemeMode.SYSTEM_AUTO,
@@ -169,7 +147,6 @@ fun PixelCalculatorTheme(
         AppThemeMode.SYSTEM_DARK -> true
         AppThemeMode.STANDARD_LIGHT -> false
         AppThemeMode.STANDARD_DARK -> true
-        AppThemeMode.PIXEL_SQUIRCLE -> true
         AppThemeMode.CANDY_POP -> false
         AppThemeMode.RETRO_CYBER -> true
     }
@@ -320,21 +297,6 @@ fun PixelCalculatorTheme(
                 onSurfaceVariant = RetroCyberCalculatorColors.onSurfaceVariant
             ),
             RetroCyberCalculatorColors
-        )
-        themeMode == AppThemeMode.PIXEL_SQUIRCLE -> Pair(
-            darkColorScheme(
-                primary = PixelSquircleCalculatorColors.equalsContainer,
-                onPrimary = PixelSquircleCalculatorColors.equalsContent,
-                primaryContainer = PixelSquircleCalculatorColors.equalsContainer,
-                onPrimaryContainer = PixelSquircleCalculatorColors.equalsContent,
-                secondaryContainer = PixelSquircleCalculatorColors.operatorContainer,
-                onSecondaryContainer = PixelSquircleCalculatorColors.operatorContent,
-                surface = PixelSquircleCalculatorColors.surface,
-                onSurface = PixelSquircleCalculatorColors.onSurface,
-                surfaceVariant = PixelSquircleCalculatorColors.operatorContainer,
-                onSurfaceVariant = PixelSquircleCalculatorColors.onSurfaceVariant
-            ),
-            PixelSquircleCalculatorColors
         )
         else -> Pair(lightColorScheme(), PixelLightCalculatorColors)
     }

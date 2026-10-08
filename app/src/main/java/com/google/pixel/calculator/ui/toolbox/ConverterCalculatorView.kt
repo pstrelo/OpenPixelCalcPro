@@ -254,6 +254,7 @@ fun ConverterCalculatorView(
                         topUnit = topUnitDef,
                         bottomUnit = bottomUnitDef,
                         activeField = activeField,
+                        isProMode = isProMode,
                         isHapticEnabled = isHapticEnabled,
                         onFocusField = { clickedField ->
                             if (activeField != clickedField) {
