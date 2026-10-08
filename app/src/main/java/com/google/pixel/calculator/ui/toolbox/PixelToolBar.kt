@@ -129,16 +129,18 @@ fun rememberToolBarDimensions(): ToolBarDimensions {
     val spacing = if (isLandscape) 6.dp else 12.dp
     val height = if (isLandscape) 48.dp else 82.dp
 
-    // Width of the first calculator key (1 column out of 4)
+    // Width of the first calculator key (1 column out of 4 in portrait, 1 out of 3 numeric keys in landscape)
     val btnWidth = if (isLandscape) {
-        height * 1.5f
+        val numbersSectionWidth = (screenWidth - (hPadding * 2) - spacing) * (3f / 5f)
+        ((numbersSectionWidth - (spacing * 2)) / 3).coerceAtLeast(48.dp)
     } else {
         ((screenWidth - (hPadding * 2) - (spacing * 3)) / 4).coerceAtLeast(82.dp)
     }
 
-    // Width of pill bar (covers exactly the 3 remaining columns)
+    // Width of pill bar (covers exactly the 3 remaining columns in portrait, 2 remaining columns in landscape)
     val pillWidth = if (isLandscape) {
-        280.dp
+        val numbersSectionWidth = (screenWidth - (hPadding * 2) - spacing) * (3f / 5f)
+        (numbersSectionWidth - btnWidth - spacing).coerceAtLeast(180.dp)
     } else {
         (screenWidth - (hPadding * 2) - btnWidth - spacing).coerceAtLeast(240.dp)
     }

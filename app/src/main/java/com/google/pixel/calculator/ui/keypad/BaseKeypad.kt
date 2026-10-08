@@ -605,6 +605,7 @@ fun PixelButton(
     }
 
     val view = LocalView.current
+    val buttonShape = if (colors.isSquircle) RoundedCornerShape(18.dp) else RoundedCornerShape(height / 2)
 
     Surface(
         onClick = {
@@ -612,7 +613,7 @@ fun PixelButton(
             onClick()
         },
         modifier = modifier.height(height),
-        shape = RoundedCornerShape(height / 2),
+        shape = buttonShape,
         color = containerColor,
         contentColor = contentColor
     ) {
@@ -667,6 +668,7 @@ fun PixelIconButton(
     }
 
     val view = LocalView.current
+    val buttonShape = if (colors.isSquircle) RoundedCornerShape(18.dp) else RoundedCornerShape(height / 2)
 
     Surface(
         onClick = {
@@ -674,7 +676,7 @@ fun PixelIconButton(
             onClick()
         },
         modifier = modifier.height(height),
-        shape = RoundedCornerShape(height / 2),
+        shape = buttonShape,
         color = containerColor,
         contentColor = contentColor
     ) {

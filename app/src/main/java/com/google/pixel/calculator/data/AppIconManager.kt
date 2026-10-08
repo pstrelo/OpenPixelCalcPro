@@ -17,6 +17,7 @@ object AppIconManager {
         AppThemeMode.SYSTEM_DARK to "$PACKAGE_NAME.MainActivityAliasSystemDark",
         AppThemeMode.STANDARD_LIGHT to "$PACKAGE_NAME.MainActivityAliasStandardLight",
         AppThemeMode.STANDARD_DARK to "$PACKAGE_NAME.MainActivityAliasStandardDark",
+        AppThemeMode.PIXEL_SQUIRCLE to "$PACKAGE_NAME.MainActivityAliasStandardDark",
         AppThemeMode.CANDY_POP to "$PACKAGE_NAME.MainActivityAliasCandyPop",
         AppThemeMode.RETRO_CYBER to "$PACKAGE_NAME.MainActivityAliasRetroCyber"
     )
@@ -84,6 +85,7 @@ object AppIconManager {
         AppThemeMode.SYSTEM_DARK -> R.drawable.ic_launcher_foreground_system_dark
         AppThemeMode.STANDARD_LIGHT -> R.drawable.ic_launcher_foreground_standard_light
         AppThemeMode.STANDARD_DARK -> R.drawable.ic_launcher_foreground_standard_dark
+        AppThemeMode.PIXEL_SQUIRCLE -> R.drawable.ic_launcher_foreground_standard_dark
         AppThemeMode.CANDY_POP -> R.drawable.ic_launcher_foreground_candy_pop
         AppThemeMode.RETRO_CYBER -> R.drawable.ic_launcher_foreground_retro_cyber
     }
@@ -97,6 +99,7 @@ object AppIconManager {
         AppThemeMode.SYSTEM_DARK -> R.drawable.ic_launcher_background_system_dark
         AppThemeMode.STANDARD_LIGHT -> R.drawable.ic_launcher_background_standard_light
         AppThemeMode.STANDARD_DARK -> R.drawable.ic_launcher_background_standard_dark
+        AppThemeMode.PIXEL_SQUIRCLE -> R.drawable.ic_launcher_background_standard_dark
         AppThemeMode.CANDY_POP -> R.drawable.ic_launcher_background_candy_pop
         AppThemeMode.RETRO_CYBER -> R.drawable.ic_launcher_background_retro_cyber
     }

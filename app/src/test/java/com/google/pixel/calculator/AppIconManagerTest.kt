@@ -20,9 +20,9 @@ class AppIconManagerTest {
             res
         }
 
-        // All 7 themes must have an assigned drawable resource
-        assertEquals(7, foregrounds.size)
-        // All 7 foregrounds must be distinct to represent each theme
+        // All themes must have an assigned drawable resource
+        assertEquals(AppThemeMode.entries.size, foregrounds.size)
+        // Distinct launcher foreground drawables among available icons
         assertEquals(7, foregrounds.distinct().size)
     }
 
@@ -35,7 +35,7 @@ class AppIconManagerTest {
             res
         }
 
-        assertEquals(7, backgrounds.size)
+        assertEquals(AppThemeMode.entries.size, backgrounds.size)
     }
 
     @Test

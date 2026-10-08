@@ -11,6 +11,7 @@ enum class AppThemeMode {
     SYSTEM_DARK,    // Dynamic system (Always dark with Monet accents)
     STANDARD_LIGHT, // Classic standard light theme
     STANDARD_DARK,  // Classic standard dark theme
+    PIXEL_SQUIRCLE, // Extra theme with squircle / square keypad buttons
     CANDY_POP,      // Vibrant Light (Pastel)
     RETRO_CYBER     // Vibrant Dark (Cyber/Neon)
 }
@@ -37,6 +38,7 @@ class ThemePreferences(private val context: Context) {
             "SYSTEM_DARK" -> AppThemeMode.SYSTEM_DARK
             "LIGHT", "STANDARD_LIGHT" -> AppThemeMode.STANDARD_LIGHT
             "DARK", "STANDARD_DARK" -> AppThemeMode.STANDARD_DARK
+            "PIXEL_SQUIRCLE", "SQUIRCLE" -> AppThemeMode.PIXEL_SQUIRCLE
             "CANDY_POP" -> AppThemeMode.CANDY_POP
             "RETRO_CYBER" -> AppThemeMode.RETRO_CYBER
             else -> AppThemeMode.SYSTEM_AUTO
