@@ -84,7 +84,7 @@
     <string name="change_unit">Change unit</string>
     <string name="unit_picker_from">Unit of measurement</string>
     <string name="unit_picker_to">Convert to</string>
-    <string name="search_units_placeholder">Search units (e.g. km, ounces, euro)...</string>
+    <string name="search_units_placeholder">Search units (e.g. km, ounces, euro)&#8230;</string>
     <string name="search">Search</string>
     <string name="clear_text">Clear text</string>
     <string name="no_units_found">No units found for \"%1$s\"</string>

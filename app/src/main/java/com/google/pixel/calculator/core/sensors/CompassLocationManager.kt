@@ -135,6 +135,10 @@ class CompassLocationManager(private val context: Context) {
         }
     }
 
+    private var geocodingJob: Job? = null
+    private var lastGeocodedLat: Double? = null
+    private var lastGeocodedLon: Double? = null
+
     fun stopListening() {
         locationListener?.let { listener ->
             try {
@@ -142,6 +146,8 @@ class CompassLocationManager(private val context: Context) {
             } catch (_: Exception) {}
             locationListener = null
         }
+        geocodingJob?.cancel()
+        geocodingJob = null
     }
 
     private fun updateFromLocation(location: Location, permitted: Boolean) {
@@ -171,7 +177,14 @@ class CompassLocationManager(private val context: Context) {
     }
 
     private fun fetchGeocodedName(lat: Double, lon: Double) {
-        scope.launch(Dispatchers.IO) {
+        val prevLat = lastGeocodedLat
+        val prevLon = lastGeocodedLon
+        if (prevLat != null && prevLon != null && abs(lat - prevLat) < 0.001 && abs(lon - prevLon) < 0.001) {
+            return
+        }
+
+        geocodingJob?.cancel()
+        geocodingJob = scope.launch(Dispatchers.IO) {
             try {
                 val geocoder = Geocoder(context, Locale.getDefault())
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -182,6 +195,8 @@ class CompassLocationManager(private val context: Context) {
                             ?: address?.adminArea
                             ?: address?.countryName
                         if (!cityName.isNullOrBlank()) {
+                            lastGeocodedLat = lat
+                            lastGeocodedLon = lon
                             _locationFlow.value = _locationFlow.value.copy(locationName = cityName)
                         }
                     }
@@ -194,6 +209,8 @@ class CompassLocationManager(private val context: Context) {
                         ?: address?.adminArea
                         ?: address?.countryName
                     if (!cityName.isNullOrBlank()) {
+                        lastGeocodedLat = lat
+                        lastGeocodedLon = lon
                         _locationFlow.value = _locationFlow.value.copy(locationName = cityName)
                     }
                 }

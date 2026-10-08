@@ -25,6 +25,7 @@ class CompassSensorManager(context: Context) {
     // Orientation and sensor fusion sensors
     private val rotationVector = sensorManager?.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
     private val geomagneticVector = sensorManager?.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR)
+    @Suppress("DEPRECATION")
     private val orientationSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_ORIENTATION)
     private val accelerometer = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
     private val magnetometer = sensorManager?.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
@@ -40,6 +41,7 @@ class CompassSensorManager(context: Context) {
         val isLevel: Boolean = true
     )
 
+    @Suppress("DEPRECATION")
     fun getCompassFlow(): Flow<CompassData> = callbackFlow {
         val sm = sensorManager
         if (sm == null || (rotationVector == null && geomagneticVector == null && orientationSensor == null && (accelerometer == null || magnetometer == null))) {
