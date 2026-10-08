@@ -165,12 +165,33 @@ fun RulerView(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back),
-                            tint = onSurfaceColor
-                        )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(start = 4.dp)
+                    ) {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.back),
+                                tint = onSurfaceColor
+                            )
+                        }
+                        IconButton(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                showMmTicks = !showMmTicks
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Straighten,
+                                contentDescription = if (showMmTicks) {
+                                    stringResource(R.string.hide_mm_ticks)
+                                } else {
+                                    stringResource(R.string.show_mm_ticks)
+                                },
+                                tint = if (showMmTicks) accentContainer else onSurfaceColor.copy(alpha = 0.65f)
+                            )
+                        }
                     }
                 },
                 actions = {
