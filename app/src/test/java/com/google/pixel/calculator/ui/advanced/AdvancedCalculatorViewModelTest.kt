@@ -207,11 +207,22 @@ class AdvancedCalculatorViewModelTest {
         val initialVp = viewModel.uiState.value.graphViewport
         assertEquals(40f, initialVp.scaleX)
 
+        // Pan Right (Offset +40px) -> moves centerMathX to negative (leftward in math space)
+        viewModel.onGraphTransform(1f, Offset(40f, 0f))
+        assertEquals(-1.0, viewModel.uiState.value.graphViewport.centerMathX, 1e-3)
+
+        // Pan Left (Offset -80px) -> moves centerMathX to +1.0
+        viewModel.onGraphTransform(1f, Offset(-80f, 0f))
+        assertEquals(1.0, viewModel.uiState.value.graphViewport.centerMathX, 1e-3)
+
+        // Pan Down (Offset +40px) -> moves centerMathY to positive (upward in math space)
+        viewModel.onGraphTransform(1f, Offset(0f, 40f))
+        assertEquals(1.0, viewModel.uiState.value.graphViewport.centerMathY, 1e-3)
+
         // Zoom In
-        viewModel.onGraphTransform(2f, Offset(40f, -20f))
+        viewModel.onGraphTransform(2f, Offset.Zero)
         val updatedVp = viewModel.uiState.value.graphViewport
         assertEquals(80f, updatedVp.scaleX)
-        assertTrue(updatedVp.centerMathX != 0.0)
 
         // Zoom clamping test
         viewModel.onGraphTransform(10f, Offset.Zero) // 80 * 10 = 800 -> clamped to 300f
@@ -224,6 +235,7 @@ class AdvancedCalculatorViewModelTest {
         viewModel.onResetGraph()
         assertEquals(40f, viewModel.uiState.value.graphViewport.scaleX)
         assertEquals(0.0, viewModel.uiState.value.graphViewport.centerMathX, 1e-5)
+        assertEquals(0.0, viewModel.uiState.value.graphViewport.centerMathY, 1e-5)
     }
 
     @Test

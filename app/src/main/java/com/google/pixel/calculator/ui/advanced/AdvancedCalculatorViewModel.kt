@@ -588,7 +588,7 @@ class AdvancedCalculatorViewModel(
         _uiState.update { current ->
             val oldVp = current.graphViewport
             val newScale = (oldVp.scaleX * zoomChange).coerceIn(10f, 300f)
-            val newCenterMathX = oldVp.centerMathX + (panChange.x / newScale)
+            val newCenterMathX = oldVp.centerMathX - (panChange.x / newScale)
             val newCenterMathY = oldVp.centerMathY + (panChange.y / newScale)
             current.copy(
                 graphViewport = oldVp.copy(
@@ -606,10 +606,9 @@ class AdvancedCalculatorViewModel(
         _uiState.update { current ->
             val oldVp = current.graphViewport
             val newScale = (oldVp.scaleX * zoom).coerceIn(10f, 300f)
-            val effectiveZoom = newScale / oldVp.scaleX
 
             // Centroid-anchored zoom formula
-            val newCenterMathX = oldVp.centerMathX + (pan.x / newScale)
+            val newCenterMathX = oldVp.centerMathX - (pan.x / newScale)
             val newCenterMathY = oldVp.centerMathY + (pan.y / newScale)
 
             current.copy(
