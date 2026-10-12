@@ -58,66 +58,6 @@ fun AdvancedFormulaDisplay(
                 .padding(10.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            // Discreet top-right controls: [Format: DEC] and [AC]
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 2.dp),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Discreet Format chip (e.g. Format: DEC)
-                val activeEq = state.equations.getOrNull(state.activeEquationIndex)
-                val formatLabel = activeEq?.formatMode?.label ?: "DEC"
-                Surface(
-                    onClick = onCycleFormat,
-                    shape = RoundedCornerShape(10.dp),
-                    color = if (isDark) Color(0xFF282D3E) else CalculatorTheme.colors.operatorContainer.copy(alpha = 0.6f),
-                    contentColor = if (isDark) Color(0xFF94A3B8) else CalculatorTheme.colors.onSurfaceVariant
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(3.dp)
-                    ) {
-                        Text(
-                            text = "Format:",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = if (isDark) Color(0xFF94A3B8) else CalculatorTheme.colors.onSurfaceVariant
-                        )
-                        Text(
-                            text = formatLabel,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isDark) Color(0xFFE2E8F0) else CalculatorTheme.colors.onSurface
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(6.dp))
-
-                // Discreet Clear All chip: [AC]
-                Surface(
-                    onClick = onClearAll,
-                    shape = RoundedCornerShape(10.dp),
-                    color = if (isDark) Color(0xFF3F2327) else Color(0xFFFEE2E2),
-                    contentColor = if (isDark) Color(0xFFF87171) else Color(0xFFDC2626)
-                ) {
-                    Box(
-                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "AC",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isDark) Color(0xFFF87171) else Color(0xFFDC2626)
-                        )
-                    }
-                }
-            }
-
             // Equations list with interactive color badges
             state.equations.forEachIndexed { index, eq ->
                 val isActive = index == state.activeEquationIndex

@@ -226,10 +226,11 @@ fun AdvancedCalculatorScreen(
 
             // Dismiss overlay when touching outside open toolbar
             if (isToolBarExpanded && state.screenViewMode != ScreenViewMode.FULLSCREEN_GRAPH) {
+                val toolBarDims = com.google.pixel.calculator.ui.toolbox.rememberToolBarDimensions()
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(bottom = 76.dp)
+                        .padding(bottom = toolBarDims.height + 6.dp)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null

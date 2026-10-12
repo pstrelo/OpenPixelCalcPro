@@ -1,6 +1,10 @@
 package com.google.pixel.calculator.ui.advanced
 
+import android.content.res.Configuration
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -8,6 +12,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -24,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
@@ -36,21 +42,21 @@ import com.google.pixel.calculator.ui.ActiveScreen
 import com.google.pixel.calculator.ui.theme.CalculatorTheme
 import com.google.pixel.calculator.ui.toolbox.PixelToolPillBar
 import com.google.pixel.calculator.ui.toolbox.PixelToolToggleButton
+import com.google.pixel.calculator.ui.toolbox.rememberToolBarDimensions
 
 /**
  * Material 3 Keypad for Advanced Calculator.
- * 6 Columns x 7 Row-units layout:
- * - Columns 1-5 have 5 regular keys (1 row-unit each).
- * - In rows 6 & 7:
- *   - Col 1: Tool menu button (double-height, circular to square animation).
- *   - Col 2: '(' (row 6) and '<' (row 7) single keys.
- *   - Col 3: ')' (row 6) and '>' (row 7) single keys.
- *   - Col 4: [ ← ] Square key (double-height, active tab color).
- *   - Col 5: [ → ] Square key (double-height, active tab color).
- * - Column 6 has 5 keys total:
- *   - Rows 1, 2, 3: single keys.
- *   - Rows 4 & 5: [ ⌫ ] Square backspace key (double-height, standard calculator shape).
- *   - Rows 6 & 7: [ ↵ ] Square enter/solve key (double-height, active tab color).
+ * Structure:
+ * 1. Top Fixed Control Row (6 keys, uniform across all tabs):
+ *    [ < ] [ > ] [ ( ] [ ) ] [ FORMAT ] [ AC ]
+ * 2. 5 Thematic Rows (6 columns) according to the active tab:
+ *    - Columns 1-5 have 5 regular keys each.
+ *    - Column 6 has 3 regular keys + 1 double-height [ ⌫ ] backspace key (rows 4-5).
+ * 3. Bottom System / Navigation Row:
+ *    - Left: PixelToolToggleButton with identical dimensions and circular-to-squircle animation
+ *      as the standard calculator and toolbox screens.
+ *    - Right: Empty space left by moved keys (columns 2 & 3) + [ ← ] [ → ] [ ↵ ] navigation keys,
+ *      which smoothly disappear with M3 scale/fade animation when the tool pill bar expands.
  */
 @Composable
 fun AdvancedKeypad(
@@ -74,51 +80,60 @@ fun AdvancedKeypad(
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
-    val isLandscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-    val unitHeight = if (isLandscape) 26.dp else if (isSplitScreen) 30.dp else 36.dp
-    val spacing = 4.dp
-    val doubleHeight = unitHeight * 2 + spacing
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val toolBarDims = rememberToolBarDimensions()
 
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        // 1. Horizontal tab bar (Algebra, Trigonometria, Calcolo, Alfabeto)
-        MathSolverTabBar(
-            selectedTab = activeTab,
-            onTabSelected = { tab ->
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                onTabSelected(tab)
-            },
-            modifier = Modifier.padding(horizontal = 6.dp)
-        )
+    val spacing = if (isLandscape) 4.dp else 6.dp
+    val unitHeight = if (isLandscape) 22.dp else if (isSplitScreen) 28.dp else 34.dp
+    val bottomRowHeight = if (isLandscape) 48.dp else if (isSplitScreen) 58.dp else toolBarDims.height
+    val toolButtonWidth = if (isLandscape) 48.dp else if (isSplitScreen) 58.dp else toolBarDims.btnWidth
 
-        Spacer(modifier = Modifier.height(2.dp))
+    val tabAccent = activeTab.accentColor
 
-        // 2. Keypad grid
-        Box(modifier = Modifier.padding(horizontal = 6.dp)) {
+    Box(modifier = modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = if (isLandscape) 8.dp else 12.dp,
+                    vertical = if (isLandscape) 2.dp else 4.dp
+                ),
+            verticalArrangement = Arrangement.spacedBy(spacing)
+        ) {
+            // Tab Selector Bar (Algebra, Trigonometry, Calculus, Alphabet)
+            MathSolverTabBar(
+                selectedTab = activeTab,
+                onTabSelected = onTabSelected
+            )
+
+            // 1. TOP FIXED CONTROL ROW: [ < ] [ > ] [ ( ] [ ) ] [ FORMAT ] [ AC ]
+            TopFixedControlRow(
+                unitHeight = unitHeight,
+                spacing = spacing,
+                tabAccent = tabAccent,
+                onKey = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onInsertChar(it)
+                },
+                onCycleFormat = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onCycleFormat()
+                },
+                onClearAll = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onClearAll()
+                }
+            )
+
+            // 2. 5 THEMATIC ROWS (Columns 1 to 6)
             when (activeTab) {
                 MathSolverTab.ALGEBRA -> AlgebraKeypadGrid(
                     unitHeight = unitHeight,
-                    doubleHeight = doubleHeight,
                     spacing = spacing,
-                    isToolBarExpanded = isToolBarExpanded,
-                    onToggleToolBar = onToggleToolBar,
-                    onMoveCursorLeft = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onMoveCursorLeft()
-                    },
-                    onMoveCursorRight = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onMoveCursorRight()
-                    },
                     onDeleteChar = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onDeleteChar()
-                    },
-                    onExecute = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onExecute()
                     },
                     onKey = {
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -127,25 +142,10 @@ fun AdvancedKeypad(
                 )
                 MathSolverTab.TRIGONOMETRY -> TrigonometryKeypadGrid(
                     unitHeight = unitHeight,
-                    doubleHeight = doubleHeight,
                     spacing = spacing,
-                    isToolBarExpanded = isToolBarExpanded,
-                    onToggleToolBar = onToggleToolBar,
-                    onMoveCursorLeft = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onMoveCursorLeft()
-                    },
-                    onMoveCursorRight = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onMoveCursorRight()
-                    },
                     onDeleteChar = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onDeleteChar()
-                    },
-                    onExecute = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onExecute()
                     },
                     onKey = {
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -154,25 +154,10 @@ fun AdvancedKeypad(
                 )
                 MathSolverTab.CALCULUS -> CalculusKeypadGrid(
                     unitHeight = unitHeight,
-                    doubleHeight = doubleHeight,
                     spacing = spacing,
-                    isToolBarExpanded = isToolBarExpanded,
-                    onToggleToolBar = onToggleToolBar,
-                    onMoveCursorLeft = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onMoveCursorLeft()
-                    },
-                    onMoveCursorRight = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onMoveCursorRight()
-                    },
                     onDeleteChar = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onDeleteChar()
-                    },
-                    onExecute = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onExecute()
                     },
                     onKey = {
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -180,26 +165,11 @@ fun AdvancedKeypad(
                     }
                 )
                 MathSolverTab.ALPHABET -> AlphabetKeypadGrid(
-                    unitHeight = if (isLandscape) 24.dp else if (isSplitScreen) 28.dp else 32.dp,
-                    doubleHeight = if (isLandscape) 24.dp * 2 + spacing else if (isSplitScreen) 28.dp * 2 + spacing else 32.dp * 2 + spacing,
+                    unitHeight = unitHeight,
                     spacing = spacing,
-                    isToolBarExpanded = isToolBarExpanded,
-                    onToggleToolBar = onToggleToolBar,
-                    onMoveCursorLeft = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onMoveCursorLeft()
-                    },
-                    onMoveCursorRight = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onMoveCursorRight()
-                    },
                     onDeleteChar = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onDeleteChar()
-                    },
-                    onExecute = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onExecute()
                     },
                     onKey = {
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -208,36 +178,28 @@ fun AdvancedKeypad(
                 )
             }
 
-            // Material 3 floating pill bar when tool button is pressed
-            androidx.compose.animation.AnimatedVisibility(
-                visible = isToolBarExpanded,
-                enter = fadeIn(tween(180)) + scaleIn(
-                    animationSpec = androidx.compose.animation.core.spring(
-                        dampingRatio = 0.62f,
-                        stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow
-                    ),
-                    transformOrigin = TransformOrigin(0f, 1f)
-                ),
-                exit = fadeOut(tween(140)) + scaleOut(
-                    animationSpec = androidx.compose.animation.core.spring(
-                        dampingRatio = 0.85f,
-                        stiffness = androidx.compose.animation.core.Spring.StiffnessMedium
-                    ),
-                    transformOrigin = TransformOrigin(0f, 1f)
-                ),
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(bottom = doubleHeight + 6.dp)
-            ) {
-                PixelToolPillBar(
-                    currentScreen = ActiveScreen.ADVANCED_CALCULATOR,
-                    height = 42.dp,
-                    onNavigate = onNavigate,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(42.dp)
-                )
-            }
+            // 3. BOTTOM SYSTEM / NAVIGATION ROW (Tool Toggle Button + [ ← ] [ → ] [ ↵ ])
+            BottomSystemNavRow(
+                height = bottomRowHeight,
+                toolButtonWidth = toolButtonWidth,
+                spacing = spacing,
+                tabAccent = tabAccent,
+                isToolBarExpanded = isToolBarExpanded,
+                onToggleToolBar = onToggleToolBar,
+                onNavigate = onNavigate,
+                onMoveCursorLeft = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onMoveCursorLeft()
+                },
+                onMoveCursorRight = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onMoveCursorRight()
+                },
+                onExecute = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onExecute()
+                }
+            )
         }
     }
 }
@@ -360,9 +322,13 @@ fun MathSolverTabBar(
                 onClick = { onTabSelected(tab) },
                 text = {
                     Text(
-                        text = tab.title,
+                        text = when (tab) {
+                            MathSolverTab.TRIGONOMETRY -> "Trig"
+                            else -> tab.title
+                        },
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                         fontSize = 13.sp,
+                        maxLines = 1,
                         color = if (isSelected) tab.accentColor else unselectedColor
                     )
                 }
@@ -372,20 +338,206 @@ fun MathSolverTabBar(
 }
 
 // =========================================================================
-// 1. ALGEBRA KEYPAD GRID (6 Columns x 7 Row-units)
+// TOP FIXED CONTROL ROW: [ < ] [ > ] [ ( ] [ ) ] [ FORMAT ] [ AC ]
+// =========================================================================
+
+@Composable
+private fun TopFixedControlRow(
+    unitHeight: Dp,
+    spacing: Dp,
+    tabAccent: Color,
+    onKey: (String) -> Unit,
+    onCycleFormat: () -> Unit,
+    onClearAll: () -> Unit
+) {
+    val isDark = CalculatorTheme.colors.isDark
+    val fnBg = if (isDark) Color(0xFF242738) else Color(0xFFECEFF5)
+    val fnColor = if (isDark) Color(0xFFCBD5E1) else CalculatorTheme.colors.onSurface
+    val delBg = if (isDark) Color(0xFF452427) else Color(0xFFFFE4E6)
+    val delColor = if (isDark) Color(0xFFF87171) else Color(0xFFE11D48)
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(spacing),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        SquircleKey("<", fnBg, fnColor, unitHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey(" < ") }
+        SquircleKey(">", fnBg, fnColor, unitHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey(" > ") }
+        SquircleKey("(", fnBg, fnColor, unitHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("(") }
+        SquircleKey(")", fnBg, fnColor, unitHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey(")") }
+        SquircleKey("FORMAT", fnBg, tabAccent, unitHeight, Modifier.weight(1f), isBold = true, fontSize = 10.sp) { onCycleFormat() }
+        SquircleKey("AC", delBg, delColor, unitHeight, Modifier.weight(1f), isBold = true, fontSize = 13.sp) { onClearAll() }
+    }
+}
+
+// =========================================================================
+// BOTTOM SYSTEM / NAVIGATION ROW (Tool Toggle Button + [ ← ] [ → ] [ ↵ ])
+// =========================================================================
+
+@Composable
+private fun BottomSystemNavRow(
+    height: Dp,
+    toolButtonWidth: Dp,
+    spacing: Dp,
+    tabAccent: Color,
+    isToolBarExpanded: Boolean,
+    onToggleToolBar: () -> Unit,
+    onNavigate: (ActiveScreen) -> Unit,
+    onMoveCursorLeft: () -> Unit,
+    onMoveCursorRight: () -> Unit,
+    onExecute: () -> Unit
+) {
+    val isDark = CalculatorTheme.colors.isDark
+    val navSquareBg = if (isDark) tabAccent.copy(alpha = 0.28f) else tabAccent.copy(alpha = 0.18f)
+
+    if (isToolBarExpanded) {
+        BackHandler { onToggleToolBar() }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(height)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.spacedBy(spacing),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Tasto strumenti a sinistra: dimensione e forma identica a tutte le altre schermate
+            PixelToolToggleButton(
+                currentScreen = ActiveScreen.ADVANCED_CALCULATOR,
+                isExpanded = isToolBarExpanded,
+                height = height,
+                onClick = onToggleToolBar,
+                modifier = Modifier.size(width = toolButtonWidth, height = height)
+            )
+
+            // Contenitore per i tasti sottostanti o per la pillola degli strumenti
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                contentAlignment = Alignment.Center
+            ) {
+                // Tasti di navigazione (scompaiono quando la toolbar è aperta)
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = !isToolBarExpanded,
+                    enter = fadeIn(tween(180)) + scaleIn(
+                        animationSpec = spring(
+                            dampingRatio = 0.62f,
+                            stiffness = Spring.StiffnessMediumLow
+                        ),
+                        transformOrigin = TransformOrigin(0f, 0.5f)
+                    ),
+                    exit = fadeOut(tween(140)) + scaleOut(
+                        animationSpec = spring(
+                            dampingRatio = 0.85f,
+                            stiffness = Spring.StiffnessMedium
+                        ),
+                        transformOrigin = TransformOrigin(0f, 0.5f)
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.spacedBy(spacing),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Spazio vuoto lasciato dai tasti spostati (, <, ), > per mantenere
+                        // i tasti freccia e invio perfettamente allineati con le colonne 4, 5, 6
+                        Spacer(modifier = Modifier.weight(2f))
+
+                        SquareSystemKey(
+                            height = height,
+                            modifier = Modifier.weight(1f),
+                            bgColor = navSquareBg,
+                            contentColor = tabAccent,
+                            onClick = onMoveCursorLeft
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Cursor left",
+                                tint = tabAccent,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+
+                        SquareSystemKey(
+                            height = height,
+                            modifier = Modifier.weight(1f),
+                            bgColor = navSquareBg,
+                            contentColor = tabAccent,
+                            onClick = onMoveCursorRight
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = "Cursor right",
+                                tint = tabAccent,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+
+                        SquareSystemKey(
+                            height = height,
+                            modifier = Modifier.weight(1f),
+                            bgColor = tabAccent,
+                            contentColor = Color.White,
+                            onClick = onExecute
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardReturn,
+                                contentDescription = stringResource(R.string.solve),
+                                tint = Color.White,
+                                modifier = Modifier.size(26.dp)
+                            )
+                        }
+                    }
+                }
+
+                // Menu a pillola degli strumenti (compare al posto dei tasti sottostanti)
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = isToolBarExpanded,
+                    enter = fadeIn(tween(180)) + scaleIn(
+                        animationSpec = spring(
+                            dampingRatio = 0.62f,
+                            stiffness = Spring.StiffnessMediumLow
+                        ),
+                        transformOrigin = TransformOrigin(0f, 0.5f)
+                    ),
+                    exit = fadeOut(tween(140)) + scaleOut(
+                        animationSpec = spring(
+                            dampingRatio = 0.85f,
+                            stiffness = Spring.StiffnessMedium
+                        ),
+                        transformOrigin = TransformOrigin(0f, 0.5f)
+                    )
+                ) {
+                    PixelToolPillBar(
+                        currentScreen = ActiveScreen.ADVANCED_CALCULATOR,
+                        height = height,
+                        onNavigate = { screen ->
+                            onToggleToolBar()
+                            onNavigate(screen)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(height)
+                    )
+                }
+            }
+        }
+    }
+}
+
+// =========================================================================
+// 1. ALGEBRA KEYPAD GRID (6 Columns x 5 Rows)
 // =========================================================================
 
 @Composable
 private fun AlgebraKeypadGrid(
     unitHeight: Dp,
-    doubleHeight: Dp,
     spacing: Dp,
-    isToolBarExpanded: Boolean,
-    onToggleToolBar: () -> Unit,
-    onMoveCursorLeft: () -> Unit,
-    onMoveCursorRight: () -> Unit,
     onDeleteChar: () -> Unit,
-    onExecute: () -> Unit,
     onKey: (String) -> Unit
 ) {
     val isDark = CalculatorTheme.colors.isDark
@@ -398,97 +550,58 @@ private fun AlgebraKeypadGrid(
     val opColor = if (isDark) MathSolverTheme.operatorContent else CalculatorTheme.colors.operatorContent
     val delBg = if (isDark) Color(0xFF452427) else Color(0xFFFFE4E6)
     val delColor = if (isDark) Color(0xFFF87171) else Color(0xFFE11D48)
-    val navSquareBg = if (isDark) tabAccent.copy(alpha = 0.28f) else tabAccent.copy(alpha = 0.18f)
+    val doubleHeight = unitHeight * 2 + spacing
 
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(spacing)
     ) {
-        // Col 1: [ x ], [ □² ], [ □ⁿ ], [ log ], [ ln ], [ ToolButton (double height) ]
+        // Col 1: [ x ], [ □² ], [ □ⁿ ], [ log ], [ ln ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
             SquircleKey("x", fnBg, tabAccent, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 17.sp) { onKey("x") }
             SquircleKey("□²", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("^2") }
             SquircleKey("□ⁿ", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("^") }
             SquircleKey("log", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("log(") }
             SquircleKey("ln", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("ln(") }
-            PixelToolToggleButton(
-                currentScreen = ActiveScreen.ADVANCED_CALCULATOR,
-                isExpanded = isToolBarExpanded,
-                height = doubleHeight,
-                onClick = onToggleToolBar,
-                modifier = Modifier.fillMaxWidth()
-            )
         }
 
-        // Col 2: [ y ], [ □/□ ], [ √x ], [ ⁿ√□ ], [ |x| ], [ ( ], [ < ]
+        // Col 2: [ y ], [ □/□ ], [ √x ], [ ⁿ√□ ], [ |x| ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
             SquircleKey("y", fnBg, tabAccent, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 17.sp) { onKey("y") }
             SquircleKey("□/□", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("/") }
             SquircleKey("√x", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("sqrt(") }
             SquircleKey("ⁿ√□", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("ʸ√") }
             SquircleKey("|x|", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("abs(") }
-            SquircleKey("(", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey("(") }
-            SquircleKey("<", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey(" < ") }
         }
 
-        // Col 3: [ π ], [ 7 ], [ 4 ], [ 1 ], [ 0 ], [ ) ], [ > ]
+        // Col 3: [ π ], [ 7 ], [ 4 ], [ 1 ], [ 0 ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
             SquircleKey("π", fnBg, tabAccent, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 17.sp) { onKey("π") }
             SquircleKey("7", numBg, numColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 18.sp) { onKey("7") }
             SquircleKey("4", numBg, numColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 18.sp) { onKey("4") }
             SquircleKey("1", numBg, numColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 18.sp) { onKey("1") }
             SquircleKey("0", numBg, numColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 18.sp) { onKey("0") }
-            SquircleKey(")", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey(")") }
-            SquircleKey(">", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey(" > ") }
         }
 
-        // Col 4: [ e ], [ 8 ], [ 5 ], [ 2 ], [ . ], [ ← (double height) ]
+        // Col 4: [ e ], [ 8 ], [ 5 ], [ 2 ], [ . ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
             SquircleKey("e", fnBg, tabAccent, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 17.sp) { onKey("e") }
             SquircleKey("8", numBg, numColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 18.sp) { onKey("8") }
             SquircleKey("5", numBg, numColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 18.sp) { onKey("5") }
             SquircleKey("2", numBg, numColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 18.sp) { onKey("2") }
             SquircleKey(".", numBg, numColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 18.sp) { onKey(".") }
-            SquareSystemKey(
-                height = doubleHeight,
-                modifier = Modifier.fillMaxWidth(),
-                bgColor = navSquareBg,
-                contentColor = tabAccent,
-                onClick = onMoveCursorLeft
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Cursor left",
-                    tint = tabAccent,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
         }
 
-        // Col 5: [ % ], [ 9 ], [ 6 ], [ 3 ], [ = ], [ → (double height) ]
+        // Col 5: [ % ], [ 9 ], [ 6 ], [ 3 ], [ = ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
             SquircleKey("%", opBg, opColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 17.sp) { onKey("%") }
             SquircleKey("9", numBg, numColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 18.sp) { onKey("9") }
             SquircleKey("6", numBg, numColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 18.sp) { onKey("6") }
             SquircleKey("3", numBg, numColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 18.sp) { onKey("3") }
             SquircleKey("=", opBg, opColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 18.sp) { onKey(" = ") }
-            SquareSystemKey(
-                height = doubleHeight,
-                modifier = Modifier.fillMaxWidth(),
-                bgColor = navSquareBg,
-                contentColor = tabAccent,
-                onClick = onMoveCursorRight
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = "Cursor right",
-                    tint = tabAccent,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
         }
 
-        // Col 6: [ × ], [ - ], [ + ], [ ⌫ (double height) ], [ ↵ (double height) ]
+        // Col 6: [ × ], [ - ], [ + ], [ ⌫ (double height) ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
             SquircleKey("×", opBg, opColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 18.sp) { onKey("*") }
             SquircleKey("-", opBg, opColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 18.sp) { onKey("-") }
@@ -507,39 +620,19 @@ private fun AlgebraKeypadGrid(
                     modifier = Modifier.size(24.dp)
                 )
             }
-            SquareSystemKey(
-                height = doubleHeight,
-                modifier = Modifier.fillMaxWidth(),
-                bgColor = tabAccent,
-                contentColor = Color.White,
-                onClick = onExecute
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardReturn,
-                    contentDescription = stringResource(R.string.solve),
-                    tint = Color.White,
-                    modifier = Modifier.size(26.dp)
-                )
-            }
         }
     }
 }
 
 // =========================================================================
-// 2. TRIGONOMETRY KEYPAD GRID (6 Columns x 7 Row-units)
+// 2. TRIGONOMETRY KEYPAD GRID (6 Columns x 5 Rows)
 // =========================================================================
 
 @Composable
 private fun TrigonometryKeypadGrid(
     unitHeight: Dp,
-    doubleHeight: Dp,
     spacing: Dp,
-    isToolBarExpanded: Boolean,
-    onToggleToolBar: () -> Unit,
-    onMoveCursorLeft: () -> Unit,
-    onMoveCursorRight: () -> Unit,
     onDeleteChar: () -> Unit,
-    onExecute: () -> Unit,
     onKey: (String) -> Unit
 ) {
     val isDark = CalculatorTheme.colors.isDark
@@ -548,101 +641,62 @@ private fun TrigonometryKeypadGrid(
     val fnColor = if (isDark) MathSolverTheme.trigFunctionContent else Color(0xFF047857)
     val delBg = if (isDark) Color(0xFF452427) else Color(0xFFFFE4E6)
     val delColor = if (isDark) Color(0xFFF87171) else Color(0xFFE11D48)
-    val navSquareBg = if (isDark) tabAccent.copy(alpha = 0.28f) else tabAccent.copy(alpha = 0.18f)
+    val doubleHeight = unitHeight * 2 + spacing
 
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(spacing)
     ) {
-        // Col 1: [ x ], [ sin ], [ arcsin ], [ asinh ], [ □/□ ], [ ToolButton (double height) ]
+        // Col 1: [ x ], [ sin ], [ arcsin ], [ asinh ], [ □/□ ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
             SquircleKey("x", fnBg, tabAccent, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 17.sp) { onKey("x") }
             SquircleKey("sin", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("sin(") }
             SquircleKey("arcsin", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("arcsin(") }
             SquircleKey("asinh", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("asinh(") }
             SquircleKey("□/□", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("/") }
-            PixelToolToggleButton(
-                currentScreen = ActiveScreen.ADVANCED_CALCULATOR,
-                isExpanded = isToolBarExpanded,
-                height = doubleHeight,
-                onClick = onToggleToolBar,
-                modifier = Modifier.fillMaxWidth()
-            )
         }
 
-        // Col 2: [ θ ], [ cos ], [ arccos ], [ acosh ], [ √□ ], [ ( ], [ < ]
+        // Col 2: [ θ ], [ cos ], [ arccos ], [ acosh ], [ √□ ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
             SquircleKey("θ", fnBg, tabAccent, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 16.sp) { onKey("θ") }
             SquircleKey("cos", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("cos(") }
             SquircleKey("arccos", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("arccos(") }
             SquircleKey("acosh", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("acosh(") }
             SquircleKey("√□", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("sqrt(") }
-            SquircleKey("(", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey("(") }
-            SquircleKey("<", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey(" < ") }
         }
 
-        // Col 3: [ e ], [ tan ], [ arctan ], [ atanh ], [ □² ], [ ) ], [ > ]
+        // Col 3: [ e ], [ tan ], [ arctan ], [ atanh ], [ □² ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
             SquircleKey("e", fnBg, tabAccent, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 17.sp) { onKey("e") }
             SquircleKey("tan", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("tan(") }
             SquircleKey("arctan", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("arctan(") }
             SquircleKey("atanh", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("atanh(") }
             SquircleKey("□²", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("^2") }
-            SquircleKey(")", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey(")") }
-            SquircleKey(">", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey(" > ") }
         }
 
-        // Col 4: [ π ], [ csc ], [ arccsc ], [ acsch ], [ sinh ], [ ← (double height) ]
+        // Col 4: [ π ], [ csc ], [ arccsc ], [ acsch ], [ sinh ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
             SquircleKey("π", fnBg, tabAccent, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 17.sp) { onKey("π") }
             SquircleKey("csc", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("csc(") }
             SquircleKey("arccsc", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("arccsc(") }
             SquircleKey("acsch", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("acsch(") }
-            SquircleKey("sinh", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 12.sp) { onKey("sinh(") }
-            SquareSystemKey(
-                height = doubleHeight,
-                modifier = Modifier.fillMaxWidth(),
-                bgColor = navSquareBg,
-                contentColor = tabAccent,
-                onClick = onMoveCursorLeft
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Cursor left",
-                    tint = tabAccent,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+            SquircleKey("sinh", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("sinh(") }
         }
 
-        // Col 5: [ ° ], [ sec ], [ arcsec ], [ asech ], [ cosh ], [ → (double height) ]
+        // Col 5: [ sec ], [ arcsec ], [ asech ], [ cosh ], [ tanh ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
-            SquircleKey("°", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 16.sp) { onKey("°") }
             SquircleKey("sec", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("sec(") }
             SquircleKey("arcsec", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("arcsec(") }
             SquircleKey("asech", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("asech(") }
-            SquircleKey("cosh", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 12.sp) { onKey("cosh(") }
-            SquareSystemKey(
-                height = doubleHeight,
-                modifier = Modifier.fillMaxWidth(),
-                bgColor = navSquareBg,
-                contentColor = tabAccent,
-                onClick = onMoveCursorRight
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = "Cursor right",
-                    tint = tabAccent,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+            SquircleKey("cosh", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("cosh(") }
+            SquircleKey("tanh", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("tanh(") }
         }
 
-        // Col 6: [ rad ], [ cot ], [ arccot ], [ ⌫ (double height) ], [ ↵ (double height) ]
+        // Col 6: [ cot ], [ arccot ], [ acoth ], [ ⌫ (double height) ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
-            SquircleKey("rad", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 12.sp) { onKey("*(1)") }
             SquircleKey("cot", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("cot(") }
             SquircleKey("arccot", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("arccot(") }
+            SquircleKey("acoth", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("acoth(") }
             SquareSystemKey(
                 height = doubleHeight,
                 modifier = Modifier.fillMaxWidth(),
@@ -657,39 +711,19 @@ private fun TrigonometryKeypadGrid(
                     modifier = Modifier.size(24.dp)
                 )
             }
-            SquareSystemKey(
-                height = doubleHeight,
-                modifier = Modifier.fillMaxWidth(),
-                bgColor = tabAccent,
-                contentColor = Color.White,
-                onClick = onExecute
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardReturn,
-                    contentDescription = stringResource(R.string.solve),
-                    tint = Color.White,
-                    modifier = Modifier.size(26.dp)
-                )
-            }
         }
     }
 }
 
 // =========================================================================
-// 3. CALCULUS KEYPAD GRID (6 Columns x 7 Row-units)
+// 3. CALCULUS KEYPAD GRID (6 Columns x 5 Rows)
 // =========================================================================
 
 @Composable
 private fun CalculusKeypadGrid(
     unitHeight: Dp,
-    doubleHeight: Dp,
     spacing: Dp,
-    isToolBarExpanded: Boolean,
-    onToggleToolBar: () -> Unit,
-    onMoveCursorLeft: () -> Unit,
-    onMoveCursorRight: () -> Unit,
     onDeleteChar: () -> Unit,
-    onExecute: () -> Unit,
     onKey: (String) -> Unit
 ) {
     val isDark = CalculatorTheme.colors.isDark
@@ -698,97 +732,58 @@ private fun CalculusKeypadGrid(
     val fnColor = if (isDark) MathSolverTheme.calculusFunctionContent else Color(0xFFBE185D)
     val delBg = if (isDark) Color(0xFF452427) else Color(0xFFFFE4E6)
     val delColor = if (isDark) Color(0xFFF87171) else Color(0xFFE11D48)
-    val navSquareBg = if (isDark) tabAccent.copy(alpha = 0.28f) else tabAccent.copy(alpha = 0.18f)
+    val doubleHeight = unitHeight * 2 + spacing
 
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(spacing)
     ) {
-        // Col 1: [ x ], [ d/dx ], [ Σ ], [ binom ], [ binompdf ], [ ToolButton (double height) ]
+        // Col 1: [ x ], [ d/dx ], [ Σ ], [ binom ], [ binompdf ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
             SquircleKey("x", fnBg, tabAccent, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 17.sp) { onKey("x") }
             SquircleKey("d/dx", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 12.sp) { onKey("d/dx(") }
             SquircleKey("Σ", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 16.sp) { onKey("Σ(") }
             SquircleKey("binom", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 11.sp) { onKey("binom(") }
             SquircleKey("binompdf", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 9.sp) { onKey("binompdf(") }
-            PixelToolToggleButton(
-                currentScreen = ActiveScreen.ADVANCED_CALCULATOR,
-                isExpanded = isToolBarExpanded,
-                height = doubleHeight,
-                onClick = onToggleToolBar,
-                modifier = Modifier.fillMaxWidth()
-            )
         }
 
-        // Col 2: [ t ], [ ∫ ], [ Π ], [ nPr ], [ binomcdf ], [ ( ], [ < ]
+        // Col 2: [ t ], [ ∫ ], [ Π ], [ nPr ], [ binomcdf ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
             SquircleKey("t", fnBg, tabAccent, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 17.sp) { onKey("t") }
             SquircleKey("∫", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 18.sp) { onKey("∫(") }
             SquircleKey("Π", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 16.sp) { onKey("prod(") }
             SquircleKey("nPr", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 12.sp) { onKey("perm(") }
             SquircleKey("binomcdf", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 9.sp) { onKey("binomcdf(") }
-            SquircleKey("(", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey("(") }
-            SquircleKey("<", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey(" < ") }
         }
 
-        // Col 3: [ ∞ ], [ ∫ₐᵇ ], [ ln ], [ n! ], [ normpdf ], [ ) ], [ > ]
+        // Col 3: [ ∞ ], [ ∫ₐᵇ ], [ ln ], [ n! ], [ normpdf ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
             SquircleKey("∞", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 16.sp) { onKey("∞") }
             SquircleKey("∫ₐᵇ", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 13.sp) { onKey("defint(") }
             SquircleKey("ln", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("ln(") }
             SquircleKey("n!", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 14.sp) { onKey("!") }
             SquircleKey("normpdf", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 9.sp) { onKey("normpdf(") }
-            SquircleKey(")", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey(")") }
-            SquircleKey(">", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey(" > ") }
         }
 
-        // Col 4: [ e ], [ lim ], [ log ], [ rand ], [ normcdf ], [ ← (double height) ]
+        // Col 4: [ e ], [ lim ], [ log ], [ rand ], [ normcdf ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
             SquircleKey("e", fnBg, tabAccent, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 17.sp) { onKey("e") }
             SquircleKey("lim", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 13.sp) { onKey("lim(") }
             SquircleKey("log", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("log(") }
             SquircleKey("rand", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("rand()") }
             SquircleKey("normcdf", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 9.sp) { onKey("normcdf(") }
-            SquareSystemKey(
-                height = doubleHeight,
-                modifier = Modifier.fillMaxWidth(),
-                bgColor = navSquareBg,
-                contentColor = tabAccent,
-                onClick = onMoveCursorLeft
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Cursor left",
-                    tint = tabAccent,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
         }
 
-        // Col 5: [ π ], [ □ⁿ ], [ √□ ], [ randInt ], [ mean ], [ → (double height) ]
+        // Col 5: [ π ], [ □ⁿ ], [ √□ ], [ randInt ], [ mean ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
             SquircleKey("π", fnBg, tabAccent, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 17.sp) { onKey("π") }
             SquircleKey("□ⁿ", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("^") }
             SquircleKey("√□", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("sqrt(") }
             SquircleKey("randInt", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 10.sp) { onKey("randint(") }
             SquircleKey("mean", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("mean(") }
-            SquareSystemKey(
-                height = doubleHeight,
-                modifier = Modifier.fillMaxWidth(),
-                bgColor = navSquareBg,
-                contentColor = tabAccent,
-                onClick = onMoveCursorRight
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = "Cursor right",
-                    tint = tabAccent,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
         }
 
-        // Col 6: [ □/□ ], [ |x| ], [ Γ ], [ ⌫ (double height) ], [ ↵ (double height) ]
+        // Col 6: [ □/□ ], [ |x| ], [ Γ ], [ ⌫ (double height) ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
             SquircleKey("□/□", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("/") }
             SquircleKey("|x|", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("abs(") }
@@ -807,26 +802,12 @@ private fun CalculusKeypadGrid(
                     modifier = Modifier.size(24.dp)
                 )
             }
-            SquareSystemKey(
-                height = doubleHeight,
-                modifier = Modifier.fillMaxWidth(),
-                bgColor = tabAccent,
-                contentColor = Color.White,
-                onClick = onExecute
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardReturn,
-                    contentDescription = stringResource(R.string.solve),
-                    tint = Color.White,
-                    modifier = Modifier.size(26.dp)
-                )
-            }
         }
     }
 }
 
 // =========================================================================
-// 4. ALPHABET, CONSTANTS & SI PREFIXES KEYPAD GRID (6 Columns x 7 Row-units)
+// 4. ALPHABET, CONSTANTS & SI PREFIXES KEYPAD GRID (6 Columns x 5 Rows)
 // =========================================================================
 
 enum class AlphabetSubTab(val labelRes: Int) {
@@ -838,14 +819,8 @@ enum class AlphabetSubTab(val labelRes: Int) {
 @Composable
 private fun AlphabetKeypadGrid(
     unitHeight: Dp,
-    doubleHeight: Dp,
     spacing: Dp,
-    isToolBarExpanded: Boolean,
-    onToggleToolBar: () -> Unit,
-    onMoveCursorLeft: () -> Unit,
-    onMoveCursorRight: () -> Unit,
     onDeleteChar: () -> Unit,
-    onExecute: () -> Unit,
     onKey: (String) -> Unit
 ) {
     var subTab by remember { mutableStateOf(AlphabetSubTab.LETTERS) }
@@ -855,7 +830,7 @@ private fun AlphabetKeypadGrid(
     val fnColor = if (isDark) MathSolverTheme.alphabetFunctionContent else Color(0xFFC2410C)
     val delBg = if (isDark) Color(0xFF452427) else Color(0xFFFFE4E6)
     val delColor = if (isDark) Color(0xFFF87171) else Color(0xFFE11D48)
-    val navSquareBg = if (isDark) tabAccent.copy(alpha = 0.28f) else tabAccent.copy(alpha = 0.18f)
+    val doubleHeight = unitHeight * 2 + spacing
 
     Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
         // Sub-selector chip row
@@ -894,76 +869,37 @@ private fun AlphabetKeypadGrid(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(spacing)
                 ) {
-                    // Col 1: a, b, c, d, k, ToolButton
+                    // Col 1: a, b, c, d, k
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
                         listOf("a", "b", "c", "d", "k").forEach { key ->
                             SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey(key) }
                         }
-                        PixelToolToggleButton(
-                            currentScreen = ActiveScreen.ADVANCED_CALCULATOR,
-                            isExpanded = isToolBarExpanded,
-                            height = doubleHeight,
-                            onClick = onToggleToolBar,
-                            modifier = Modifier.fillMaxWidth()
-                        )
                     }
-                    // Col 2: m, n, p, r, s, (, <
+                    // Col 2: m, n, p, r, s
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
                         listOf("m", "n", "p", "r", "s").forEach { key ->
                             SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey(key) }
                         }
-                        SquircleKey("(", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey("(") }
-                        SquircleKey("<", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey(" < ") }
                     }
-                    // Col 3: t, u, v, w, z, ), >
+                    // Col 3: t, u, v, w, z
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
                         listOf("t", "u", "v", "w", "z").forEach { key ->
                             SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey(key) }
                         }
-                        SquircleKey(")", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey(")") }
-                        SquircleKey(">", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey(" > ") }
                     }
-                    // Col 4: α, β, γ, δ, ε, [ ← ]
+                    // Col 4: α, β, γ, δ, ε
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
                         listOf("α", "β", "γ", "δ", "ε").forEach { key ->
                             SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey(key) }
                         }
-                        SquareSystemKey(
-                            height = doubleHeight,
-                            modifier = Modifier.fillMaxWidth(),
-                            bgColor = navSquareBg,
-                            contentColor = tabAccent,
-                            onClick = onMoveCursorLeft
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Cursor left",
-                                tint = tabAccent,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
                     }
-                    // Col 5: λ, μ, φ, ω, i, [ → ]
+                    // Col 5: λ, μ, φ, ω, i
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
                         listOf("λ", "μ", "φ", "ω", "i").forEach { key ->
                             SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey(key) }
                         }
-                        SquareSystemKey(
-                            height = doubleHeight,
-                            modifier = Modifier.fillMaxWidth(),
-                            bgColor = navSquareBg,
-                            contentColor = tabAccent,
-                            onClick = onMoveCursorRight
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = "Cursor right",
-                                tint = tabAccent,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
                     }
-                    // Col 6: Δ, Σ, Ω, [ ⌫ ], [ ↵ ]
+                    // Col 6: Δ, Σ, Ω, [ ⌫ (double height) ]
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
                         listOf("Δ", "Σ", "Ω").forEach { key ->
                             SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey(key) }
@@ -982,20 +918,6 @@ private fun AlphabetKeypadGrid(
                                 modifier = Modifier.size(24.dp)
                             )
                         }
-                        SquareSystemKey(
-                            height = doubleHeight,
-                            modifier = Modifier.fillMaxWidth(),
-                            bgColor = tabAccent,
-                            contentColor = Color.White,
-                            onClick = onExecute
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.KeyboardReturn,
-                                contentDescription = stringResource(R.string.solve),
-                                tint = Color.White,
-                                modifier = Modifier.size(26.dp)
-                            )
-                        }
                     }
                 }
             }
@@ -1005,88 +927,49 @@ private fun AlphabetKeypadGrid(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(spacing)
                 ) {
-                    // Col 1: c, G, g, h, ħ, ToolButton
+                    // Col 1: c, G, g, h, ħ
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
                         listOf("c", "G", "g", "h", "ħ").forEach { key ->
                             SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 15.sp) { onKey(key) }
                         }
-                        PixelToolToggleButton(
-                            currentScreen = ActiveScreen.ADVANCED_CALCULATOR,
-                            isExpanded = isToolBarExpanded,
-                            height = doubleHeight,
-                            onClick = onToggleToolBar,
-                            modifier = Modifier.fillMaxWidth()
-                        )
                     }
-                    // Col 2: k_B, N_A, R, q_e, m_e, (, <
+                    // Col 2: k_B, N_A, R, q_e, m_e
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
                         SquircleKey("k_B", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 11.sp) { onKey("k_B") }
                         SquircleKey("N_A", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 11.sp) { onKey("N_A") }
                         SquircleKey("R", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 14.sp) { onKey("R") }
                         SquircleKey("q_e", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 11.sp) { onKey("q_e") }
                         SquircleKey("m_e", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 11.sp) { onKey("m_e") }
-                        SquircleKey("(", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey("(") }
-                        SquircleKey("<", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey(" < ") }
                     }
-                    // Col 3: m_p, u, ε₀, μ₀, σ, ), >
+                    // Col 3: m_p, u, ε₀, μ₀, σ
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
                         SquircleKey("m_p", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 11.sp) { onKey("m_p") }
                         SquircleKey("u", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 14.sp) { onKey("u") }
                         SquircleKey("ε₀", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 14.sp) { onKey("ε₀") }
                         SquircleKey("μ₀", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 14.sp) { onKey("μ₀") }
                         SquircleKey("σ", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 14.sp) { onKey("σ") }
-                        SquircleKey(")", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey(")") }
-                        SquircleKey(">", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey(" > ") }
                     }
-                    // Col 4: φ, e, π, √2, √3, [ ← ]
+                    // Col 4: φ, e, π, √2, √3
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
                         SquircleKey("φ", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 15.sp) { onKey("φ") }
                         SquircleKey("e", fnBg, tabAccent, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 16.sp) { onKey("e") }
                         SquircleKey("π", fnBg, tabAccent, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 16.sp) { onKey("π") }
                         SquircleKey("√2", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 12.sp) { onKey("sqrt(2)") }
                         SquircleKey("√3", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 12.sp) { onKey("sqrt(3)") }
-                        SquareSystemKey(
-                            height = doubleHeight,
-                            modifier = Modifier.fillMaxWidth(),
-                            bgColor = navSquareBg,
-                            contentColor = tabAccent,
-                            onClick = onMoveCursorLeft
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Cursor left",
-                                tint = tabAccent,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
                     }
-                    // Col 5: ln2, ln10, □ⁿ, √□, □/□, [ → ]
+                    // Col 5: α_fs, a₀, R_inf, μ_B, F
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
-                        SquircleKey("ln2", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 12.sp) { onKey("ln(2)") }
-                        SquircleKey("ln10", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("ln(10)") }
-                        SquircleKey("□ⁿ", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("^") }
-                        SquircleKey("√□", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("sqrt(") }
-                        SquircleKey("□/□", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("/") }
-                        SquareSystemKey(
-                            height = doubleHeight,
-                            modifier = Modifier.fillMaxWidth(),
-                            bgColor = navSquareBg,
-                            contentColor = tabAccent,
-                            onClick = onMoveCursorRight
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = "Cursor right",
-                                tint = tabAccent,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
+                        SquircleKey("α_fs", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 11.sp) { onKey("α_fs") }
+                        SquircleKey("a₀", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 12.sp) { onKey("a₀") }
+                        SquircleKey("R_inf", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 11.sp) { onKey("R_inf") }
+                        SquircleKey("μ_B", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 11.sp) { onKey("μ_B") }
+                        SquircleKey("F", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 14.sp) { onKey("F") }
                     }
-                    // Col 6: |x|, x, y, [ ⌫ ], [ ↵ ]
+                    // Col 6: atm, c_s, M_☉, [ ⌫ (double height) ]
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
-                        SquircleKey("|x|", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("abs(") }
-                        SquircleKey("x", fnBg, tabAccent, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 16.sp) { onKey("x") }
-                        SquircleKey("y", fnBg, tabAccent, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 16.sp) { onKey("y") }
+                        SquircleKey("atm", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("atm") }
+                        SquircleKey("c_s", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("c_sound") }
+                        SquircleKey("M_☉", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("M_sun") }
                         SquareSystemKey(
                             height = doubleHeight,
                             modifier = Modifier.fillMaxWidth(),
@@ -1101,20 +984,6 @@ private fun AlphabetKeypadGrid(
                                 modifier = Modifier.size(24.dp)
                             )
                         }
-                        SquareSystemKey(
-                            height = doubleHeight,
-                            modifier = Modifier.fillMaxWidth(),
-                            bgColor = tabAccent,
-                            contentColor = Color.White,
-                            onClick = onExecute
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.KeyboardReturn,
-                                contentDescription = stringResource(R.string.solve),
-                                tint = Color.White,
-                                modifier = Modifier.size(26.dp)
-                            )
-                        }
                     }
                 }
             }
@@ -1124,86 +993,47 @@ private fun AlphabetKeypadGrid(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(spacing)
                 ) {
-                    // Col 1: Y, Z, E, P, T, ToolButton
+                    // Col 1: Y, Z, E, P, T
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
-                        SquircleKey("Y (10²⁴)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 9.sp) { onKey("*(1e24)") }
-                        SquircleKey("Z (10²¹)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 9.sp) { onKey("*(1e21)") }
-                        SquircleKey("E (10¹⁸)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 9.sp) { onKey("*(1e18)") }
-                        SquircleKey("P (10¹⁵)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 9.sp) { onKey("*(1e15)") }
-                        SquircleKey("T (10¹²)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 9.sp) { onKey("*(1e12)") }
-                        PixelToolToggleButton(
-                            currentScreen = ActiveScreen.ADVANCED_CALCULATOR,
-                            isExpanded = isToolBarExpanded,
-                            height = doubleHeight,
-                            onClick = onToggleToolBar,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        SquircleKey("Y (10²⁴)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 8.sp) { onKey("*(1e24)") }
+                        SquircleKey("Z (10²¹)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 8.sp) { onKey("*(1e21)") }
+                        SquircleKey("E (10¹⁸)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 8.sp) { onKey("*(1e18)") }
+                        SquircleKey("P (10¹⁵)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 8.sp) { onKey("*(1e15)") }
+                        SquircleKey("T (10¹²)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 8.sp) { onKey("*(1e12)") }
                     }
-                    // Col 2: G, M, k, h, da, (, <
+                    // Col 2: G, M, k, h, da
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
-                        SquircleKey("G (10⁹)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 9.sp) { onKey("*(1e9)") }
-                        SquircleKey("M (10⁶)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 9.sp) { onKey("*(1e6)") }
-                        SquircleKey("k (10³)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 10.sp) { onKey("*(1000)") }
-                        SquircleKey("h (10²)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 10.sp) { onKey("*(100)") }
-                        SquircleKey("da (10¹)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 9.sp) { onKey("*(10)") }
-                        SquircleKey("(", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey("(") }
-                        SquircleKey("<", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey(" < ") }
+                        SquircleKey("G (10⁹)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 8.sp) { onKey("*(1e9)") }
+                        SquircleKey("M (10⁶)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 8.sp) { onKey("*(1e6)") }
+                        SquircleKey("k (10³)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 8.sp) { onKey("*(1e3)") }
+                        SquircleKey("h (10²)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 8.sp) { onKey("*(1e2)") }
+                        SquircleKey("da (10¹)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 8.sp) { onKey("*(1e1)") }
                     }
-                    // Col 3: d, c, m, μ, n, ), >
+                    // Col 3: d, c, m, μ, n
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
-                        SquircleKey("d (10⁻¹)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 9.sp) { onKey("*(0.1)") }
-                        SquircleKey("c (10⁻²)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 9.sp) { onKey("*(0.01)") }
-                        SquircleKey("m (10⁻³)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 9.sp) { onKey("*(0.001)") }
-                        SquircleKey("μ (10⁻⁶)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 9.sp) { onKey("*(1e-6)") }
-                        SquircleKey("n (10⁻⁹)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 9.sp) { onKey("*(1e-9)") }
-                        SquircleKey(")", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey(")") }
-                        SquircleKey(">", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true) { onKey(" > ") }
+                        SquircleKey("d (10⁻¹)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 8.sp) { onKey("*(1e-1)") }
+                        SquircleKey("c (10⁻²)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 8.sp) { onKey("*(1e-2)") }
+                        SquircleKey("m (10⁻³)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 8.sp) { onKey("*(1e-3)") }
+                        SquircleKey("μ (10⁻⁶)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 8.sp) { onKey("*(1e-6)") }
+                        SquircleKey("n (10⁻⁹)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 8.sp) { onKey("*(1e-9)") }
                     }
-                    // Col 4: p, f, a, z, y, [ ← ]
+                    // Col 4: p, f, a, z, y
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
                         SquircleKey("p (10⁻¹²)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 8.sp) { onKey("*(1e-12)") }
                         SquircleKey("f (10⁻¹⁵)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 8.sp) { onKey("*(1e-15)") }
                         SquircleKey("a (10⁻¹⁸)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 8.sp) { onKey("*(1e-18)") }
                         SquircleKey("z (10⁻²¹)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 8.sp) { onKey("*(1e-21)") }
                         SquircleKey("y (10⁻²⁴)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 8.sp) { onKey("*(1e-24)") }
-                        SquareSystemKey(
-                            height = doubleHeight,
-                            modifier = Modifier.fillMaxWidth(),
-                            bgColor = navSquareBg,
-                            contentColor = tabAccent,
-                            onClick = onMoveCursorLeft
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Cursor left",
-                                tint = tabAccent,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
                     }
-                    // Col 5: 10ⁿ, ×, ÷, +, -, [ → ]
+                    // Col 5: 10ⁿ, ×, ÷, +, -
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
                         SquircleKey("10ⁿ", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("*10^") }
                         SquircleKey("×", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 16.sp) { onKey("*") }
                         SquircleKey("÷", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 16.sp) { onKey("/") }
                         SquircleKey("+", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 16.sp) { onKey("+") }
                         SquircleKey("-", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 16.sp) { onKey("-") }
-                        SquareSystemKey(
-                            height = doubleHeight,
-                            modifier = Modifier.fillMaxWidth(),
-                            bgColor = navSquareBg,
-                            contentColor = tabAccent,
-                            onClick = onMoveCursorRight
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = "Cursor right",
-                                tint = tabAccent,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
                     }
-                    // Col 6: =, 0, ., [ ⌫ ], [ ↵ ]
+                    // Col 6: =, 0, ., [ ⌫ (double height) ]
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
                         SquircleKey("=", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 17.sp) { onKey(" = ") }
                         SquircleKey("0", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 16.sp) { onKey("0") }
@@ -1222,20 +1052,6 @@ private fun AlphabetKeypadGrid(
                                 modifier = Modifier.size(24.dp)
                             )
                         }
-                        SquareSystemKey(
-                            height = doubleHeight,
-                            modifier = Modifier.fillMaxWidth(),
-                            bgColor = tabAccent,
-                            contentColor = Color.White,
-                            onClick = onExecute
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.KeyboardReturn,
-                                contentDescription = stringResource(R.string.solve),
-                                tint = Color.White,
-                                modifier = Modifier.size(26.dp)
-                            )
-                        }
                     }
                 }
             }
@@ -1249,7 +1065,7 @@ private fun AlphabetKeypadGrid(
 
 /**
  * Square button with the exact shape and size of the system calculator (RoundedCornerShape 18dp).
- * Used for double-height [ ← ], [ → ], [ ↵ ], and [ ⌫ ].
+ * Used for [ ← ], [ → ], [ ↵ ], and [ ⌫ ].
  */
 @Composable
 fun SquareSystemKey(
@@ -1271,11 +1087,12 @@ fun SquareSystemKey(
         modifier = modifier.height(height),
         shape = RoundedCornerShape(18.dp),
         color = bgColor,
-        contentColor = contentColor
+        contentColor = contentColor,
+        shadowElevation = 0.dp
     ) {
         Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
             content()
         }
@@ -1287,32 +1104,40 @@ fun SquareSystemKey(
  */
 @Composable
 fun SquircleKey(
-    label: String,
+    text: String,
     bgColor: Color,
     textColor: Color,
     height: Dp,
     modifier: Modifier = Modifier,
     isBold: Boolean = false,
-    fontSize: androidx.compose.ui.unit.TextUnit = 14.sp,
+    fontSize: androidx.compose.ui.unit.TextUnit = 13.sp,
     onClick: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     val view = LocalView.current
-    Box(
-        modifier = modifier
-            .height(height)
-            .clip(RoundedCornerShape(percent = 50))
-            .background(bgColor)
-            .clickable {
-                view.playSoundEffect(android.view.SoundEffectConstants.CLICK)
-                onClick()
-            },
-        contentAlignment = Alignment.Center
+    Surface(
+        onClick = {
+            view.playSoundEffect(android.view.SoundEffectConstants.CLICK)
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            onClick()
+        },
+        modifier = modifier.height(height),
+        shape = RoundedCornerShape(percent = 50),
+        color = bgColor,
+        contentColor = textColor,
+        shadowElevation = 0.dp
     ) {
-        Text(
-            text = label,
-            fontSize = fontSize,
-            fontWeight = if (isBold) FontWeight.Bold else FontWeight.Medium,
-            color = textColor
-        )
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = text,
+                fontSize = fontSize,
+                fontWeight = if (isBold) FontWeight.Bold else FontWeight.Medium,
+                color = textColor,
+                maxLines = 1
+            )
+        }
     }
 }
