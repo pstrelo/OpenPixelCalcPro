@@ -150,6 +150,7 @@ fun AdvancedCalculatorScreen(
                                     onCycleFormat = { viewModel.onCycleFormat() },
                                     onCycleColor = { viewModel.cycleEquationColor(it) },
                                     onToggleGraph = { viewModel.toggleGraphView() },
+                                    onClearAll = { viewModel.onClearAll() },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .wrapContentHeight()
@@ -190,6 +191,7 @@ fun AdvancedCalculatorScreen(
                                     onCycleFormat = { viewModel.onCycleFormat() },
                                     onCycleColor = { viewModel.cycleEquationColor(it) },
                                     onToggleGraph = { viewModel.toggleGraphView() },
+                                    onClearAll = { viewModel.onClearAll() },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .wrapContentHeight()

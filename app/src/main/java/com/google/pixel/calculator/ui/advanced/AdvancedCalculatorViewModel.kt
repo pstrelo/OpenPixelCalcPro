@@ -771,22 +771,23 @@ class AdvancedCalculatorViewModel(
         if (engine.isVariableAssignment(expr)) {
             return ""
         }
+        val cleanExpr = expr.replace("θ", "x")
         val ineqOps = listOf("<=", ">=", "≤", "≥", "<", ">")
-        val foundIneq = ineqOps.firstOrNull { expr.contains(it) }
+        val foundIneq = ineqOps.firstOrNull { cleanExpr.contains(it) }
         if (foundIneq != null) {
-            val ineq2D = engine.parseInequality2D(expr, foundIneq, getCustomVariables())
+            val ineq2D = engine.parseInequality2D(cleanExpr, foundIneq, getCustomVariables())
             if (ineq2D != null) {
                 return ineq2D.boundaryExpr
             }
-            val parts = expr.split(foundIneq)
+            val parts = cleanExpr.split(foundIneq)
             return if (parts.size == 2) {
                 val lhs = parts[0].trim()
                 val rhs = parts[1].trim()
                 if (rhs == "0" || rhs.isEmpty()) lhs else "($lhs) - ($rhs)"
-            } else expr
+            } else cleanExpr
         }
-        return if (expr.contains("=")) {
-            val parts = expr.split("=")
+        return if (cleanExpr.contains("=")) {
+            val parts = cleanExpr.split("=")
             if (parts.size == 2) {
                 val lhs = parts[0].trim()
                 val rhs = parts[1].trim()
@@ -795,9 +796,9 @@ class AdvancedCalculatorViewModel(
                 } else {
                     "(${lhs}) - (${rhs})"
                 }
-            } else expr
+            } else cleanExpr
         } else {
-            expr
+            cleanExpr
         }
     }
 }
