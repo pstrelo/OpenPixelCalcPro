@@ -240,6 +240,16 @@ class ExpressionParser {
                     }
 
                     val varName = sb.toString()
+                    var peek = i
+                    while (peek < len && expr[peek].isWhitespace()) peek++
+                    if (peek < len && expr[peek] == '(') {
+                        if (tokens.isNotEmpty() && shouldInsertImplicitMul(tokens.last())) {
+                            tokens.add(Token.Operator("*", 2))
+                        }
+                        tokens.add(Token.Function(varName.lowercase()))
+                        continue
+                    }
+
                     if (tokens.isNotEmpty() && shouldInsertImplicitMul(tokens.last())) {
                         tokens.add(Token.Operator("*", 2))
                     }

@@ -163,8 +163,36 @@ class AdvancedCalculatorViewModel(
         val expr = eq.expression
         val pos = eq.cursorPosition.coerceIn(0, expr.length)
 
-        val newExpr = expr.substring(0, pos) + text + expr.substring(pos)
-        val newPos = pos + text.length
+        val (newExpr, newPos) = when {
+            text == "(" -> {
+                // Auto-close: insert "()" and place cursor inside
+                val updated = expr.substring(0, pos) + "()" + expr.substring(pos)
+                Pair(updated, pos + 1)
+            }
+            text == ")" -> {
+                // If next character is already ')', skip over it without duplicating
+                if (pos < expr.length && expr[pos] == ')') {
+                    Pair(expr, pos + 1)
+                } else {
+                    val updated = expr.substring(0, pos) + ")" + expr.substring(pos)
+                    Pair(updated, pos + 1)
+                }
+            }
+            text == "|" -> {
+                // If next character is already '|', skip over it
+                if (pos < expr.length && expr[pos] == '|') {
+                    Pair(expr, pos + 1)
+                } else {
+                    // Auto-close: insert "||" and place cursor inside
+                    val updated = expr.substring(0, pos) + "||" + expr.substring(pos)
+                    Pair(updated, pos + 1)
+                }
+            }
+            else -> {
+                val updated = expr.substring(0, pos) + text + expr.substring(pos)
+                Pair(updated, pos + text.length)
+            }
+        }
 
         updateEquationAt(curIndex) {
             it.copy(
@@ -187,6 +215,28 @@ class AdvancedCalculatorViewModel(
         val expr = eq.expression
         val pos = eq.cursorPosition.coerceIn(0, expr.length)
         if (pos <= 0) return
+
+        // Smart delete between pairs: if cursor is inside () or ||, delete both
+        if (pos < expr.length) {
+            val prevChar = expr[pos - 1]
+            val nextChar = expr[pos]
+            if ((prevChar == '(' && nextChar == ')') || (prevChar == '|' && nextChar == '|')) {
+                val newExpr = expr.substring(0, pos - 1) + expr.substring(pos + 1)
+                val newPos = pos - 1
+                updateEquationAt(curIndex) {
+                    it.copy(
+                        expression = newExpr,
+                        cursorPosition = newPos,
+                        formattedResult = "",
+                        lastSolveResult = null,
+                        roots = emptyList(),
+                        isError = false
+                    )
+                }
+                updateGraphForActiveEquation()
+                return
+            }
+        }
 
         // Multi-character token handling: if preceded by " = ", delete all 3 characters
         val deleteLen = when {
@@ -305,7 +355,7 @@ class AdvancedCalculatorViewModel(
             "ⁿ√", "ⁿ√□" -> insertCharacter("ʸ√")
             "√", "√□" -> insertCharacter("sqrt(")
             "□/□" -> insertCharacter("/")
-            "|x|", "|□|" -> insertCharacter("abs(")
+            "|x|", "|□|" -> insertCharacter("|")
             "n!", "x!", "□!" -> insertCharacter("!")
             "log", "log_□" -> insertCharacter("log(")
             "ln" -> insertCharacter("ln(")
@@ -359,6 +409,21 @@ class AdvancedCalculatorViewModel(
     // 5. SOLVE EXECUTION EXCLUSIVELY BY '➤'
     // ==========================================
 
+    companion object {
+        private val FUNCTION_LETTERS = listOf("f", "g", "h", "p", "q", "r", "u", "v")
+
+        fun getFunctionLetter(index: Int): String {
+            return if (index in FUNCTION_LETTERS.indices) FUNCTION_LETTERS[index] else "y${index + 1}"
+        }
+
+        fun getFunctionName(index: Int): String {
+            return "${getFunctionLetter(index)}(x)"
+        }
+    }
+
+    fun getFunctionLetterForIndex(index: Int): String = getFunctionLetter(index)
+    fun getFunctionNameForIndex(index: Int): String = getFunctionName(index)
+
     fun getCustomVariables(): Map<String, java.math.BigDecimal> {
         val vars = mutableMapOf<String, java.math.BigDecimal>()
         val isRad = _uiState.value.isRadians
@@ -385,6 +450,30 @@ class AdvancedCalculatorViewModel(
         return vars
     }
 
+    fun getCustomFunctions(excludeIndex: Int = -1): Map<String, (List<java.math.BigDecimal>, com.google.pixel.calculator.core.math.EvaluationContext) -> java.math.BigDecimal> {
+        val functions = mutableMapOf<String, (List<java.math.BigDecimal>, com.google.pixel.calculator.core.math.EvaluationContext) -> java.math.BigDecimal>()
+        val parser = com.google.pixel.calculator.core.math.ExpressionParser()
+
+        _uiState.value.equations.forEachIndexed { idx, item ->
+            if (idx != excludeIndex && item.expression.isNotBlank()) {
+                val fnName = getFunctionLetter(idx).lowercase()
+                val body = engine.stripFunctionDefinition(item.expression).trim()
+                if (body.isNotBlank()) {
+                    try {
+                        val ast = parser.parse(body)
+                        functions[fnName] = { args, evalCtx ->
+                            val xVal = args.firstOrNull() ?: java.math.BigDecimal.ZERO
+                            val subVars = evalCtx.variables + ("x" to xVal)
+                            val subCtx = evalCtx.copy(variables = subVars)
+                            ast.evaluate(subCtx)
+                        }
+                    } catch (_: Exception) {}
+                }
+            }
+        }
+        return functions
+    }
+
     fun executeSolve() {
         val curIndex = _uiState.value.activeEquationIndex
         val eq = _uiState.value.equations.getOrNull(curIndex) ?: return
@@ -393,7 +482,8 @@ class AdvancedCalculatorViewModel(
         viewModelScope.launch(dispatcher) {
             val isRad = _uiState.value.isRadians
             val customVars = getCustomVariables()
-            val result = engine.solve(eq.expression, isRad, customVars)
+            val customFns = getCustomFunctions(excludeIndex = curIndex)
+            val result = engine.solve(eq.expression, isRad, customVars, customFns)
             val format = eq.formatMode
 
             when (result) {
@@ -710,6 +800,7 @@ class AdvancedCalculatorViewModel(
             val xMax = centerX + halfSpan
 
             val customVars = getCustomVariables()
+            val customFns = getCustomFunctions(excludeIndex = curIndex)
             val ineqOps = listOf("<=", ">=", "≤", "≥", "<", ">")
             val foundIneq = ineqOps.firstOrNull { eq.expression.contains(it) }
             val ineq2DInfo = if (foundIneq != null) engine.parseInequality2D(eq.expression, foundIneq, customVars) else null
@@ -723,7 +814,7 @@ class AdvancedCalculatorViewModel(
 
             val plotExpr = preparePlotExpression(eq.expression)
             val points = if (plotExpr.isNotBlank()) {
-                engine.sampleFunction(plotExpr, xMin, xMax, 550, state.isRadians, customVars)
+                engine.sampleFunction(plotExpr, xMin, xMax, 550, state.isRadians, customVars, customFns)
             } else {
                 emptyList()
             }
@@ -744,7 +835,8 @@ class AdvancedCalculatorViewModel(
 
             val customVars = getCustomVariables()
             val ineqOps = listOf("<=", ">=", "≤", "≥", "<", ">")
-            val updated = state.equations.map { entry ->
+            val updated = state.equations.mapIndexed { idx, entry ->
+                val customFns = getCustomFunctions(excludeIndex = idx)
                 val foundIneq = ineqOps.firstOrNull { entry.expression.contains(it) }
                 val ineq2DInfo = if (foundIneq != null) engine.parseInequality2D(entry.expression, foundIneq, customVars) else null
                 val ineq2DData = ineq2DInfo?.let {
@@ -757,7 +849,7 @@ class AdvancedCalculatorViewModel(
 
                 val plotExpr = preparePlotExpression(entry.expression)
                 if (plotExpr.isNotBlank()) {
-                    val pts = engine.sampleFunction(plotExpr, xMin, xMax, 550, state.isRadians, customVars)
+                    val pts = engine.sampleFunction(plotExpr, xMin, xMax, 550, state.isRadians, customVars, customFns)
                     entry.copy(sampledPoints = pts, inequality2D = ineq2DData)
                 } else {
                     entry.copy(sampledPoints = emptyList(), inequality2D = ineq2DData)
@@ -771,7 +863,7 @@ class AdvancedCalculatorViewModel(
         if (engine.isVariableAssignment(expr)) {
             return ""
         }
-        val cleanExpr = expr.replace("θ", "x")
+        val cleanExpr = engine.stripFunctionDefinition(expr.replace("θ", "x")).trim()
         val ineqOps = listOf("<=", ">=", "≤", "≥", "<", ">")
         val foundIneq = ineqOps.firstOrNull { cleanExpr.contains(it) }
         if (foundIneq != null) {

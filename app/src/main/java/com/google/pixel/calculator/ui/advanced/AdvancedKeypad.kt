@@ -602,7 +602,7 @@ private fun AlgebraKeypadGrid(
             SquircleKey("□/□", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("/") }
             SquircleKey("√x", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("sqrt(") }
             SquircleKey("ⁿ√□", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("ʸ√") }
-            SquircleKey("|x|", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("abs(") }
+            SquircleKey("|x|", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("|") }
         }
 
         // Col 3: [ π ], [ 7 ], [ 4 ], [ 1 ], [ 0 ]
@@ -817,7 +817,7 @@ private fun CalculusKeypadGrid(
         // Col 6: [ □/□ ], [ |x| ], [ Γ ], [ ⌫ (double height) ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
             SquircleKey("□/□", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("/") }
-            SquircleKey("|x|", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("abs(") }
+            SquircleKey("|x|", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("|") }
             SquircleKey("Γ", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey("gamma(") }
             SquareSystemKey(
                 height = doubleHeight,

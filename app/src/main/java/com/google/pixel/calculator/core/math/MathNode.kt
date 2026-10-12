@@ -136,6 +136,11 @@ sealed class MathNode {
             val evaluatedArgs = arguments.map { it.evaluate(context) }
             val mc = context.mathContext
 
+            val customFn = context.customFunctions[name.lowercase()]
+            if (customFn != null) {
+                return customFn(evaluatedArgs, context)
+            }
+
             return when (name.lowercase()) {
                 "sin" -> {
                     val angle = evaluatedArgs[0].toDouble()
@@ -521,7 +526,8 @@ sealed class MathNode {
 data class EvaluationContext(
     val variables: Map<String, BigDecimal> = DEFAULT_VARIABLES,
     val isRadians: Boolean = true,
-    val mathContext: MathContext = MathContext(34, RoundingMode.HALF_UP) // 34 decimal digits precision (128-bit IEEE 754r standard)
+    val mathContext: MathContext = MathContext(34, RoundingMode.HALF_UP), // 34 decimal digits precision (128-bit IEEE 754r standard)
+    val customFunctions: Map<String, (List<BigDecimal>, EvaluationContext) -> BigDecimal> = emptyMap()
 ) {
     companion object {
         val DEFAULT_VARIABLES: Map<String, BigDecimal> = mapOf(

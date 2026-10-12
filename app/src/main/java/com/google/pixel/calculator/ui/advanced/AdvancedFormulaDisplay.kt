@@ -83,25 +83,27 @@ fun AdvancedFormulaDisplay(
                         .padding(horizontal = 8.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Interactive curve/variable color badge (e.g. y₁, y₂ or a, b clickable to cycle color)
+                    // Interactive curve/function color badge (e.g. f(x), g(x), h(x) or a, b clickable to cycle color)
                     val isAssignment = AdvancedMathEngine().isVariableAssignment(eq.expression)
                     val badgeText = if (isAssignment) {
                         eq.expression.substringBefore("=").trim()
                     } else {
-                        "y${index + 1}"
+                        AdvancedCalculatorViewModel.getFunctionName(index)
                     }
                     Box(
                         modifier = Modifier
-                            .size(28.dp)
-                            .clip(CircleShape)
-                            .background(eq.color.copy(alpha = 0.25f))
-                            .border(1.5.dp, eq.color, CircleShape)
-                            .clickable { onCycleColor(index) },
+                            .height(28.dp)
+                            .wrapContentWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(eq.color.copy(alpha = 0.20f))
+                            .border(1.5.dp, eq.color, RoundedCornerShape(14.dp))
+                            .clickable { onCycleColor(index) }
+                            .padding(horizontal = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = badgeText,
-                            fontSize = if (badgeText.length > 2) 9.sp else 11.sp,
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = eq.color
                         )
@@ -122,8 +124,12 @@ fun AdvancedFormulaDisplay(
                         // Single result (scalar, inequality, or error) when not a multi-root matrix
                         if (eq.formattedResult.isNotBlank() && eq.roots.size <= 1) {
                             Spacer(modifier = Modifier.height(2.dp))
+                            val isInformative = eq.formattedResult.contains("Nessun") || 
+                                                eq.formattedResult.contains("Nessuna") ||
+                                                eq.formattedResult.contains("nessun", ignoreCase = true)
                             val resultColor = when {
-                                eq.isError -> Color(0xFFF87171)
+                                eq.isError && !isInformative -> Color(0xFFF87171)
+                                isInformative -> if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B)
                                 eq.formattedResult.contains("∈") || eq.formattedResult.contains("<") || eq.formattedResult.contains(">") -> Color(0xFF38BDF8)
                                 else -> Color(0xFF6EE7B7)
                             }
@@ -135,7 +141,7 @@ fun AdvancedFormulaDisplay(
                             Text(
                                 text = displayResult,
                                 fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = if (isInformative) FontWeight.Medium else FontWeight.Bold,
                                 color = resultColor
                             )
                         }

@@ -357,7 +357,7 @@ fun MinimizedGraphCard(
                                     .background(eq.color)
                             )
                             Text(
-                                text = "y${idx + 1}",
+                                text = AdvancedCalculatorViewModel.getFunctionName(idx),
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = eq.color
