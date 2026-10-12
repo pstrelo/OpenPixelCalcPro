@@ -85,9 +85,8 @@ fun AdvancedKeypad(
     val toolBarDims = rememberToolBarDimensions()
 
     val spacing = if (isLandscape) 4.dp else 6.dp
-    val unitHeight = if (isLandscape) 22.dp else if (isSplitScreen) 28.dp else 34.dp
-    val bottomRowHeight = if (isLandscape) 48.dp else if (isSplitScreen) 58.dp else toolBarDims.height
-    val toolButtonWidth = if (isLandscape) 48.dp else if (isSplitScreen) 58.dp else toolBarDims.btnWidth
+    val unitHeight = if (isLandscape) 22.dp else if (isSplitScreen) 28.dp else 36.dp
+    val bottomRowHeight = if (isLandscape) 44.dp else if (isSplitScreen) 50.dp else 56.dp
 
     val tabAccent = activeTab.accentColor
 
@@ -107,24 +106,17 @@ fun AdvancedKeypad(
                 onTabSelected = onTabSelected
             )
 
-            // 1. TOP FIXED CONTROL ROW: [ < ] [ > ] [ ( ] [ ) ] [ FORMAT ] [ AC ]
-            TopFixedControlRow(
-                unitHeight = unitHeight,
-                spacing = spacing,
-                tabAccent = tabAccent,
-                onKey = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onInsertChar(it)
-                },
-                onCycleFormat = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onCycleFormat()
-                },
-                onClearAll = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onClearAll()
-                }
-            )
+            // 1. TOP FIXED CONTROL ROW: [ < ] [ > ] [ ≤ ] [ ≥ ] [ ( ] [ ) ] (Nascosto nella tab Alphabet)
+            if (activeTab != MathSolverTab.ALPHABET) {
+                TopFixedControlRow(
+                    unitHeight = unitHeight,
+                    spacing = spacing,
+                    onKey = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onInsertChar(it)
+                    }
+                )
+            }
 
             // 2. 5 THEMATIC ROWS (Columns 1 to 6)
             when (activeTab) {
@@ -178,15 +170,23 @@ fun AdvancedKeypad(
                 )
             }
 
-            // 3. BOTTOM SYSTEM / NAVIGATION ROW (Tool Toggle Button + [ ← ] [ → ] [ ↵ ])
+            // 3. BOTTOM SYSTEM / NAVIGATION ROW (Tool Toggle Button + [ FORMAT ] [ AC ] [ ← ] [ → ] [ ↵ ])
             BottomSystemNavRow(
                 height = bottomRowHeight,
-                toolButtonWidth = toolButtonWidth,
+                unitHeight = unitHeight,
                 spacing = spacing,
                 tabAccent = tabAccent,
                 isToolBarExpanded = isToolBarExpanded,
                 onToggleToolBar = onToggleToolBar,
                 onNavigate = onNavigate,
+                onCycleFormat = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onCycleFormat()
+                },
+                onClearAll = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onClearAll()
+                },
                 onMoveCursorLeft = {
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onMoveCursorLeft()
@@ -338,57 +338,57 @@ fun MathSolverTabBar(
 }
 
 // =========================================================================
-// TOP FIXED CONTROL ROW: [ < ] [ > ] [ ( ] [ ) ] [ FORMAT ] [ AC ]
+// TOP FIXED CONTROL ROW: [ < ] [ > ] [ ≤ ] [ ≥ ] [ ( ] [ ) ]
 // =========================================================================
 
 @Composable
 private fun TopFixedControlRow(
     unitHeight: Dp,
     spacing: Dp,
-    tabAccent: Color,
-    onKey: (String) -> Unit,
-    onCycleFormat: () -> Unit,
-    onClearAll: () -> Unit
+    onKey: (String) -> Unit
 ) {
     val isDark = CalculatorTheme.colors.isDark
     val fnBg = if (isDark) Color(0xFF242738) else Color(0xFFECEFF5)
     val fnColor = if (isDark) Color(0xFFCBD5E1) else CalculatorTheme.colors.onSurface
-    val delBg = if (isDark) Color(0xFF452427) else Color(0xFFFFE4E6)
-    val delColor = if (isDark) Color(0xFFF87171) else Color(0xFFE11D48)
 
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(spacing),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        SquircleKey("<", fnBg, fnColor, unitHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey(" < ") }
-        SquircleKey(">", fnBg, fnColor, unitHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey(" > ") }
-        SquircleKey("(", fnBg, fnColor, unitHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey("(") }
-        SquircleKey(")", fnBg, fnColor, unitHeight, Modifier.weight(1f), isBold = true, fontSize = 16.sp) { onKey(")") }
-        SquircleKey("FORMAT", fnBg, tabAccent, unitHeight, Modifier.weight(1f), isBold = true, fontSize = 10.sp) { onCycleFormat() }
-        SquircleKey("AC", delBg, delColor, unitHeight, Modifier.weight(1f), isBold = true, fontSize = 13.sp) { onClearAll() }
+        SquircleKey("<", fnBg, fnColor, unitHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey(" < ") }
+        SquircleKey(">", fnBg, fnColor, unitHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey(" > ") }
+        SquircleKey("≤", fnBg, fnColor, unitHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey(" <= ") }
+        SquircleKey("≥", fnBg, fnColor, unitHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey(" >= ") }
+        SquircleKey("(", fnBg, fnColor, unitHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey("(") }
+        SquircleKey(")", fnBg, fnColor, unitHeight, Modifier.weight(1f), isBold = true, fontSize = 17.sp) { onKey(")") }
     }
 }
 
 // =========================================================================
-// BOTTOM SYSTEM / NAVIGATION ROW (Tool Toggle Button + [ ← ] [ → ] [ ↵ ])
+// BOTTOM SYSTEM / NAVIGATION ROW (Tool Toggle Button + [ FORMAT ] [ AC ] [ ← ] [ → ] [ ↵ ])
 // =========================================================================
 
 @Composable
 private fun BottomSystemNavRow(
     height: Dp,
-    toolButtonWidth: Dp,
+    unitHeight: Dp,
     spacing: Dp,
     tabAccent: Color,
     isToolBarExpanded: Boolean,
     onToggleToolBar: () -> Unit,
     onNavigate: (ActiveScreen) -> Unit,
+    onCycleFormat: () -> Unit,
+    onClearAll: () -> Unit,
     onMoveCursorLeft: () -> Unit,
     onMoveCursorRight: () -> Unit,
     onExecute: () -> Unit
 ) {
     val isDark = CalculatorTheme.colors.isDark
     val navSquareBg = if (isDark) tabAccent.copy(alpha = 0.28f) else tabAccent.copy(alpha = 0.18f)
+    val fnBg = if (isDark) Color(0xFF242738) else Color(0xFFECEFF5)
+    val delBg = if (isDark) Color(0xFF452427) else Color(0xFFFFE4E6)
+    val delColor = if (isDark) Color(0xFFF87171) else Color(0xFFE11D48)
 
     if (isToolBarExpanded) {
         BackHandler { onToggleToolBar() }
@@ -404,23 +404,30 @@ private fun BottomSystemNavRow(
             horizontalArrangement = Arrangement.spacedBy(spacing),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Tasto strumenti a sinistra: dimensione e forma identica a tutte le altre schermate
-            PixelToolToggleButton(
-                currentScreen = ActiveScreen.ADVANCED_CALCULATOR,
-                isExpanded = isToolBarExpanded,
-                height = height,
-                onClick = onToggleToolBar,
-                modifier = Modifier.size(width = toolButtonWidth, height = height)
-            )
-
-            // Contenitore per i tasti sottostanti o per la pillola degli strumenti
+            // Colonna 1: Tasto strumenti circolare Pixel (weight 1f, identico alla colonna 1 del keypad)
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight(),
                 contentAlignment = Alignment.Center
             ) {
-                // Tasti di navigazione (scompaiono quando la toolbar è aperta)
+                PixelToolToggleButton(
+                    currentScreen = ActiveScreen.ADVANCED_CALCULATOR,
+                    isExpanded = isToolBarExpanded,
+                    height = height,
+                    onClick = onToggleToolBar,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            // Colonne 2..6: Box per i restanti 5 tasti (weight 5f, 100% allineato verticalmente con colonne 2-6)
+            Box(
+                modifier = Modifier
+                    .weight(5f)
+                    .fillMaxHeight(),
+                contentAlignment = Alignment.Center
+            ) {
+                // Tasti di controllo, editing e navigazione (scompaiono fluidamente quando la toolbar si apre)
                 androidx.compose.animation.AnimatedVisibility(
                     visible = !isToolBarExpanded,
                     enter = fadeIn(tween(180)) + scaleIn(
@@ -443,10 +450,31 @@ private fun BottomSystemNavRow(
                         horizontalArrangement = Arrangement.spacedBy(spacing),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Spazio vuoto lasciato dai tasti spostati (, <, ), > per mantenere
-                        // i tasti freccia e invio perfettamente allineati con le colonne 4, 5, 6
-                        Spacer(modifier = Modifier.weight(2f))
+                        // Colonna 2: [ FORMAT ] (forma squircle e altezza standard attuale)
+                        SquircleKey(
+                            text = "FORMAT",
+                            bgColor = fnBg,
+                            textColor = tabAccent,
+                            height = unitHeight,
+                            modifier = Modifier.weight(1f),
+                            isBold = true,
+                            fontSize = 11.sp,
+                            onClick = onCycleFormat
+                        )
 
+                        // Colonna 3: [ AC ] (forma squircle e altezza standard attuale)
+                        SquircleKey(
+                            text = "AC",
+                            bgColor = delBg,
+                            textColor = delColor,
+                            height = unitHeight,
+                            modifier = Modifier.weight(1f),
+                            isBold = true,
+                            fontSize = 14.sp,
+                            onClick = onClearAll
+                        )
+
+                        // Colonna 4: [ ← ] (squadrato 18dp, perfettamente allineato con la colonna 4)
                         SquareSystemKey(
                             height = height,
                             modifier = Modifier.weight(1f),
@@ -462,6 +490,7 @@ private fun BottomSystemNavRow(
                             )
                         }
 
+                        // Colonna 5: [ → ] (squadrato 18dp, perfettamente allineato con la colonna 5)
                         SquareSystemKey(
                             height = height,
                             modifier = Modifier.weight(1f),
@@ -477,6 +506,7 @@ private fun BottomSystemNavRow(
                             )
                         }
 
+                        // Colonna 6: [ ↵ ] (squadrato 18dp, perfettamente allineato con la colonna 6)
                         SquareSystemKey(
                             height = height,
                             modifier = Modifier.weight(1f),
@@ -494,7 +524,7 @@ private fun BottomSystemNavRow(
                     }
                 }
 
-                // Menu a pillola degli strumenti (compare al posto dei tasti sottostanti)
+                // Menu a pillola degli strumenti (compare al posto dei 5 tasti sottostanti)
                 androidx.compose.animation.AnimatedVisibility(
                     visible = isToolBarExpanded,
                     enter = fadeIn(tween(180)) + scaleIn(
