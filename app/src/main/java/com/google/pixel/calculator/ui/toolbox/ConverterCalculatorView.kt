@@ -28,6 +28,7 @@ import com.google.pixel.calculator.core.math.EvaluationContext
 import com.google.pixel.calculator.core.math.MathEvaluator
 import com.google.pixel.calculator.core.utils.CurrencyRateRepository
 import com.google.pixel.calculator.core.utils.UnitConverter
+import com.google.pixel.calculator.data.ConverterPreferences
 import com.google.pixel.calculator.ui.ActiveScreen
 import com.google.pixel.calculator.ui.display.ActiveConverterField
 import com.google.pixel.calculator.ui.display.ConvertDisplay
@@ -62,16 +63,20 @@ fun ConverterCalculatorView(
 
     val currencyRepo = remember { CurrencyRateRepository(context) }
     val converter = remember(currencyRepo) { UnitConverter(currencyRepo) }
+    val converterPrefs = remember { ConverterPreferences(context) }
     val evaluator = remember { MathEvaluator() }
 
     // Collect currency rate updates
     val currencyRates by currencyRepo.rates.collectAsState()
     val isCurrencyUpdating by currencyRepo.isUpdating.collectAsState()
 
-    // Unit conversion state (default: Mass kg and g, or Currency USD and EUR)
-    var selectedCategory by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(UnitConverter.Category.MASS) }
-    var topUnitCode by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("g") }
-    var bottomUnitCode by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("kg") }
+    // Load persisted unit selection or fallback to defaults
+    val initialSelection = remember { converterPrefs.loadSelection(converter) }
+
+    // Unit conversion state (persisted across app launches)
+    var selectedCategory by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(initialSelection.category) }
+    var topUnitCode by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(initialSelection.topUnitCode) }
+    var bottomUnitCode by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(initialSelection.bottomUnitCode) }
 
     // Active field state (TOP or BOTTOM)
     var activeField by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(ActiveConverterField.TOP) }
@@ -154,6 +159,7 @@ fun ConverterCalculatorView(
         topUnitCode = oldBottom
         bottomUnitCode = oldTop
         shouldClearOnNextDigit = false
+        converterPrefs.saveSelection(selectedCategory, oldBottom, oldTop)
     }
 
     // Cleans formatted string for numeric input
@@ -401,24 +407,31 @@ fun ConverterCalculatorView(
             target = pickerTarget,
             onDismiss = { showPicker = false },
             onSelectUnit = { category, unitCode ->
+                val newTop: String
+                val newBottom: String
                 if (category != selectedCategory) {
                     selectedCategory = category
                     val units = converter.getUnitsForCategory(category)
                     val companion = units.firstOrNull { it.code != unitCode }?.code ?: unitCode
                     if (pickerTarget == UnitPickerTarget.FROM) {
-                        topUnitCode = unitCode
-                        bottomUnitCode = companion
+                        newTop = unitCode
+                        newBottom = companion
                     } else {
-                        bottomUnitCode = unitCode
-                        topUnitCode = companion
+                        newTop = companion
+                        newBottom = unitCode
                     }
                 } else {
                     if (pickerTarget == UnitPickerTarget.FROM) {
-                        topUnitCode = unitCode
+                        newTop = unitCode
+                        newBottom = bottomUnitCode
                     } else {
-                        bottomUnitCode = unitCode
+                        newTop = topUnitCode
+                        newBottom = unitCode
                     }
                 }
+                topUnitCode = newTop
+                bottomUnitCode = newBottom
+                converterPrefs.saveSelection(category, newTop, newBottom)
             }
         )
     }
