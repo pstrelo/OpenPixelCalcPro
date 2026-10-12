@@ -86,7 +86,7 @@ fun AdvancedKeypad(
 
     val spacing = if (isLandscape) 4.dp else 6.dp
     val unitHeight = if (isLandscape) 22.dp else if (isSplitScreen) 28.dp else 36.dp
-    val bottomRowHeight = if (isLandscape) 48.dp else if (isSplitScreen) 58.dp else toolBarDims.height
+    val bottomRowHeight = if (isLandscape) 44.dp else if (isSplitScreen) 50.dp else 56.dp
 
     val tabAccent = activeTab.accentColor
 
@@ -455,7 +455,7 @@ private fun BottomSystemNavRow(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Cursor left",
                                 tint = tabAccent,
-                                modifier = Modifier.size(26.dp)
+                                modifier = Modifier.size(24.dp)
                             )
                         }
 
@@ -471,7 +471,7 @@ private fun BottomSystemNavRow(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                 contentDescription = "Cursor right",
                                 tint = tabAccent,
-                                modifier = Modifier.size(26.dp)
+                                modifier = Modifier.size(24.dp)
                             )
                         }
 
@@ -519,7 +519,7 @@ private fun BottomSystemNavRow(
                                 imageVector = Icons.AutoMirrored.Filled.KeyboardReturn,
                                 contentDescription = stringResource(R.string.solve),
                                 tint = Color.White,
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(26.dp)
                             )
                         }
                     }
