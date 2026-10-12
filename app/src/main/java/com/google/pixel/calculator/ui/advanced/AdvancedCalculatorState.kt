@@ -122,6 +122,15 @@ data class SelectedGraphPoint(
 )
 
 /**
+ * Data describing a 2D inequality region on the Cartesian plane (e.g. y >= x or y + x > 2).
+ */
+data class Inequality2DData(
+    val boundaryExpr: String,
+    val isAbove: Boolean,
+    val isStrict: Boolean
+)
+
+/**
  * Single equation item in the Desmos/GeoGebra style multi-equation list.
  * id is Any to transparently support both String IDs ("eq_1") and legacy Int IDs (1, 2, 3).
  */
@@ -135,7 +144,8 @@ data class EquationItem(
     val formattedResult: String = "",
     val roots: List<Double> = emptyList(),
     val sampledPoints: List<AdvancedMathEngine.Point?> = emptyList(),
-    val isError: Boolean = false
+    val isError: Boolean = false,
+    val inequality2D: Inequality2DData? = null
 ) {
     // Backward compatibility constructor for legacy FormulaEntry references with Int id
     constructor(
@@ -159,7 +169,8 @@ data class EquationItem(
         formattedResult = resultText,
         roots = roots,
         sampledPoints = sampledPoints,
-        isError = isError
+        isError = isError,
+        inequality2D = null
     )
 
     // Legacy property aliases

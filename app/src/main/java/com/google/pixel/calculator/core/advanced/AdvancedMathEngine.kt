@@ -40,6 +40,13 @@ class AdvancedMathEngine(
         data class SingleValue(val formatted: String, val raw: Double) : SolveResult()
         data class EquationRoots(val roots: List<Double>, val formattedText: String) : SolveResult()
         data class InequalityIntervals(val text: String, val intervals: List<ShadedInterval>) : SolveResult()
+        data class Inequality2D(
+            val text: String,
+            val boundaryExpr: String,
+            val op: String,
+            val isAbove: Boolean,
+            val isStrict: Boolean
+        ) : SolveResult()
         data class SystemSolution(val solutions: Map<String, Double>, val formattedText: String) : SolveResult()
         data class VariableAssignment(val variableName: String, val value: Double, val formattedText: String) : SolveResult()
         data class Error(val message: String) : SolveResult()
@@ -60,6 +67,7 @@ class AdvancedMathEngine(
                     }.joinToString(", ")
                 }
                 is InequalityIntervals -> text
+                is Inequality2D -> text
                 is SystemSolution -> formattedText
                 is Error -> message
             }
@@ -395,12 +403,163 @@ class AdvancedMathEngine(
     // 4. INEQUALITY SOLVER
     // ==========================================
 
+    data class Inequality2DInfo(
+        val boundaryExpr: String,
+        val readableRhs: String,
+        val op: String,
+        val isAbove: Boolean,
+        val isStrict: Boolean
+    )
+
+    fun parseInequality2D(
+        clean: String,
+        op: String,
+        customVariables: Map<String, BigDecimal> = emptyMap()
+    ): Inequality2DInfo? {
+        val hasY = Regex("(?<![a-zA-Z])y(?![a-zA-Z])", RegexOption.IGNORE_CASE).containsMatchIn(clean)
+        if (!hasY) return null
+
+        val parts = clean.split(op)
+        if (parts.size != 2) return null
+        val lhs = parts[0].trim()
+        val rhs = parts[1].trim()
+
+        val isStrict = op == "<" || op == ">"
+
+        // Replace variable y with 0 in lhs and rhs
+        val lhsZeroY = replaceVarWith(lhs, "y", "0")
+        val rhsZeroY = replaceVarWith(rhs, "y", "0")
+
+        // Estimate coefficient A of y in diffExpr = lhs - rhs
+        val diffExpr = "($lhs) - ($rhs)"
+        val ast = try { parser.parse(diffExpr) } catch (_: Exception) { return null }
+        val baseVars = EvaluationContext.DEFAULT_VARIABLES + customVariables
+
+        fun evalDiff(yVal: Double, xVal: Double): Double {
+            return try {
+                val ctx = EvaluationContext(
+                    variables = baseVars + mapOf(
+                        "y" to BigDecimal(yVal.toString(), defaultMc),
+                        "x" to BigDecimal(xVal.toString(), defaultMc)
+                    ),
+                    isRadians = true,
+                    mathContext = defaultMc
+                )
+                ast.evaluate(ctx).toDouble()
+            } catch (_: Exception) {
+                Double.NaN
+            }
+        }
+
+        var diff0 = evalDiff(0.0, 1.0)
+        var diff1 = evalDiff(1.0, 1.0)
+        if (diff0.isNaN() || diff1.isNaN()) {
+            diff0 = evalDiff(0.0, 0.0)
+            diff1 = evalDiff(1.0, 0.0)
+        }
+        if (diff0.isNaN() || diff1.isNaN()) {
+            diff0 = evalDiff(0.0, 2.0)
+            diff1 = evalDiff(1.0, 2.0)
+        }
+        if (diff0.isNaN() || diff1.isNaN()) return null
+        val A = diff1 - diff0
+        if (abs(A) < 1e-9) return null
+
+        val finalOp = if (A > 0) {
+            op
+        } else {
+            when (op) {
+                ">" -> "<"
+                ">=", "≥" -> "≤"
+                "<" -> ">"
+                "<=", "≤" -> "≥"
+                else -> op
+            }
+        }
+
+        val isAbove = finalOp == ">" || finalOp == ">=" || finalOp == "≥"
+
+        val boundaryExpr = if (lhs.trim().equals("y", ignoreCase = true)) {
+            rhs
+        } else if (abs(A - 1.0) < 1e-7) {
+            "($rhsZeroY) - ($lhsZeroY)"
+        } else {
+            "(($rhsZeroY) - ($lhsZeroY)) / ${formatNumber(A)}"
+        }
+
+        val readableRhs = if (lhs.trim().equals("y", ignoreCase = true)) {
+            rhs
+        } else {
+            simplifyReadableRhs(lhs, rhs, A)
+        }
+
+        return Inequality2DInfo(
+            boundaryExpr = boundaryExpr,
+            readableRhs = readableRhs,
+            op = finalOp,
+            isAbove = isAbove,
+            isStrict = isStrict
+        )
+    }
+
+    private fun replaceVarWith(expr: String, varName: String, replacement: String): String {
+        return expr.replace(Regex("(?<![a-zA-Z_])${varName}(?![a-zA-Z0-9_])"), "($replacement)")
+    }
+
+    private fun simplifyReadableRhs(lhs: String, rhs: String, A: Double): String {
+        val cleanLhs = lhs.trim()
+        val cleanRhs = rhs.trim()
+        if (cleanLhs.equals("y + x", ignoreCase = true) || cleanLhs.equals("x + y", ignoreCase = true)) {
+            return if (cleanRhs == "0") "-x" else "$cleanRhs - x"
+        }
+        if (cleanLhs.equals("y - x", ignoreCase = true)) {
+            return if (cleanRhs == "0") "x" else "$cleanRhs + x"
+        }
+        if (cleanLhs.equals("x - y", ignoreCase = true)) {
+            return if (cleanRhs == "0") "x" else "x - $cleanRhs"
+        }
+        val withoutY = cleanLhs.replace(Regex("(?<![a-zA-Z_])y(?![a-zA-Z0-9_])"), "0")
+            .replace("+ 0", "")
+            .replace("- 0", "")
+            .replace("0 +", "")
+            .trim()
+        val baseStr = if (cleanRhs == "0") "-($withoutY)" else "$cleanRhs - ($withoutY)"
+        return if (abs(A - 1.0) < 1e-7) {
+            baseStr
+        } else if (abs(A - (-1.0)) < 1e-7) {
+            "($withoutY) - $cleanRhs"
+        } else {
+            "($baseStr) / ${formatNumber(A)}"
+        }
+    }
+
     fun solveInequality(
         expr: String,
         op: String,
         isRadians: Boolean = true,
         customVariables: Map<String, BigDecimal> = emptyMap()
     ): SolveResult {
+        // First check if this is a 2D inequality involving y (e.g. y >= x, y + x > 2)
+        val ineq2D = parseInequality2D(expr, op, customVariables)
+        if (ineq2D != null) {
+            val opSymbol = when (ineq2D.op) {
+                ">" -> ">"
+                "<" -> "<"
+                ">=", "≥" -> "≥"
+                "<=", "≤" -> "≤"
+                else -> ineq2D.op
+            }
+            val regionDesc = if (ineq2D.isAbove) "Semipiano superiore" else "Semipiano inferiore"
+            val text = "y $opSymbol ${ineq2D.readableRhs}  ($regionDesc)"
+            return SolveResult.Inequality2D(
+                text = text,
+                boundaryExpr = ineq2D.boundaryExpr,
+                op = ineq2D.op,
+                isAbove = ineq2D.isAbove,
+                isStrict = ineq2D.isStrict
+            )
+        }
+
         val parts = expr.split(op)
         if (parts.size != 2) return SolveResult.Error("Formato disequazione non valido")
         val lhs = parts[0].trim()

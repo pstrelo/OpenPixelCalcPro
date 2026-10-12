@@ -242,5 +242,39 @@ class AdvancedMathEngineTest {
         // 2 * (3^2) = 18
         assertEquals("18", polyVal)
     }
+
+    @Test
+    fun testInequality2D_Solving() {
+        // y >= x -> Semipiano superiore
+        val res1 = engine.solve("y >= x")
+        assertTrue("y >= x must be SolveResult.Inequality2D", res1 is AdvancedMathEngine.SolveResult.Inequality2D)
+        val ineq1 = res1 as AdvancedMathEngine.SolveResult.Inequality2D
+        assertTrue(ineq1.isAbove)
+        assertFalse(ineq1.isStrict)
+        assertEquals("x", ineq1.boundaryExpr)
+        assertTrue(ineq1.text.contains("Semipiano superiore"))
+        assertTrue(ineq1.text.contains("≥ x"))
+
+        // y + x > 2 -> y > 2 - x (Semipiano superiore, strict)
+        val res2 = engine.solve("y + x > 2")
+        assertTrue("y + x > 2 must be SolveResult.Inequality2D", res2 is AdvancedMathEngine.SolveResult.Inequality2D)
+        val ineq2 = res2 as AdvancedMathEngine.SolveResult.Inequality2D
+        assertTrue(ineq2.isAbove)
+        assertTrue(ineq2.isStrict)
+        assertTrue(ineq2.text.contains("Semipiano superiore"))
+        assertTrue(ineq2.text.contains("> 2 - x"))
+
+        // 4 - y > x -> y < 4 - x (Semipiano inferiore, strict)
+        val res3 = engine.solve("4 - y > x")
+        assertTrue("4 - y > x must be SolveResult.Inequality2D", res3 is AdvancedMathEngine.SolveResult.Inequality2D)
+        val ineq3 = res3 as AdvancedMathEngine.SolveResult.Inequality2D
+        assertFalse(ineq3.isAbove)
+        assertTrue(ineq3.isStrict)
+        assertTrue(ineq3.text.contains("Semipiano inferiore"))
+
+        // 1D inequality fallback must still work! x^2 - 4 < 0
+        val res4 = engine.solve("x^2 - 4 < 0")
+        assertTrue("x^2 - 4 < 0 must be 1D interval solution", res4 is AdvancedMathEngine.SolveResult.InequalityIntervals)
+    }
 }
 

@@ -317,4 +317,33 @@ class AdvancedCalculatorViewModelTest {
         assertTrue("Equation 1 roots should be x = 0", eq1.roots.contains(0.0))
         assertTrue("Equation 1 should sample curve points", eq1.sampledPoints.isNotEmpty())
     }
+
+    @Test
+    fun testInequality2D_ViewModelExecutionAndGraphing() {
+        viewModel.onClearAll()
+        viewModel.insertCharacter("y >= x")
+        viewModel.onKeyClick("➤")
+
+        val state = viewModel.uiState.value
+        val eq = state.activeEquation
+        assertNotNull(eq)
+        assertTrue("Result should mention semipiano", eq!!.formattedResult.contains("Semipiano"))
+        assertNotNull(eq.inequality2D)
+        assertEquals("x", eq.inequality2D?.boundaryExpr)
+        assertTrue(eq.inequality2D?.isAbove == true)
+        assertFalse(eq.inequality2D?.isStrict == true)
+        assertTrue(eq.sampledPoints.isNotEmpty())
+
+        // Test strict 2D inequality: y + x > 2
+        viewModel.onClearAll()
+        viewModel.insertCharacter("y + x > 2")
+        viewModel.onKeyClick("➤")
+
+        val state2 = viewModel.uiState.value
+        val eq2 = state2.activeEquation
+        assertNotNull(eq2)
+        assertTrue(eq2!!.inequality2D?.isStrict == true)
+        assertTrue(eq2.inequality2D?.isAbove == true)
+        assertTrue(eq2.formattedResult.contains("y > 2 - x"))
+    }
 }

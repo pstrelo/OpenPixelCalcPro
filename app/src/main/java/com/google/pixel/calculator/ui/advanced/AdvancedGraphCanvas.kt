@@ -24,6 +24,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
@@ -31,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.pixel.calculator.R
+import com.google.pixel.calculator.core.advanced.AdvancedMathEngine
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -177,6 +179,51 @@ fun AdvancedGraphCanvas(
                 }
             }
 
+            // 2b. 2D Inequality Shaded Semi-planes (e.g. y >= x, y + x > 2)
+            for (eq in state.equations) {
+                val ineq = eq.inequality2D
+                if (ineq != null && eq.sampledPoints.isNotEmpty()) {
+                    val segments = mutableListOf<MutableList<AdvancedMathEngine.Point>>()
+                    var currentSegment = mutableListOf<AdvancedMathEngine.Point>()
+                    for (p in eq.sampledPoints) {
+                        if (p != null) {
+                            currentSegment.add(p)
+                        } else {
+                            if (currentSegment.isNotEmpty()) {
+                                segments.add(currentSegment)
+                                currentSegment = mutableListOf()
+                            }
+                        }
+                    }
+                    if (currentSegment.isNotEmpty()) {
+                        segments.add(currentSegment)
+                    }
+
+                    val edgeY = if (ineq.isAbove) -20f else height + 20f
+                    for (segment in segments) {
+                        if (segment.isNotEmpty()) {
+                            val shadePath = Path()
+                            val firstScreen = viewport.mathToScreen(segment.first().x.toDouble(), segment.first().y.toDouble(), canvasSize)
+                            val lastScreen = viewport.mathToScreen(segment.last().x.toDouble(), segment.last().y.toDouble(), canvasSize)
+
+                            shadePath.moveTo(firstScreen.x, edgeY)
+                            for (p in segment) {
+                                val screenPt = viewport.mathToScreen(p.x.toDouble(), p.y.toDouble(), canvasSize)
+                                val yClamped = screenPt.y.coerceIn(-height * 2f, height * 3f)
+                                shadePath.lineTo(screenPt.x, yClamped)
+                            }
+                            shadePath.lineTo(lastScreen.x, edgeY)
+                            shadePath.close()
+
+                            drawPath(
+                                path = shadePath,
+                                color = eq.color.copy(alpha = 0.22f)
+                            )
+                        }
+                    }
+                }
+            }
+
             // 3. Main Cartesian axes (X and Y)
             if (centerY in 0f..height) {
                 drawLine(
@@ -278,10 +325,20 @@ fun AdvancedGraphCanvas(
                         }
                     }
 
+                    val ineq = eq.inequality2D
+                    val pathEffect = if (ineq?.isStrict == true) {
+                        PathEffect.dashPathEffect(floatArrayOf(16f, 10f), 0f)
+                    } else {
+                        null
+                    }
+
                     drawPath(
                         path = path,
                         color = eq.color,
-                        style = Stroke(width = 2.5.dp.toPx())
+                        style = Stroke(
+                            width = 2.5.dp.toPx(),
+                            pathEffect = pathEffect
+                        )
                     )
                 }
             }

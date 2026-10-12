@@ -404,6 +404,7 @@ class AdvancedCalculatorViewModel(
                             formattedResult = formatted,
                             lastSolveResult = result,
                             roots = emptyList(),
+                            inequality2D = null,
                             isError = false
                         )
                     }
@@ -421,6 +422,7 @@ class AdvancedCalculatorViewModel(
                             formattedResult = formatted,
                             lastSolveResult = result,
                             roots = if (isFuncSummary) emptyList() else listOf(result.raw),
+                            inequality2D = null,
                             isError = false
                         )
                     }
@@ -433,6 +435,7 @@ class AdvancedCalculatorViewModel(
                             formattedResult = formatted,
                             lastSolveResult = result,
                             roots = result.roots,
+                            inequality2D = null,
                             isError = false
                         )
                     }
@@ -443,16 +446,34 @@ class AdvancedCalculatorViewModel(
                         it.copy(
                             formattedResult = result.text,
                             lastSolveResult = result,
+                            inequality2D = null,
                             isError = false
                         )
                     }
                     _uiState.update { it.copy(shadedIntervals = result.intervals) }
+                }
+                is AdvancedMathEngine.SolveResult.Inequality2D -> {
+                    updateEquationAt(curIndex) {
+                        it.copy(
+                            formattedResult = result.text,
+                            lastSolveResult = result,
+                            inequality2D = Inequality2DData(
+                                boundaryExpr = result.boundaryExpr,
+                                isAbove = result.isAbove,
+                                isStrict = result.isStrict
+                            ),
+                            roots = emptyList(),
+                            isError = false
+                        )
+                    }
+                    _uiState.update { it.copy(shadedIntervals = emptyList()) }
                 }
                 is AdvancedMathEngine.SolveResult.SystemSolution -> {
                     updateEquationAt(curIndex) {
                         it.copy(
                             formattedResult = result.formattedText,
                             lastSolveResult = result,
+                            inequality2D = null,
                             isError = false
                         )
                     }
@@ -462,6 +483,7 @@ class AdvancedCalculatorViewModel(
                         it.copy(
                             formattedResult = result.message,
                             lastSolveResult = result,
+                            inequality2D = null,
                             isError = true
                         )
                     }
@@ -688,6 +710,17 @@ class AdvancedCalculatorViewModel(
             val xMax = centerX + halfSpan
 
             val customVars = getCustomVariables()
+            val ineqOps = listOf("<=", ">=", "≤", "≥", "<", ">")
+            val foundIneq = ineqOps.firstOrNull { eq.expression.contains(it) }
+            val ineq2DInfo = if (foundIneq != null) engine.parseInequality2D(eq.expression, foundIneq, customVars) else null
+            val ineq2DData = ineq2DInfo?.let {
+                Inequality2DData(
+                    boundaryExpr = it.boundaryExpr,
+                    isAbove = it.isAbove,
+                    isStrict = it.isStrict
+                )
+            }
+
             val plotExpr = preparePlotExpression(eq.expression)
             val points = if (plotExpr.isNotBlank()) {
                 engine.sampleFunction(plotExpr, xMin, xMax, 550, state.isRadians, customVars)
@@ -695,7 +728,7 @@ class AdvancedCalculatorViewModel(
                 emptyList()
             }
 
-            updateEquationAt(curIndex) { it.copy(sampledPoints = points) }
+            updateEquationAt(curIndex) { it.copy(sampledPoints = points, inequality2D = ineq2DData) }
         }
     }
 
@@ -710,13 +743,24 @@ class AdvancedCalculatorViewModel(
             val xMax = centerX + halfSpan
 
             val customVars = getCustomVariables()
+            val ineqOps = listOf("<=", ">=", "≤", "≥", "<", ">")
             val updated = state.equations.map { entry ->
+                val foundIneq = ineqOps.firstOrNull { entry.expression.contains(it) }
+                val ineq2DInfo = if (foundIneq != null) engine.parseInequality2D(entry.expression, foundIneq, customVars) else null
+                val ineq2DData = ineq2DInfo?.let {
+                    Inequality2DData(
+                        boundaryExpr = it.boundaryExpr,
+                        isAbove = it.isAbove,
+                        isStrict = it.isStrict
+                    )
+                }
+
                 val plotExpr = preparePlotExpression(entry.expression)
                 if (plotExpr.isNotBlank()) {
                     val pts = engine.sampleFunction(plotExpr, xMin, xMax, 550, state.isRadians, customVars)
-                    entry.copy(sampledPoints = pts)
+                    entry.copy(sampledPoints = pts, inequality2D = ineq2DData)
                 } else {
-                    entry.copy(sampledPoints = emptyList())
+                    entry.copy(sampledPoints = emptyList(), inequality2D = ineq2DData)
                 }
             }
             _uiState.update { it.copy(equations = updated) }
@@ -726,6 +770,20 @@ class AdvancedCalculatorViewModel(
     private fun preparePlotExpression(expr: String): String {
         if (engine.isVariableAssignment(expr)) {
             return ""
+        }
+        val ineqOps = listOf("<=", ">=", "≤", "≥", "<", ">")
+        val foundIneq = ineqOps.firstOrNull { expr.contains(it) }
+        if (foundIneq != null) {
+            val ineq2D = engine.parseInequality2D(expr, foundIneq, getCustomVariables())
+            if (ineq2D != null) {
+                return ineq2D.boundaryExpr
+            }
+            val parts = expr.split(foundIneq)
+            return if (parts.size == 2) {
+                val lhs = parts[0].trim()
+                val rhs = parts[1].trim()
+                if (rhs == "0" || rhs.isEmpty()) lhs else "($lhs) - ($rhs)"
+            } else expr
         }
         return if (expr.contains("=")) {
             val parts = expr.split("=")
