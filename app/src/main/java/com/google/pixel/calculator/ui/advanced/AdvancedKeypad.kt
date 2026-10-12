@@ -863,11 +863,11 @@ private fun AlphabetKeypadGrid(
     val delColor = if (isDark) Color(0xFFF87171) else Color(0xFFE11D48)
     val doubleHeight = unitHeight * 2 + spacing
 
-    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(spacing)) {
         // Sub-selector chip row
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(spacing),
             verticalAlignment = Alignment.CenterVertically
         ) {
             AlphabetSubTab.values().forEach { tab ->
@@ -878,7 +878,7 @@ private fun AlphabetKeypadGrid(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .height(24.dp)
+                        .height(unitHeight)
                         .clip(RoundedCornerShape(percent = 50))
                         .background(chipBg)
                         .clickable { subTab = tab },
@@ -886,7 +886,7 @@ private fun AlphabetKeypadGrid(
                 ) {
                     Text(
                         text = stringResource(tab.labelRes),
-                        fontSize = 11.sp,
+                        fontSize = 12.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                         color = chipText
                     )
