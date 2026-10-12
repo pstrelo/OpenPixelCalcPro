@@ -40,12 +40,6 @@ class CalculatorViewModel(
     val uiState: StateFlow<CalculatorState> = _uiState.asStateFlow()
 
     init {
-        val initialHistory = activeHistoryStorage?.historyFlow?.value ?: emptyList()
-        if (initialHistory.isNotEmpty()) {
-            val recent = initialHistory.take(2).reversed().map { Pair(it.expression, it.result) }
-            _uiState.update { it.copy(sessionHistory = recent) }
-        }
-
         themePreferences?.let { prefs ->
             viewModelScope.launch(dispatcher) {
                 prefs.themeMode.collect { mode ->

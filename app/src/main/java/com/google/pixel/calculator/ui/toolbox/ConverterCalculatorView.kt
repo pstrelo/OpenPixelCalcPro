@@ -80,7 +80,7 @@ fun ConverterCalculatorView(
 
     // Active field state (TOP or BOTTOM)
     var activeField by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(ActiveConverterField.TOP) }
-    var expression by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("100") }
+    var expression by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("0") }
     var shouldClearOnNextDigit by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
 
     var isProMode by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
