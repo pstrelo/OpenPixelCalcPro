@@ -86,7 +86,7 @@ fun AdvancedKeypad(
 
     val spacing = if (isLandscape) 4.dp else 6.dp
     val unitHeight = if (isLandscape) 22.dp else if (isSplitScreen) 28.dp else 36.dp
-    val bottomRowHeight = if (isLandscape) 44.dp else if (isSplitScreen) 50.dp else 56.dp
+    val bottomRowHeight = if (isLandscape) 48.dp else if (isSplitScreen) 58.dp else toolBarDims.height
 
     val tabAccent = activeTab.accentColor
 
@@ -404,30 +404,23 @@ private fun BottomSystemNavRow(
             horizontalArrangement = Arrangement.spacedBy(spacing),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Colonna 1: Tasto strumenti circolare Pixel (weight 1f, identico alla colonna 1 del keypad)
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                contentAlignment = Alignment.Center
-            ) {
-                PixelToolToggleButton(
-                    currentScreen = ActiveScreen.ADVANCED_CALCULATOR,
-                    isExpanded = isToolBarExpanded,
-                    height = height,
-                    onClick = onToggleToolBar,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
+            // Colonna 1: Tasto strumenti (allineato con colonna 1 della tastiera)
+            PixelToolToggleButton(
+                currentScreen = ActiveScreen.ADVANCED_CALCULATOR,
+                isExpanded = isToolBarExpanded,
+                height = height,
+                onClick = onToggleToolBar,
+                modifier = Modifier.weight(1f)
+            )
 
-            // Colonne 2..6: Box per i restanti 5 tasti (weight 5f, 100% allineato verticalmente con colonne 2-6)
+            // Contenitore per le restanti 5 colonne (tasti di controllo o menu a pillola)
             Box(
                 modifier = Modifier
                     .weight(5f)
                     .fillMaxHeight(),
                 contentAlignment = Alignment.Center
             ) {
-                // Tasti di controllo, editing e navigazione (scompaiono fluidamente quando la toolbar si apre)
+                // Tasti di navigazione, format, AC e invio (scompaiono fluidamente quando la toolbar si apre)
                 androidx.compose.animation.AnimatedVisibility(
                     visible = !isToolBarExpanded,
                     enter = fadeIn(tween(180)) + scaleIn(
@@ -450,31 +443,7 @@ private fun BottomSystemNavRow(
                         horizontalArrangement = Arrangement.spacedBy(spacing),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Colonna 2: [ FORMAT ] (forma squircle e altezza standard attuale)
-                        SquircleKey(
-                            text = "FORMAT",
-                            bgColor = fnBg,
-                            textColor = tabAccent,
-                            height = unitHeight,
-                            modifier = Modifier.weight(1f),
-                            isBold = true,
-                            fontSize = 11.sp,
-                            onClick = onCycleFormat
-                        )
-
-                        // Colonna 3: [ AC ] (forma squircle e altezza standard attuale)
-                        SquircleKey(
-                            text = "AC",
-                            bgColor = delBg,
-                            textColor = delColor,
-                            height = unitHeight,
-                            modifier = Modifier.weight(1f),
-                            isBold = true,
-                            fontSize = 14.sp,
-                            onClick = onClearAll
-                        )
-
-                        // Colonna 4: [ ← ] (squadrato 18dp, perfettamente allineato con la colonna 4)
+                        // Colonna 2: [ ← ] (squadrato, altezza piena)
                         SquareSystemKey(
                             height = height,
                             modifier = Modifier.weight(1f),
@@ -486,11 +455,11 @@ private fun BottomSystemNavRow(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Cursor left",
                                 tint = tabAccent,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(26.dp)
                             )
                         }
 
-                        // Colonna 5: [ → ] (squadrato 18dp, perfettamente allineato con la colonna 5)
+                        // Colonna 3: [ → ] (squadrato, altezza piena)
                         SquareSystemKey(
                             height = height,
                             modifier = Modifier.weight(1f),
@@ -502,11 +471,43 @@ private fun BottomSystemNavRow(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                 contentDescription = "Cursor right",
                                 tint = tabAccent,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(26.dp)
                             )
                         }
 
-                        // Colonna 6: [ ↵ ] (squadrato 18dp, perfettamente allineato con la colonna 6)
+                        // Colonna 4: [ FORMAT ] (squadrato, altezza piena)
+                        SquareSystemKey(
+                            height = height,
+                            modifier = Modifier.weight(1f),
+                            bgColor = fnBg,
+                            contentColor = tabAccent,
+                            onClick = onCycleFormat
+                        ) {
+                            Text(
+                                text = "FORMAT",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = tabAccent
+                            )
+                        }
+
+                        // Colonna 5: [ AC ] (squadrato, altezza piena)
+                        SquareSystemKey(
+                            height = height,
+                            modifier = Modifier.weight(1f),
+                            bgColor = delBg,
+                            contentColor = delColor,
+                            onClick = onClearAll
+                        ) {
+                            Text(
+                                text = "AC",
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = delColor
+                            )
+                        }
+
+                        // Colonna 6: [ ↵ ] (squadrato, altezza piena)
                         SquareSystemKey(
                             height = height,
                             modifier = Modifier.weight(1f),
@@ -518,13 +519,13 @@ private fun BottomSystemNavRow(
                                 imageVector = Icons.AutoMirrored.Filled.KeyboardReturn,
                                 contentDescription = stringResource(R.string.solve),
                                 tint = Color.White,
-                                modifier = Modifier.size(26.dp)
+                                modifier = Modifier.size(28.dp)
                             )
                         }
                     }
                 }
 
-                // Menu a pillola degli strumenti (compare al posto dei 5 tasti sottostanti)
+                // Menu a pillola degli strumenti (compare al posto dei tasti sottostanti)
                 androidx.compose.animation.AnimatedVisibility(
                     visible = isToolBarExpanded,
                     enter = fadeIn(tween(180)) + scaleIn(
