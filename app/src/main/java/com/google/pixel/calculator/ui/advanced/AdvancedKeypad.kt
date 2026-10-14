@@ -548,7 +548,7 @@ private fun AlgebraKeypadGrid(
         // Col 1: [ x ], [ □² ], [ □ⁿ ], [ log ], [ logₙ ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
             SquircleKey("x", fnBg, tabAccent, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 17.sp) { onKey("x") }
-            SquircleKey("□²", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("^2") }
+            SquircleKey("□²", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("²") }
             SquircleKey("□ⁿ", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("^") }
             SquircleKey("log", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("log(") }
             SquircleKey("log_□", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 12.sp) { onKey("log_□") }
@@ -660,7 +660,7 @@ private fun TrigonometryKeypadGrid(
             SquircleKey("tan", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("tan(") }
             SquircleKey("arctan", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("arctan(") }
             SquircleKey("atanh", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("atanh(") }
-            SquircleKey("□²", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("^2") }
+            SquircleKey("□²", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("²") }
         }
 
         // Col 4: [ π ], [ csc ], [ arccsc ], [ acsch ], [ sinh ]

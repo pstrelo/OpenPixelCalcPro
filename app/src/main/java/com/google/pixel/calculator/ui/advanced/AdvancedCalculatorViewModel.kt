@@ -303,10 +303,12 @@ class AdvancedCalculatorViewModel(
 
         // Multi-character token handling: if preceded by " = ", delete all 3 characters
         // Or if deleting right after log_ or log_□, delete the whole template or prefix
+        // Or if preceded by legacy "^2", delete both characters together
         val deleteLen = when {
             pos >= 3 && expr.substring(pos - 3, pos) == " = " -> 3
             pos >= 4 && expr.substring(pos - 4, pos) == "log_" -> 4
             pos >= 5 && expr.substring(pos - 5, pos) == "log_□" -> 5
+            pos >= 2 && expr.substring(pos - 2, pos) == "^2" -> 2
             else -> 1
         }
 
@@ -438,7 +440,7 @@ class AdvancedCalculatorViewModel(
                 updateGraphForActiveEquation()
             }
             "xⁿ", "x□", "□^□" -> insertCharacter("^")
-            "x²", "□²" -> insertCharacter("^2")
+            "x²", "□²", "²" -> insertCharacter("²")
             "ⁿ√", "ⁿ√□", "□√□", "ʸ√" -> insertCharacter("ⁿ√□")
             "√", "√□" -> insertCharacter("sqrt(")
             "□/□" -> insertCharacter("/")

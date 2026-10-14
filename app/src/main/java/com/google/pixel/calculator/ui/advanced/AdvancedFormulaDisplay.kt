@@ -346,120 +346,45 @@ fun FormulaMath2DRenderer(
         return
     }
 
-    // 2D fraction if isolated "/"
-    if (expression.contains("/") && !expression.contains("d/dx") && !expression.contains("=")) {
-        val slashIndex = expression.indexOf('/')
-        val numPart = expression.substring(0, slashIndex).trim().removePrefix("(").removeSuffix(")")
-        val remainder = expression.substring(slashIndex + 1).trim()
-        val spaceAfterDen = remainder.indexOfAny(charArrayOf('+', '-'))
+    // Linear with exact in-place cursor positioning for all expressions including division/fractions
+    val safeCursor = cursorPosition.coerceIn(0, expression.length)
+    val beforeCursor = expression.substring(0, safeCursor)
+    val afterCursor = expression.substring(safeCursor)
 
-        val (denPart, restPart) = if (spaceAfterDen != -1 && !remainder.startsWith("(")) {
-            Pair(
-                remainder.substring(0, spaceAfterDen).trim().removePrefix("(").removeSuffix(")"),
-                remainder.substring(spaceAfterDen).trim()
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+    ) {
+        val formattedBefore = formatExponents(beforeCursor)
+        val formattedAfter = formatExponents(afterCursor)
+
+        if (formattedBefore.isNotEmpty()) {
+            Text(
+                text = formattedBefore,
+                color = textColor,
+                fontSize = 16.sp,
+                fontFamily = FontFamily.SansSerif,
+                fontWeight = FontWeight.Normal
             )
-        } else {
-            Pair(remainder.removePrefix("(").removeSuffix(")"), "")
         }
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = modifier.fillMaxWidth()
-        ) {
-            if (isActive && cursorPosition <= slashIndex) {
-                Box(
-                    modifier = Modifier
-                        .width(2.dp)
-                        .height(28.dp)
-                        .background(Color(0xFF60A5FA), RoundedCornerShape(1.dp))
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-            }
-
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = numPart,
-                    color = textColor,
-                    fontSize = 15.sp,
-                    fontFamily = FontFamily.SansSerif,
-                    fontWeight = FontWeight.Medium
-                )
-                Box(
-                    modifier = Modifier
-                        .width((maxOf(numPart.length, denPart.length) * 10).dp.coerceAtLeast(24.dp))
-                        .height(1.5.dp)
-                        .background(divBarColor)
-                )
-                Text(
-                    text = denPart,
-                    color = textColor,
-                    fontSize = 15.sp,
-                    fontFamily = FontFamily.SansSerif,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-
-            if (isActive && cursorPosition > slashIndex) {
-                Spacer(modifier = Modifier.width(4.dp))
-                Box(
-                    modifier = Modifier
-                        .width(2.dp)
-                        .height(28.dp)
-                        .background(Color(0xFF60A5FA), RoundedCornerShape(1.dp))
-                )
-            }
-
-            if (restPart.isNotEmpty()) {
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = formatExponents(restPart),
-                    color = textColor,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Normal
-                )
-            }
+        if (isActive) {
+            Box(
+                modifier = Modifier
+                    .width(2.dp)
+                    .height(20.dp)
+                    .background(Color(0xFF60A5FA), RoundedCornerShape(1.dp))
+            )
         }
-    } else {
-        // Linear with exact in-place cursor positioning
-        val safeCursor = cursorPosition.coerceIn(0, expression.length)
-        val beforeCursor = expression.substring(0, safeCursor)
-        val afterCursor = expression.substring(safeCursor)
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = modifier
-        ) {
-            val formattedBefore = formatExponents(beforeCursor)
-            val formattedAfter = formatExponents(afterCursor)
-
-            if (formattedBefore.isNotEmpty()) {
-                Text(
-                    text = formattedBefore,
-                    color = textColor,
-                    fontSize = 16.sp,
-                    fontFamily = FontFamily.SansSerif,
-                    fontWeight = FontWeight.Normal
-                )
-            }
-
-            if (isActive) {
-                Box(
-                    modifier = Modifier
-                        .width(2.dp)
-                        .height(20.dp)
-                        .background(Color(0xFF60A5FA), RoundedCornerShape(1.dp))
-                )
-            }
-
-            if (formattedAfter.isNotEmpty()) {
-                Text(
-                    text = formattedAfter,
-                    color = textColor,
-                    fontSize = 16.sp,
-                    fontFamily = FontFamily.SansSerif,
-                    fontWeight = FontWeight.Normal
-                )
-            }
+        if (formattedAfter.isNotEmpty()) {
+            Text(
+                text = formattedAfter,
+                color = textColor,
+                fontSize = 16.sp,
+                fontFamily = FontFamily.SansSerif,
+                fontWeight = FontWeight.Normal
+            )
         }
     }
 }
@@ -482,7 +407,13 @@ private fun formatExponents(text: String): String {
         '+' to '⁺', '-' to '⁻', '=' to '⁼', '(' to '⁽', ')' to '⁾',
         'n' to 'ⁿ', 'i' to 'ⁱ', 'x' to 'ˣ', 'y' to 'ʸ', 'a' to 'ᵃ', 'b' to 'ᵇ'
     )
-    val formattedExponents = Regex("""\^([0-9a-zA-Z\+\-]+)""").replace(formattedLog) { m ->
+    // 1. Parenthesized exponents: ^(2+x) -> ²⁺ˣ
+    val formattedParenthesized = Regex("""\^\(([^)]+)\)""").replace(formattedLog) { m ->
+        val rawExp = m.groupValues[1]
+        rawExp.map { superscriptMap[it] ?: it }.joinToString("")
+    }
+    // 2. Simple exponent: ^ followed by digits (optionally signed, like ^-1) or single variable
+    val formattedExponents = Regex("""\^(-?[0-9]+|[a-zA-Z])""").replace(formattedParenthesized) { m ->
         val rawExp = m.groupValues[1]
         rawExp.map { superscriptMap[it] ?: it }.joinToString("")
     }
