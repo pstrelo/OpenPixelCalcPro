@@ -32,6 +32,8 @@ class AdvancedCalculatorViewModel(
     private val _uiState = MutableStateFlow(AdvancedCalculatorState())
     val uiState: StateFlow<AdvancedCalculatorState> = _uiState.asStateFlow()
 
+    private var graphSamplingJob: kotlinx.coroutines.Job? = null
+
     init {
         updateGraphForActiveEquation()
     }
@@ -75,6 +77,7 @@ class AdvancedCalculatorViewModel(
                 activeEquationIndex = current.size
             )
         }
+        updateAllGraphPoints()
     }
 
     fun removeEquation(index: Int) {
@@ -474,6 +477,37 @@ class AdvancedCalculatorViewModel(
         return functions
     }
 
+    fun getCustomFunctionsFast(
+        excludeIndex: Int = -1,
+        isRadians: Boolean = true,
+        customVars: Map<String, Double> = emptyMap()
+    ): Map<String, (Double) -> Double> {
+        val functions = mutableMapOf<String, (Double) -> Double>()
+        val parser = com.google.pixel.calculator.core.math.ExpressionParser()
+
+        _uiState.value.equations.forEachIndexed { idx, item ->
+            if (idx != excludeIndex && item.expression.isNotBlank()) {
+                val fnName = getFunctionLetter(idx).lowercase()
+                val body = engine.stripFunctionDefinition(item.expression).trim()
+                if (body.isNotBlank()) {
+                    try {
+                        val ast = parser.parse(body)
+                        functions[fnName] = { xArg ->
+                            com.google.pixel.calculator.core.math.FastDoubleEvaluator.evaluate(
+                                node = ast,
+                                x = xArg,
+                                isRadians = isRadians,
+                                customVars = customVars,
+                                customFns = emptyMap() // Prevents mutual recursive lock
+                            )
+                        }
+                    } catch (_: Exception) {}
+                }
+            }
+        }
+        return functions
+    }
+
     fun executeSolve() {
         val curIndex = _uiState.value.activeEquationIndex
         val eq = _uiState.value.equations.getOrNull(curIndex) ?: return
@@ -783,60 +817,48 @@ class AdvancedCalculatorViewModel(
     private fun updateGraphForActiveEquation() {
         val curIndex = _uiState.value.activeEquationIndex
         val eq = _uiState.value.equations.getOrNull(curIndex) ?: return
-        if (eq.expression.isBlank()) return
-
-        if (engine.isVariableAssignment(eq.expression)) {
+        if (eq.expression.isBlank()) {
+            updateEquationAt(curIndex) {
+                it.copy(
+                    sampledPoints = emptyList(),
+                    inequality2D = null,
+                    roots = emptyList(),
+                    formattedResult = "",
+                    lastSolveResult = null
+                )
+            }
             updateAllGraphPoints()
             return
         }
 
-        viewModelScope.launch(dispatcher) {
-            val state = _uiState.value
-            val scale = state.graphViewport.scaleX
-            // Generous buffer of at least 2.5x screen width to prevent clipping
-            val halfSpan = maxOf((1600f / scale) * 1.5f, 40f)
-            val centerX = state.graphViewport.centerMathX.toFloat()
-            val xMin = centerX - halfSpan
-            val xMax = centerX + halfSpan
-
-            val customVars = getCustomVariables()
-            val customFns = getCustomFunctions(excludeIndex = curIndex)
-            val ineqOps = listOf("<=", ">=", "≤", "≥", "<", ">")
-            val foundIneq = ineqOps.firstOrNull { eq.expression.contains(it) }
-            val ineq2DInfo = if (foundIneq != null) engine.parseInequality2D(eq.expression, foundIneq, customVars) else null
-            val ineq2DData = ineq2DInfo?.let {
-                Inequality2DData(
-                    boundaryExpr = it.boundaryExpr,
-                    isAbove = it.isAbove,
-                    isStrict = it.isStrict
-                )
-            }
-
-            val plotExpr = preparePlotExpression(eq.expression)
-            val points = if (plotExpr.isNotBlank()) {
-                engine.sampleFunction(plotExpr, xMin, xMax, 550, state.isRadians, customVars, customFns)
-            } else {
-                emptyList()
-            }
-
-            updateEquationAt(curIndex) { it.copy(sampledPoints = points, inequality2D = ineq2DData) }
-        }
+        updateAllGraphPoints()
     }
 
     private fun updateAllGraphPoints() {
-        viewModelScope.launch(dispatcher) {
+        graphSamplingJob?.cancel()
+        graphSamplingJob = viewModelScope.launch(dispatcher) {
             val state = _uiState.value
             val scale = state.graphViewport.scaleX
-            // Generous buffer of at least 2.5x screen width to prevent clipping
-            val halfSpan = maxOf((1600f / scale) * 1.5f, 40f)
+            // Generous buffer of 2.2x screen width to avoid pop-in on pan
+            val halfSpan = maxOf((1600f / scale) * 2.2f, 50f)
             val centerX = state.graphViewport.centerMathX.toFloat()
             val xMin = centerX - halfSpan
             val xMax = centerX + halfSpan
 
             val customVars = getCustomVariables()
+            val doubleVars = customVars.mapValues { it.value.toDouble() }
             val ineqOps = listOf("<=", ">=", "≤", "≥", "<", ">")
-            val updated = state.equations.mapIndexed { idx, entry ->
-                val customFns = getCustomFunctions(excludeIndex = idx)
+
+            val computedMap = mutableMapOf<Any, Pair<List<AdvancedMathEngine.Point?>, Inequality2DData?>>()
+
+            for ((idx, entry) in state.equations.withIndex()) {
+                val plotExpr = preparePlotExpression(entry.expression)
+                if (plotExpr.isBlank()) {
+                    computedMap[entry.id] = Pair(emptyList(), null)
+                    continue
+                }
+
+                val fastCustomFns = getCustomFunctionsFast(excludeIndex = idx, isRadians = state.isRadians, customVars = doubleVars)
                 val foundIneq = ineqOps.firstOrNull { entry.expression.contains(it) }
                 val ineq2DInfo = if (foundIneq != null) engine.parseInequality2D(entry.expression, foundIneq, customVars) else null
                 val ineq2DData = ineq2DInfo?.let {
@@ -847,15 +869,30 @@ class AdvancedCalculatorViewModel(
                     )
                 }
 
-                val plotExpr = preparePlotExpression(entry.expression)
-                if (plotExpr.isNotBlank()) {
-                    val pts = engine.sampleFunction(plotExpr, xMin, xMax, 550, state.isRadians, customVars, customFns)
-                    entry.copy(sampledPoints = pts, inequality2D = ineq2DData)
-                } else {
-                    entry.copy(sampledPoints = emptyList(), inequality2D = ineq2DData)
-                }
+                val pts = engine.sampleFunction(
+                    expr = plotExpr,
+                    xMin = xMin,
+                    xMax = xMax,
+                    steps = 1100,
+                    isRadians = state.isRadians,
+                    customVariables = customVars,
+                    fastCustomFunctions = fastCustomFns
+                )
+                computedMap[entry.id] = Pair(pts, ineq2DData)
             }
-            _uiState.update { it.copy(equations = updated) }
+
+            // Safe update by Equation ID to prevent wiping concurrent user edits
+            _uiState.update { current ->
+                val updated = current.equations.map { eq ->
+                    val computed = computedMap[eq.id]
+                    if (computed != null) {
+                        eq.copy(sampledPoints = computed.first, inequality2D = computed.second)
+                    } else {
+                        eq
+                    }
+                }
+                current.copy(equations = updated)
+            }
         }
     }
 

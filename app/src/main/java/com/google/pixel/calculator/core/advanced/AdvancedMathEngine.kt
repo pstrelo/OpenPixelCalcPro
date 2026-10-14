@@ -880,17 +880,18 @@ class AdvancedMathEngine(
     }
 
     // ==========================================
-    // 8. HIGH-PERFORMANCE SAMPLING FOR GRAPH
+    // 8. HIGH-PERFORMANCE SAMPLING FOR GRAPH (GEOGEBRA / PYPLOT STYLE)
     // ==========================================
 
     fun sampleFunction(
         expr: String,
         xMin: Float,
         xMax: Float,
-        steps: Int = 500,
+        steps: Int = 1000,
         isRadians: Boolean = true,
         customVariables: Map<String, BigDecimal> = emptyMap(),
-        customFunctions: Map<String, (List<BigDecimal>, EvaluationContext) -> BigDecimal> = emptyMap()
+        customFunctions: Map<String, (List<BigDecimal>, EvaluationContext) -> BigDecimal> = emptyMap(),
+        fastCustomFunctions: Map<String, (Double) -> Double> = emptyMap()
     ): List<Point?> {
         val stripped = stripFunctionDefinition(expr)
         val clean = autoCloseParentheses(stripped)
@@ -898,40 +899,166 @@ class AdvancedMathEngine(
 
         val ast = try { parser.parse(clean) } catch (e: Exception) { return emptyList() }
         val points = mutableListOf<Point?>()
-        val totalSteps = steps.coerceAtLeast(2)
-        val stepSize = (xMax - xMin) / totalSteps
-        val baseVariables = EvaluationContext.DEFAULT_VARIABLES + customVariables
+        val totalSteps = steps.coerceIn(100, 2000)
+        val stepSize = ((xMax - xMin) / totalSteps).toDouble()
+        if (stepSize <= 0.0) return emptyList()
 
+        // Prepare Double precision fast variables & constants
+        val doubleVars = mutableMapOf<String, Double>()
+        for ((k, v) in EvaluationContext.DEFAULT_VARIABLES) {
+            doubleVars[k] = v.toDouble()
+        }
+        for ((k, v) in customVariables) {
+            doubleVars[k] = v.toDouble()
+        }
+
+        // Fast custom functions map
+        val doubleFns = fastCustomFunctions.toMutableMap()
+
+        val yCutoff = 800.0 // Generous vertical asymptote extension bound for clean screen exit
+        var prevX: Double? = null
         var prevY: Double? = null
+        var prevWasUndefined = true
 
         for (i in 0..totalSteps) {
-            val x = xMin + i * stepSize
-            try {
-                val ctx = EvaluationContext(
-                    variables = baseVariables + ("x" to BigDecimal(x.toDouble().toString(), defaultMc)),
-                    isRadians = isRadians,
-                    mathContext = defaultMc,
-                    customFunctions = customFunctions
-                )
-                val yVal = ast.evaluate(ctx).toDouble()
-                if (yVal.isFinite() && !yVal.isNaN() && abs(yVal) < 1e5) {
-                    // Vertical asymptote detection: if sign changes rapidly with high slope
-                    val lastY = prevY
-                    if (lastY != null && lastY * yVal < 0 && abs(yVal - lastY) > 40.0 && abs(yVal - lastY) / stepSize > 300.0) {
-                        points.add(null) // Asymptotic discontinuity (e.g. tan(x), cot(x), 1/x)
+            val rawX = xMin.toDouble() + i * stepSize
+            val x = if (abs(rawX) < 1e-11) 0.0 else rawX
+            val yVal = com.google.pixel.calculator.core.math.FastDoubleEvaluator.evaluate(
+                node = ast,
+                x = x,
+                isRadians = isRadians,
+                customVars = doubleVars,
+                customFns = doubleFns
+            )
+
+            if (yVal.isNaN()) {
+                // Domain boundary exit check
+                if (!prevWasUndefined && prevX != null && prevY != null) {
+                    val boundaryPoint = findDomainBoundary(
+                        ast = ast,
+                        validX = prevX,
+                        invalidX = x,
+                        isRadians = isRadians,
+                        customVars = doubleVars,
+                        customFns = doubleFns
+                    )
+                    if (boundaryPoint != null) {
+                        points.add(boundaryPoint)
                     }
-                    points.add(Point(x, yVal.toFloat()))
-                    prevY = yVal
-                } else {
-                    points.add(null) // Discontinuity or vertical asymptote
-                    prevY = null
+                    points.add(null) // Discontinuity / gap
                 }
-            } catch (e: Exception) {
-                points.add(null)
+                prevWasUndefined = true
                 prevY = null
+                prevX = x
+                continue
+            }
+
+            // Function is defined at x
+            if (prevWasUndefined) {
+                // Domain boundary entry check (e.g. sqrt(x) entering at x >= 0)
+                if (prevX != null) {
+                    val boundaryPoint = findDomainBoundary(
+                        ast = ast,
+                        validX = x,
+                        invalidX = prevX,
+                        isRadians = isRadians,
+                        customVars = doubleVars,
+                        customFns = doubleFns
+                    )
+                    if (boundaryPoint != null) {
+                        points.add(boundaryPoint)
+                    }
+                }
+                prevWasUndefined = false
+            }
+
+            val isOutOfScreen = yVal.isInfinite() || abs(yVal) >= yCutoff
+
+            if (isOutOfScreen) {
+                val outSign = if (yVal > 0) 1.0 else -1.0
+                val lastY = prevY
+                val lastX = prevX
+
+                if (lastY != null && lastX != null && abs(lastY) < yCutoff) {
+                    // Smooth exit at boundary
+                    points.add(Point((lastX + 0.35 * stepSize).toFloat(), (outSign * yCutoff).toFloat()))
+                    points.add(null) // Break path beyond screen boundary
+                }
+                prevY = null
+                prevX = null
+                continue
+            }
+
+            // Here: point is finite and inside visible screen (|yVal| < yCutoff)
+            val lastY = prevY
+            val lastX = prevX
+
+            // Re-entering screen from out of bounds
+            if (lastY == null) {
+                if (abs(yVal) > 20.0) {
+                    val enterSign = if (yVal > 0) 1.0 else -1.0
+                    points.add(Point((x - 0.35 * stepSize).toFloat(), (enterSign * yCutoff).toFloat()))
+                }
+            } else if (lastX != null) {
+                // Rapid sign change check between visible points (asymptote jump)
+                val deltaY = yVal - lastY
+                val slope = abs(deltaY) / stepSize
+                if (lastY * yVal < 0 && abs(deltaY) > 40.0 && slope > 350.0) {
+                    val prevExitSign = if (lastY > 0) 1.0 else -1.0
+                    points.add(Point((lastX + 0.35 * stepSize).toFloat(), (prevExitSign * yCutoff).toFloat()))
+                    points.add(null)
+                    val curEnterSign = if (yVal > 0) 1.0 else -1.0
+                    points.add(Point((x - 0.35 * stepSize).toFloat(), (curEnterSign * yCutoff).toFloat()))
+                }
+            }
+
+            points.add(Point(x.toFloat(), yVal.toFloat()))
+            prevX = x
+            prevY = yVal
+        }
+
+        return points
+    }
+
+    private fun findDomainBoundary(
+        ast: MathNode,
+        validX: Double,
+        invalidX: Double,
+        isRadians: Boolean,
+        customVars: Map<String, Double>,
+        customFns: Map<String, (Double) -> Double>,
+        iterations: Int = 6
+    ): Point? {
+        var low = validX
+        var high = invalidX
+        var lastValidX = validX
+        var lastValidY = com.google.pixel.calculator.core.math.FastDoubleEvaluator.evaluate(
+            node = ast,
+            x = validX,
+            isRadians = isRadians,
+            customVars = customVars,
+            customFns = customFns
+        )
+        if (lastValidY.isNaN()) return null
+
+        for (k in 0 until iterations) {
+            val mid = (low + high) * 0.5
+            val y = com.google.pixel.calculator.core.math.FastDoubleEvaluator.evaluate(
+                node = ast,
+                x = mid,
+                isRadians = isRadians,
+                customVars = customVars,
+                customFns = customFns
+            )
+            if (!y.isNaN() && y.isFinite()) {
+                lastValidX = mid
+                lastValidY = y
+                low = mid
+            } else {
+                high = mid
             }
         }
-        return points
+        return Point(lastValidX.toFloat(), lastValidY.toFloat())
     }
 
     fun formatNumber(value: Double, format: ResultFormat = ResultFormat.DECIMAL, isRadians: Boolean = true): String {
