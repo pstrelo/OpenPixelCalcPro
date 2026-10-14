@@ -915,7 +915,67 @@ class AdvancedMathEngine(
         // Fast custom functions map
         val doubleFns = fastCustomFunctions.toMutableMap()
 
-        val yCutoff = 800.0 // Generous vertical asymptote extension bound for clean screen exit
+        fun evalFast(xVal: Double): Double {
+            return com.google.pixel.calculator.core.math.FastDoubleEvaluator.evaluate(
+                node = ast,
+                x = xVal,
+                isRadians = isRadians,
+                customVars = doubleVars,
+                customFns = doubleFns
+            )
+        }
+
+        fun findAsymptoteInInterval(
+            x0: Double, y0: Double,
+            x1: Double, y1: Double
+        ): Double? {
+            val mid = (x0 + x1) * 0.5
+            val yMid = evalFast(mid)
+            val hasPole = yMid.isNaN() || yMid.isInfinite() ||
+                (y0 * y1 < 0 && (abs(yMid) > maxOf(abs(y0), abs(y1)) * 1.35 + 2.0)) ||
+                (y0 * y1 > 0 && (abs(yMid) > maxOf(abs(y0), abs(y1)) * 2.8 + 8.0))
+
+            if (!hasPole) {
+                // Large delta with opposite signs: verify if values blow up or cross zero smoothly
+                if (y0 * y1 < 0 && abs(y1 - y0) > 25.0) {
+                    var l = x0; var r = x1; var vL = y0; var vR = y1
+                    for (step in 0 until 4) {
+                        val m = (l + r) * 0.5
+                        val vM = evalFast(m)
+                        if (vM.isNaN() || vM.isInfinite() || abs(vM) > 100.0) return m
+                        if (vL * vM < 0) { r = m; vR = vM } else { l = m; vL = vM }
+                    }
+                    if (abs(vL) > 40.0 || abs(vR) > 40.0) return (l + r) * 0.5
+                }
+                return null
+            }
+
+            // Refine pole position using bisection
+            var left = x0
+            var right = x1
+            var bestPole = mid
+            for (iter in 0 until 6) {
+                val m = (left + right) * 0.5
+                val v = evalFast(m)
+                if (v.isNaN() || v.isInfinite()) {
+                    bestPole = m
+                    break
+                }
+                if (abs(v) > 150.0) {
+                    bestPole = m
+                }
+                val leftVal = evalFast((left + m) * 0.5)
+                val rightVal = evalFast((m + right) * 0.5)
+                if (leftVal.isNaN() || leftVal.isInfinite() || abs(leftVal) > abs(rightVal)) {
+                    right = m
+                } else {
+                    left = m
+                }
+            }
+            return bestPole
+        }
+
+        val yCutoff = 250.0 // Smooth asymptote extension bound
         var prevX: Double? = null
         var prevY: Double? = null
         var prevWasUndefined = true
@@ -923,13 +983,7 @@ class AdvancedMathEngine(
         for (i in 0..totalSteps) {
             val rawX = xMin.toDouble() + i * stepSize
             val x = if (abs(rawX) < 1e-11) 0.0 else rawX
-            val yVal = com.google.pixel.calculator.core.math.FastDoubleEvaluator.evaluate(
-                node = ast,
-                x = x,
-                isRadians = isRadians,
-                customVars = doubleVars,
-                customFns = doubleFns
-            )
+            val yVal = evalFast(x)
 
             if (yVal.isNaN()) {
                 // Domain boundary exit check
@@ -953,7 +1007,36 @@ class AdvancedMathEngine(
                 continue
             }
 
-            // Function is defined at x
+            if (yVal.isInfinite()) {
+                // Vertical asymptote hit directly on sample
+                val lastY = prevY
+                val lastX = prevX
+                if (lastY != null && lastX != null) {
+                    val exitSign = if (lastY > 0) 1.0 else -1.0
+                    points.add(Point((x - 0.001 * stepSize).toFloat(), (exitSign * yCutoff).toFloat()))
+                }
+                points.add(null) // Hard path break: do NOT connect across pole!
+                prevWasUndefined = true
+                prevY = null
+                prevX = null
+                continue
+            }
+
+            // Point is finite real number
+            if (abs(yVal) >= yCutoff) {
+                val lastY = prevY
+                val lastX = prevX
+                if (lastY != null && lastX != null && abs(lastY) < yCutoff) {
+                    val exitSign = if (lastY > 0) 1.0 else -1.0
+                    points.add(Point((lastX + 0.35 * stepSize).toFloat(), (exitSign * yCutoff).toFloat()))
+                    points.add(null)
+                }
+                prevY = null
+                prevX = null
+                continue
+            }
+
+            // Function is defined and inside visible y bounds (|yVal| < yCutoff)
             if (prevWasUndefined) {
                 // Domain boundary entry check (e.g. sqrt(x) entering at x >= 0)
                 if (prevX != null) {
@@ -972,43 +1055,23 @@ class AdvancedMathEngine(
                 prevWasUndefined = false
             }
 
-            val isOutOfScreen = yVal.isInfinite() || abs(yVal) >= yCutoff
-
-            if (isOutOfScreen) {
-                val outSign = if (yVal > 0) 1.0 else -1.0
-                val lastY = prevY
-                val lastX = prevX
-
-                if (lastY != null && lastX != null && abs(lastY) < yCutoff) {
-                    // Smooth exit at boundary
-                    points.add(Point((lastX + 0.35 * stepSize).toFloat(), (outSign * yCutoff).toFloat()))
-                    points.add(null) // Break path beyond screen boundary
-                }
-                prevY = null
-                prevX = null
-                continue
-            }
-
-            // Here: point is finite and inside visible screen (|yVal| < yCutoff)
             val lastY = prevY
             val lastX = prevX
 
-            // Re-entering screen from out of bounds
             if (lastY == null) {
                 if (abs(yVal) > 20.0) {
                     val enterSign = if (yVal > 0) 1.0 else -1.0
                     points.add(Point((x - 0.35 * stepSize).toFloat(), (enterSign * yCutoff).toFloat()))
                 }
             } else if (lastX != null) {
-                // Rapid sign change check between visible points (asymptote jump)
-                val deltaY = yVal - lastY
-                val slope = abs(deltaY) / stepSize
-                if (lastY * yVal < 0 && abs(deltaY) > 40.0 && slope > 350.0) {
-                    val prevExitSign = if (lastY > 0) 1.0 else -1.0
-                    points.add(Point((lastX + 0.35 * stepSize).toFloat(), (prevExitSign * yCutoff).toFloat()))
-                    points.add(null)
-                    val curEnterSign = if (yVal > 0) 1.0 else -1.0
-                    points.add(Point((x - 0.35 * stepSize).toFloat(), (curEnterSign * yCutoff).toFloat()))
+                // Check if there is an asymptote or singularity in the interval between lastX and x
+                val pole = findAsymptoteInInterval(lastX, lastY, x, yVal)
+                if (pole != null) {
+                    val exitSign = if (lastY > 0) 1.0 else -1.0
+                    points.add(Point((pole - 0.001 * stepSize).toFloat(), (exitSign * yCutoff).toFloat()))
+                    points.add(null) // Break path: NEVER draw line across asymptote!
+                    val enterSign = if (yVal > 0) 1.0 else -1.0
+                    points.add(Point((pole + 0.001 * stepSize).toFloat(), (enterSign * yCutoff).toFloat()))
                 }
             }
 

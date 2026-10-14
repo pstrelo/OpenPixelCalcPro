@@ -140,6 +140,25 @@ class GraphRenderingAndSamplingTest {
         val pts = engine.sampleFunction("sin(x) * x^2 + cos(x) / (1 + x^2)", -20f, 20f, steps = 1000)
         val elapsedMs = (System.nanoTime() - startTime) / 1_000_000.0
         assertTrue("1000 points calculated: ${pts.size}", pts.isNotEmpty())
-        assertTrue("Sampling took ${elapsedMs}ms, should be < 15ms for 60fps", elapsedMs < 25.0)
+        assertTrue("Sampling took ${elapsedMs}ms, should be < 25ms for 60fps", elapsedMs < 25.0)
+    }
+
+    @Test
+    fun testSampleFunctionInverseXZoomOutHasNoSpuriousLine() {
+        // When zoomed out far, e.g. [-50, 50], consecutive sample points jump from negative to positive.
+        // It must detect the asymptote and insert a null break so no line is drawn across x=0.
+        val points = engine.sampleFunction("1 / x", -50f, 50f, steps = 300)
+        assertTrue(points.isNotEmpty())
+        assertTrue("Must break path at x=0 even when zoomed out", points.contains(null))
+
+        // Check that no consecutive non-null points cross x=0 directly
+        for (i in 0 until points.size - 1) {
+            val p1 = points[i]
+            val p2 = points[i + 1]
+            if (p1 != null && p2 != null) {
+                val crossesZero = (p1.x < 0f && p2.x > 0f)
+                assertFalse("Found direct connection crossing x=0: (${p1.x}, ${p1.y}) -> (${p2.x}, ${p2.y})", crossesZero)
+            }
+        }
     }
 }
