@@ -466,4 +466,5 @@ private fun formatExponents(text: String): String {
         .replace("^4", "⁴")
         .replace("^5", "⁵")
         .replace("sqrt(", "√(")
+        .replace("logn(", "logₙ(")
 }

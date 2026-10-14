@@ -545,13 +545,13 @@ private fun AlgebraKeypadGrid(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(spacing)
     ) {
-        // Col 1: [ x ], [ □² ], [ □ⁿ ], [ log ], [ ln ]
+        // Col 1: [ x ], [ □² ], [ □ⁿ ], [ log ], [ logₙ ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
             SquircleKey("x", fnBg, tabAccent, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 17.sp) { onKey("x") }
             SquircleKey("□²", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("^2") }
             SquircleKey("□ⁿ", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("^") }
             SquircleKey("log", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("log(") }
-            SquircleKey("ln", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("ln(") }
+            SquircleKey("logₙ", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 13.sp) { onKey("logn(") }
         }
 
         // Col 2: [ y ], [ □/□ ], [ √x ], [ ⁿ√□ ], [ |x| ]
@@ -754,11 +754,11 @@ private fun CalculusKeypadGrid(
             SquircleKey("normpdf", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 9.sp) { onKey("normpdf(") }
         }
 
-        // Col 4: [ e ], [ lim ], [ log ], [ rand ], [ normcdf ]
+        // Col 4: [ e ], [ lim ], [ logₙ ], [ rand ], [ normcdf ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
             SquircleKey("e", fnBg, tabAccent, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 17.sp) { onKey("e") }
             SquircleKey("lim", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 13.sp) { onKey("lim(") }
-            SquircleKey("log", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("log(") }
+            SquircleKey("logₙ", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 13.sp) { onKey("logn(") }
             SquircleKey("rand", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("rand()") }
             SquircleKey("normcdf", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 9.sp) { onKey("normcdf(") }
         }

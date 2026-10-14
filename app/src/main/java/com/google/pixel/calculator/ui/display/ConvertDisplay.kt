@@ -215,19 +215,28 @@ private fun ConverterBox(
                     .horizontalScroll(scrollState),
                 contentAlignment = Alignment.CenterEnd
             ) {
+                val screenWidthDp = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp
+                val isSmallScreen = screenWidthDp < 360
                 val fontSize = if (isCompact) {
                     when {
-                        valueStr.length > 14 -> 16.sp
-                        valueStr.length > 10 -> 20.sp
-                        valueStr.length > 7 -> 24.sp
-                        else -> 28.sp
+                        valueStr.length > 14 -> 14.sp
+                        valueStr.length > 10 -> 17.sp
+                        valueStr.length > 7 -> 20.sp
+                        else -> 24.sp
+                    }
+                } else if (isSmallScreen) {
+                    when {
+                        valueStr.length > 14 -> 20.sp
+                        valueStr.length > 10 -> 24.sp
+                        valueStr.length > 7 -> 30.sp
+                        else -> 36.sp
                     }
                 } else {
                     when {
-                        valueStr.length > 14 -> 28.sp
-                        valueStr.length > 10 -> 36.sp
-                        valueStr.length > 7 -> 44.sp
-                        else -> 52.sp
+                        valueStr.length > 14 -> 24.sp
+                        valueStr.length > 10 -> 30.sp
+                        valueStr.length > 7 -> 36.sp
+                        else -> 42.sp
                     }
                 }
 
@@ -243,7 +252,13 @@ private fun ConverterBox(
                         fontFamily = QuicksandFontFamily,
                         color = textColor,
                         textAlign = TextAlign.End,
-                        maxLines = 1
+                        maxLines = 1,
+                        softWrap = false,
+                        style = androidx.compose.ui.text.TextStyle(
+                            platformStyle = androidx.compose.ui.text.PlatformTextStyle(
+                                includeFontPadding = false
+                            )
+                        )
                     )
                 }
             }
