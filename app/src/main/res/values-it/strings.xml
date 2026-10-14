@@ -358,6 +358,6 @@
     <!-- Easter Egg Screen -->
     <string name="cannot_open_link">Impossibile aprire il link</string>
     <string name="easter_egg_role">Creatore dell\'applicazione</string>
-    <string name="easter_egg_bio">Il progetto nasce dall\'esigenza di migliorare la calcolatrice stock di Google Pixel. Nato per uso personale, ho voluto condividerlo con tutti nella speranza che sia utile e possa continuare a crescere ed evolversi.</string>
+    <string name="easter_egg_bio">Da piccolo non ho imparato a fare conti complessi perché mi hanno dato la calcolatrice, ora non saprò programmare perché mi hanno dato l\'intelligenza artificiale.</string>
     <string name="easter_egg_contacts">CONTATTI &amp; PROGETTI</string>
 </resources>

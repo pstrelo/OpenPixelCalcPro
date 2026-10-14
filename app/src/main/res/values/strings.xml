@@ -358,6 +358,6 @@
     <!-- Easter Egg Screen -->
     <string name="cannot_open_link">Unable to open link</string>
     <string name="easter_egg_role">Application Creator</string>
-    <string name="easter_egg_bio">The project was born from the need to improve Google Pixel\'s stock calculator. Created for personal use, I wanted to share it with everyone hoping it will be useful and keep growing and evolving.</string>
+    <string name="easter_egg_bio">As a kid I never learned to do complex calculations because they gave me a calculator, now I won\'t know how to code because they gave me artificial intelligence.</string>
     <string name="easter_egg_contacts">CONTACTS &amp; PROJECTS</string>
 </resources>
