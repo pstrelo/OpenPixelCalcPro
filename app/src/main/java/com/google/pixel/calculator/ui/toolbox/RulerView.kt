@@ -100,7 +100,10 @@ fun RulerView(
     val zeroY = 0f
     val rulerWidth = 84.dp
     val rulerWidthPx = with(density) { rulerWidth.toPx() }
-    val bottomToolbarClearance = with(density) { if (isLandscape) 56.dp.toPx() else 96.dp.toPx() }
+    val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val bottomToolbarClearance = with(density) {
+        ((if (isLandscape) 56.dp else 96.dp) + navBarBottom).toPx()
+    }
 
     LaunchedEffect(effectiveYdpi) {
         if (sliderY < 0f) {
@@ -576,7 +579,9 @@ fun RulerView(
         PixelFloatingToolBar(
             currentScreen = ActiveScreen.TOOLBOX_RULER,
             onNavigate = onNavigate,
-            modifier = Modifier.align(Alignment.BottomEnd),
+            modifier = Modifier
+                .navigationBarsPadding()
+                .align(Alignment.BottomEnd),
             alignRight = true
         )
     }
