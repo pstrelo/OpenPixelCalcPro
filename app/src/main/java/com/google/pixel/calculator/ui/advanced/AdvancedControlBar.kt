@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -58,34 +59,42 @@ fun AdvancedControlBar(
             }
 
             // Dropdown menu
-            DropdownMenu(
-                expanded = state.showModeDropdown,
-                onDismissRequest = { onToggleDropdown() },
-                modifier = Modifier.background(Color(0xFF2C3040), RoundedCornerShape(14.dp))
+            MaterialTheme(
+                shapes = MaterialTheme.shapes.copy(
+                    extraSmall = RoundedCornerShape(20.dp)
+                )
             ) {
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = stringResource(R.string.keypad_operations),
-                            fontSize = 17.sp,
-                            fontWeight = if (state.keypadMode == KeypadMode.OPERATIONS) FontWeight.Bold else FontWeight.Normal,
-                            color = if (state.keypadMode == KeypadMode.OPERATIONS) Color(0xFF60A5FA) else Color.White
-                        )
-                    },
-                    onClick = { onSelectKeypadMode(KeypadMode.OPERATIONS) }
-                )
-                HorizontalDivider(color = Color(0xFF3B4156), thickness = 1.dp)
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = stringResource(R.string.keypad_functions),
-                            fontSize = 17.sp,
-                            fontWeight = if (state.keypadMode == KeypadMode.FUNCTIONS) FontWeight.Bold else FontWeight.Normal,
-                            color = if (state.keypadMode == KeypadMode.FUNCTIONS) Color(0xFF60A5FA) else Color.White
-                        )
-                    },
-                    onClick = { onSelectKeypadMode(KeypadMode.FUNCTIONS) }
-                )
+                DropdownMenu(
+                    expanded = state.showModeDropdown,
+                    onDismissRequest = { onToggleDropdown() },
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color(0xFF2C3040), RoundedCornerShape(20.dp))
+                ) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = stringResource(R.string.keypad_operations),
+                                fontSize = 17.sp,
+                                fontWeight = if (state.keypadMode == KeypadMode.OPERATIONS) FontWeight.Bold else FontWeight.Normal,
+                                color = if (state.keypadMode == KeypadMode.OPERATIONS) Color(0xFF60A5FA) else Color.White
+                            )
+                        },
+                        onClick = { onSelectKeypadMode(KeypadMode.OPERATIONS) }
+                    )
+                    HorizontalDivider(color = Color(0xFF3B4156), thickness = 1.dp)
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = stringResource(R.string.keypad_functions),
+                                fontSize = 17.sp,
+                                fontWeight = if (state.keypadMode == KeypadMode.FUNCTIONS) FontWeight.Bold else FontWeight.Normal,
+                                color = if (state.keypadMode == KeypadMode.FUNCTIONS) Color(0xFF60A5FA) else Color.White
+                            )
+                        },
+                        onClick = { onSelectKeypadMode(KeypadMode.FUNCTIONS) }
+                    )
+                }
             }
         }
 

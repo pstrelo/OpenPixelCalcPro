@@ -9,13 +9,18 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.SyncDisabled
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -24,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.pixel.calculator.R
+import com.google.pixel.calculator.ui.theme.QuicksandFontFamily
 import com.google.pixel.calculator.core.math.EvaluationContext
 import com.google.pixel.calculator.core.math.MathEvaluator
 import com.google.pixel.calculator.core.utils.CurrencyRateRepository
@@ -87,14 +93,18 @@ fun ConverterCalculatorView(
     var isShiftActive by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     var isRadians by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(true) }
     var isHapticEnabled by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(true) }
+    var isAutoSyncEnabled by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(converterPrefs.isAutoSyncEnabled()) }
+    var showMenu by remember { mutableStateOf(false) }
 
     // Unit picker bottom sheet state
     var showPicker by remember { mutableStateOf(false) }
     var pickerTarget by remember { mutableStateOf(UnitPickerTarget.FROM) }
 
-    // Check on launch if rates need refreshing (> 24h)
-    LaunchedEffect(Unit) {
-        currencyRepo.updateRatesIfNeeded(coroutineScope, force = false)
+    // Check on launch if rates need refreshing (> 24h) and auto-sync is enabled
+    LaunchedEffect(isAutoSyncEnabled) {
+        if (isAutoSyncEnabled) {
+            currencyRepo.updateRatesIfNeeded(coroutineScope, force = false)
+        }
     }
 
     // Real-time evaluation of active expression
@@ -204,18 +214,18 @@ fun ConverterCalculatorView(
                     }
                 },
                 actions = {
-                    // Refresh button for currency exchange rates
-                    if (selectedCategory == UnitConverter.Category.CURRENCY) {
-                        val infiniteTransition = rememberInfiniteTransition(label = "SyncRotation")
-                        val angle by infiniteTransition.animateFloat(
-                            initialValue = 0f,
-                            targetValue = 360f,
-                            animationSpec = infiniteRepeatable(
-                                animation = tween(1000, easing = LinearEasing)
-                            ),
-                            label = "SyncAngle"
-                        )
+                    val infiniteTransition = rememberInfiniteTransition(label = "SyncRotation")
+                    val angle by infiniteTransition.animateFloat(
+                        initialValue = 0f,
+                        targetValue = 360f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(1000, easing = LinearEasing)
+                        ),
+                        label = "SyncAngle"
+                    )
 
+                    // Refresh button for currency exchange rates when in currency category
+                    if (selectedCategory == UnitConverter.Category.CURRENCY) {
                         IconButton(
                             onClick = {
                                 currencyRepo.updateRatesIfNeeded(coroutineScope, force = true)
@@ -228,6 +238,93 @@ fun ConverterCalculatorView(
                                 tint = CalculatorTheme.colors.onSurface,
                                 modifier = if (isCurrencyUpdating) Modifier.rotate(angle) else Modifier
                             )
+                        }
+                    }
+
+                    // 3-dots options menu for converter synchronization
+                    Box {
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = stringResource(R.string.more_options),
+                                tint = CalculatorTheme.colors.onSurface
+                            )
+                        }
+
+                        MaterialTheme(
+                            shapes = MaterialTheme.shapes.copy(
+                                extraSmall = RoundedCornerShape(20.dp)
+                            )
+                        ) {
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false },
+                                modifier = Modifier.clip(RoundedCornerShape(20.dp))
+                            ) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = stringResource(R.string.converter_auto_sync),
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    },
+                                    onClick = {
+                                        isAutoSyncEnabled = !isAutoSyncEnabled
+                                        converterPrefs.setAutoSyncEnabled(isAutoSyncEnabled)
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = if (isAutoSyncEnabled) Icons.Default.Sync else Icons.Default.SyncDisabled,
+                                            contentDescription = null
+                                        )
+                                    },
+                                    trailingIcon = {
+                                        Switch(
+                                            checked = isAutoSyncEnabled,
+                                            onCheckedChange = {
+                                                isAutoSyncEnabled = it
+                                                converterPrefs.setAutoSyncEnabled(it)
+                                            }
+                                        )
+                                    }
+                                )
+
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = stringResource(R.string.converter_sync_now),
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    },
+                                    onClick = {
+                                        currencyRepo.updateRatesIfNeeded(coroutineScope, force = true)
+                                        showMenu = false
+                                    },
+                                    enabled = !isCurrencyUpdating,
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Refresh,
+                                            contentDescription = null,
+                                            modifier = if (isCurrencyUpdating) Modifier.rotate(angle) else Modifier
+                                        )
+                                    }
+                                )
+
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                                Box(
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                                ) {
+                                    Text(
+                                        text = currencyRepo.getLastUpdateText(context),
+                                        fontSize = 11.sp,
+                                        fontFamily = QuicksandFontFamily,
+                                        color = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.75f)
+                                    )
+                                }
+                            }
                         }
                     }
                 },

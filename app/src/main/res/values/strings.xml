@@ -91,6 +91,8 @@
     <string name="currency_offline_default">Default offline rates</string>
     <string name="currency_updated_at">Updated on: %1$s</string>
     <string name="update_exchange_rates">Update exchange rates</string>
+    <string name="converter_auto_sync">Automatic rate sync</string>
+    <string name="converter_sync_now">Update rates now</string>
 
     <!-- Unit Categories -->
     <string name="category_currency">Currency</string>

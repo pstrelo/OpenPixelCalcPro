@@ -27,6 +27,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -184,85 +185,92 @@ fun CompassView(
                             )
                         }
 
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false }
+                        MaterialTheme(
+                            shapes = MaterialTheme.shapes.copy(
+                                extraSmall = RoundedCornerShape(20.dp)
+                            )
                         ) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.recalibrate_compass)) },
-                                onClick = {
-                                    showMenu = false
-                                    showCalibrationDialog = true
-                                },
-                                leadingIcon = {
-                                    @Suppress("DEPRECATION")
-                                    Icon(Icons.Default.RotateRight, contentDescription = null)
-                                }
-                            )
-
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        if (locationData.hasPermission) {
-                                            stringResource(R.string.update_gps_location)
-                                        } else {
-                                            stringResource(R.string.enable_gps_location)
-                                        }
-                                    )
-                                },
-                                onClick = {
-                                    showMenu = false
-                                    if (locationData.hasPermission) {
-                                        locationManager.startListening()
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    } else {
-                                        locationPermissionLauncher.launch(
-                                            arrayOf(
-                                                Manifest.permission.ACCESS_FINE_LOCATION,
-                                                Manifest.permission.ACCESS_COARSE_LOCATION
-                                            )
-                                        )
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false },
+                                modifier = Modifier.clip(RoundedCornerShape(20.dp))
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.recalibrate_compass)) },
+                                    onClick = {
+                                        showMenu = false
+                                        showCalibrationDialog = true
+                                    },
+                                    leadingIcon = {
+                                        @Suppress("DEPRECATION")
+                                        Icon(Icons.Default.RotateRight, contentDescription = null)
                                     }
-                                },
-                                leadingIcon = {
-                                    Icon(Icons.Default.LocationOn, contentDescription = null)
-                                }
-                            )
+                                )
 
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        if (useDecimalFormat) {
-                                            stringResource(R.string.use_dms_format)
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            if (locationData.hasPermission) {
+                                                stringResource(R.string.update_gps_location)
+                                            } else {
+                                                stringResource(R.string.enable_gps_location)
+                                            }
+                                        )
+                                    },
+                                    onClick = {
+                                        showMenu = false
+                                        if (locationData.hasPermission) {
+                                            locationManager.startListening()
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                         } else {
-                                            stringResource(R.string.use_decimal_format)
+                                            locationPermissionLauncher.launch(
+                                                arrayOf(
+                                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                                )
+                                            )
                                         }
-                                    )
-                                },
-                                onClick = {
-                                    showMenu = false
-                                    useDecimalFormat = !useDecimalFormat
-                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                },
-                                leadingIcon = {
-                                    Icon(Icons.Default.Tune, contentDescription = null)
-                                }
-                            )
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.LocationOn, contentDescription = null)
+                                    }
+                                )
 
-                            HorizontalDivider()
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            if (useDecimalFormat) {
+                                                stringResource(R.string.use_dms_format)
+                                            } else {
+                                                stringResource(R.string.use_decimal_format)
+                                            }
+                                        )
+                                    },
+                                    onClick = {
+                                        showMenu = false
+                                        useDecimalFormat = !useDecimalFormat
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Tune, contentDescription = null)
+                                    }
+                                )
 
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.copy_coordinates)) },
-                                onClick = {
-                                    showMenu = false
-                                    val coordsText = "${locationData.latitudeDms} ${locationData.latitudeCardinal}, ${locationData.longitudeDms} ${locationData.longitudeCardinal} - ${locationData.altitudeFormatted}"
-                                    clipboardManager.setText(AnnotatedString(coordsText))
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                },
-                                leadingIcon = {
-                                    Icon(Icons.Default.ContentCopy, contentDescription = null)
-                                }
-                            )
+                                HorizontalDivider()
+
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.copy_coordinates)) },
+                                    onClick = {
+                                        showMenu = false
+                                        val coordsText = "${locationData.latitudeDms} ${locationData.latitudeCardinal}, ${locationData.longitudeDms} ${locationData.longitudeCardinal} - ${locationData.altitudeFormatted}"
+                                        clipboardManager.setText(AnnotatedString(coordsText))
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.ContentCopy, contentDescription = null)
+                                    }
+                                )
+                            }
                         }
                     }
                 },

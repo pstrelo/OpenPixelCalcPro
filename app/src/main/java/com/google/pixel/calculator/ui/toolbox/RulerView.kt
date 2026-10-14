@@ -24,6 +24,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -88,8 +89,8 @@ fun RulerView(
     var showMmTicks by rememberSaveable { mutableStateOf(false) }
     var useClassicYellow by rememberSaveable { mutableStateOf(false) }
 
-    // TopAppBar overlay visibility (reappears with single tap, disappears with double tap)
-    var showTopBar by rememberSaveable { mutableStateOf(true) }
+    // TopAppBar overlay visibility (hidden by default, toggled with double tap)
+    var showTopBar by rememberSaveable { mutableStateOf(false) }
     var lastTapTime by remember { mutableLongStateOf(0L) }
 
     // Slider position in pixels. Defaults to 5.00 cm
@@ -192,17 +193,13 @@ fun RulerView(
                                 val distance = (change.position - downPos).getDistance()
                                 if (duration < 350 && distance < 20f && !isDrag) {
                                     if (upTime - lastTapTime < 350) {
-                                        // Double tap: hide top bar
-                                        showTopBar = false
+                                        // Double tap: toggle top bar visibility!
+                                        showTopBar = !showTopBar
                                         lastTapTime = 0L
                                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     } else {
-                                        // Single tap: show top bar if hidden
+                                        // Single tap: record timestamp for double tap detection
                                         lastTapTime = upTime
-                                        if (!showTopBar) {
-                                            showTopBar = true
-                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        }
                                     }
                                 }
                                 break
@@ -434,132 +431,144 @@ fun RulerView(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.TopCenter)
-                .statusBarsPadding()
         ) {
             Surface(
-                color = backgroundColor.copy(alpha = 0.94f),
-                shadowElevation = 4.dp,
+                color = backgroundColor,
+                shadowElevation = 6.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = stringResource(R.string.ruler_title),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = onSurfaceColor
-                        )
-                    },
-                    navigationIcon = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(start = 4.dp)
-                        ) {
-                            IconButton(onClick = onBack) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = stringResource(R.string.back),
-                                    tint = onSurfaceColor
-                                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                ) {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                text = stringResource(R.string.ruler_title),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = onSurfaceColor
+                            )
+                        },
+                        navigationIcon = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(start = 4.dp)
+                            ) {
+                                IconButton(onClick = onBack) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = stringResource(R.string.back),
+                                        tint = onSurfaceColor
+                                    )
+                                }
+                                IconButton(
+                                    onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        showMmTicks = !showMmTicks
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Straighten,
+                                        contentDescription = if (showMmTicks) {
+                                            stringResource(R.string.hide_mm_ticks)
+                                        } else {
+                                            stringResource(R.string.show_mm_ticks)
+                                        },
+                                        tint = if (showMmTicks) accentContainer else onSurfaceColor.copy(alpha = 0.65f)
+                                    )
+                                }
                             }
-                            IconButton(
+                        },
+                        actions = {
+                            // Quick unit toggle chip (cm / mm / in)
+                            FilterChip(
+                                selected = false,
                                 onClick = {
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    showMmTicks = !showMmTicks
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Straighten,
-                                    contentDescription = if (showMmTicks) {
-                                        stringResource(R.string.hide_mm_ticks)
-                                    } else {
-                                        stringResource(R.string.show_mm_ticks)
-                                    },
-                                    tint = if (showMmTicks) accentContainer else onSurfaceColor.copy(alpha = 0.65f)
-                                )
-                            }
-                        }
-                    },
-                    actions = {
-                        // Quick unit toggle chip (cm / mm / in)
-                        FilterChip(
-                            selected = false,
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                selectedUnit = when (selectedUnit) {
-                                    RulerUnit.CM -> RulerUnit.MM
-                                    RulerUnit.MM -> RulerUnit.INCH
-                                    RulerUnit.INCH -> RulerUnit.CM
-                                }
-                            },
-                            label = {
-                                Text(
-                                    text = selectedUnit.shortLabel,
-                                    fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.labelMedium
-                                )
-                            },
-                            shape = RoundedCornerShape(percent = 50),
-                            colors = FilterChipDefaults.filterChipColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh ?: Color(0xFF282A30),
-                                labelColor = onSurfaceColor
-                            ),
-                            modifier = Modifier.padding(end = 4.dp)
-                        )
+                                    selectedUnit = when (selectedUnit) {
+                                        RulerUnit.CM -> RulerUnit.MM
+                                        RulerUnit.MM -> RulerUnit.INCH
+                                        RulerUnit.INCH -> RulerUnit.CM
+                                    }
+                                },
+                                label = {
+                                    Text(
+                                        text = selectedUnit.shortLabel,
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.labelMedium
+                                    )
+                                },
+                                shape = RoundedCornerShape(percent = 50),
+                                colors = FilterChipDefaults.filterChipColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh ?: Color(0xFF282A30),
+                                    labelColor = onSurfaceColor
+                                ),
+                                modifier = Modifier.padding(end = 4.dp)
+                            )
 
-                        // Options dropdown menu
-                        var showMenu by remember { mutableStateOf(false) }
-                        Box {
-                            IconButton(onClick = { showMenu = true }) {
-                                Icon(
-                                    imageVector = Icons.Default.MoreVert,
-                                    contentDescription = stringResource(R.string.more_options),
-                                    tint = onSurfaceColor
-                                )
-                            }
-                            DropdownMenu(
-                                expanded = showMenu,
-                                onDismissRequest = { showMenu = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            if (showMmTicks) {
-                                                stringResource(R.string.hide_mm_ticks)
-                                            } else {
-                                                stringResource(R.string.show_mm_ticks)
-                                            }
-                                        )
-                                    },
-                                    onClick = {
-                                        showMmTicks = !showMmTicks
-                                        showMenu = false
+                            // Options dropdown menu with consistent rounded shape (20.dp)
+                            var showMenu by remember { mutableStateOf(false) }
+                            Box {
+                                IconButton(onClick = { showMenu = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.MoreVert,
+                                        contentDescription = stringResource(R.string.more_options),
+                                        tint = onSurfaceColor
+                                    )
+                                }
+                                MaterialTheme(
+                                    shapes = MaterialTheme.shapes.copy(
+                                        extraSmall = RoundedCornerShape(20.dp)
+                                    )
+                                ) {
+                                    DropdownMenu(
+                                        expanded = showMenu,
+                                        onDismissRequest = { showMenu = false },
+                                        modifier = Modifier.clip(RoundedCornerShape(20.dp))
+                                    ) {
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                if (showMmTicks) {
+                                                    stringResource(R.string.hide_mm_ticks)
+                                                } else {
+                                                    stringResource(R.string.show_mm_ticks)
+                                                }
+                                            )
+                                        },
+                                        onClick = {
+                                            showMmTicks = !showMmTicks
+                                            showMenu = false
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                if (useClassicYellow) {
+                                                    stringResource(R.string.use_layout_accent_color)
+                                                } else {
+                                                    stringResource(R.string.use_classic_yellow_color)
+                                                }
+                                            )
+                                        },
+                                        onClick = {
+                                            useClassicYellow = !useClassicYellow
+                                            showMenu = false
+                                        }
+                                    )
                                     }
-                                )
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            if (useClassicYellow) {
-                                                stringResource(R.string.use_layout_accent_color)
-                                            } else {
-                                                stringResource(R.string.use_classic_yellow_color)
-                                            }
-                                        )
-                                    },
-                                    onClick = {
-                                        useClassicYellow = !useClassicYellow
-                                        showMenu = false
-                                    }
-                                )
+                                }
                             }
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent,
-                        titleContentColor = onSurfaceColor,
-                        navigationIconContentColor = onSurfaceColor
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                            titleContentColor = onSurfaceColor,
+                            navigationIconContentColor = onSurfaceColor
+                        )
                     )
-                )
+                }
             }
         }
 

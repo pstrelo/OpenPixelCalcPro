@@ -17,10 +17,19 @@ class ConverterPreferences(
         const val KEY_CATEGORY = "converter_selected_category"
         const val KEY_TOP_UNIT = "converter_top_unit_code"
         const val KEY_BOTTOM_UNIT = "converter_bottom_unit_code"
+        const val KEY_AUTO_SYNC = "converter_auto_sync_enabled"
 
         val DEFAULT_CATEGORY = UnitConverter.Category.MASS
         const val DEFAULT_TOP_UNIT = "g"
         const val DEFAULT_BOTTOM_UNIT = "kg"
+    }
+
+    fun isAutoSyncEnabled(): Boolean {
+        return prefs?.getBoolean(KEY_AUTO_SYNC, true) ?: true
+    }
+
+    fun setAutoSyncEnabled(enabled: Boolean) {
+        prefs?.edit()?.putBoolean(KEY_AUTO_SYNC, enabled)?.apply()
     }
 
     private val prefs: SharedPreferences? = sharedPreferences
