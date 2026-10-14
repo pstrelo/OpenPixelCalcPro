@@ -171,6 +171,11 @@ class AdvancedCalculatorViewModel(
         val pos = eq.cursorPosition.coerceIn(0, expr.length)
 
         val (newExpr, newPos) = when {
+            text == "log_" || text == "log_□" -> {
+                // Inserts log_□(□) template with cursor placed at the base box
+                val updated = expr.substring(0, pos) + "log_□(□)" + expr.substring(pos)
+                Pair(updated, pos + 4) // cursor inside the base placeholder '□' (selection/position at □)
+            }
             text == "(x)" -> {
                 // Quick function argument insertion: insert "(x)" and place cursor after ')'
                 val updated = expr.substring(0, pos) + "(x)" + expr.substring(pos)
@@ -194,6 +199,16 @@ class AdvancedCalculatorViewModel(
                     val updated = expr.substring(0, pos) + ")" + expr.substring(pos)
                     Pair(updated, pos + 1)
                 }
+            }
+            // If cursor is right on or before a placeholder '□', replace '□' with the entered text!
+            pos < expr.length && expr[pos] == '□' -> {
+                val updated = expr.substring(0, pos) + text + expr.substring(pos + 1)
+                Pair(updated, pos + text.length)
+            }
+            // If user typed '(' while inside log_base(□), advance cursor to argument placeholder
+            text == "(" && pos < expr.length && expr[pos] == '(' -> {
+                val nextPos = if (pos + 1 < expr.length && expr[pos + 1] == '□') pos + 1 else pos + 1
+                Pair(expr, nextPos)
             }
             // Smart step-over for binary operators if cursor is right after an argument like "f(x|)"
             pos < expr.length && expr[pos] == ')' && text in listOf("+", "-", "*", "/", "×", "÷", "^", "=") &&
@@ -279,8 +294,11 @@ class AdvancedCalculatorViewModel(
         }
 
         // Multi-character token handling: if preceded by " = ", delete all 3 characters
+        // Or if deleting right after log_ or log_□, delete the whole template or prefix
         val deleteLen = when {
             pos >= 3 && expr.substring(pos - 3, pos) == " = " -> 3
+            pos >= 4 && expr.substring(pos - 4, pos) == "log_" -> 4
+            pos >= 5 && expr.substring(pos - 5, pos) == "log_□" -> 5
             else -> 1
         }
 
@@ -418,7 +436,8 @@ class AdvancedCalculatorViewModel(
             "□/□" -> insertCharacter("/")
             "|x|", "|□|" -> insertCharacter("|")
             "n!", "x!", "□!" -> insertCharacter("!")
-            "log", "log_□" -> insertCharacter("log(")
+            "log" -> insertCharacter("log(")
+            "log_□", "log_", "logₙ", "logn" -> insertCharacter("log_")
             "ln" -> insertCharacter("ln(")
             "f(x)" -> openCatalog()
             "CATALOG" -> openCatalog()

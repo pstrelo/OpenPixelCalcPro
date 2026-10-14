@@ -460,11 +460,23 @@ fun FormulaMath2DRenderer(
 }
 
 private fun formatExponents(text: String): String {
-    return text
+    val subscriptMap = mapOf(
+        '0' to '₀', '1' to '₁', '2' to '₂', '3' to '₃', '4' to '₄',
+        '5' to '₅', '6' to '₆', '7' to '₇', '8' to '₈', '9' to '₉',
+        'n' to 'ₙ', 'b' to 'ᵦ', 'x' to 'ₓ', 'y' to 'ᵧ'
+    )
+    val formattedLog = Regex("""log_([0-9a-zA-Z]+)""").replace(text) { m ->
+        val rawBase = m.groupValues[1]
+        val subBase = rawBase.map { subscriptMap[it] ?: it }.joinToString("")
+        "log$subBase"
+    }
+
+    return formattedLog
         .replace("^2", "²")
         .replace("^3", "³")
         .replace("^4", "⁴")
         .replace("^5", "⁵")
         .replace("sqrt(", "√(")
         .replace("logn(", "logₙ(")
+        .replace("log_□", "log_□")
 }
