@@ -71,7 +71,7 @@ fun ConvertDisplay(
     }
 
     val isLandscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-    val isCompact = isProMode || isLandscape
+    val isCompact = isLandscape
 
     val topScrollState = rememberScrollState()
     val bottomScrollState = rememberScrollState()

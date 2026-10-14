@@ -111,10 +111,7 @@ fun AdvancedKeypad(
                 TopFixedControlRow(
                     unitHeight = unitHeight,
                     spacing = spacing,
-                    onKey = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onInsertChar(it)
-                    }
+                    onKey = { onInsertChar(it) }
                 )
             }
 
@@ -123,50 +120,26 @@ fun AdvancedKeypad(
                 MathSolverTab.ALGEBRA -> AlgebraKeypadGrid(
                     unitHeight = unitHeight,
                     spacing = spacing,
-                    onDeleteChar = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onDeleteChar()
-                    },
-                    onKey = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onInsertChar(it)
-                    }
+                    onDeleteChar = onDeleteChar,
+                    onKey = { onInsertChar(it) }
                 )
                 MathSolverTab.TRIGONOMETRY -> TrigonometryKeypadGrid(
                     unitHeight = unitHeight,
                     spacing = spacing,
-                    onDeleteChar = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onDeleteChar()
-                    },
-                    onKey = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onInsertChar(it)
-                    }
+                    onDeleteChar = onDeleteChar,
+                    onKey = { onInsertChar(it) }
                 )
                 MathSolverTab.CALCULUS -> CalculusKeypadGrid(
                     unitHeight = unitHeight,
                     spacing = spacing,
-                    onDeleteChar = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onDeleteChar()
-                    },
-                    onKey = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onInsertChar(it)
-                    }
+                    onDeleteChar = onDeleteChar,
+                    onKey = { onInsertChar(it) }
                 )
                 MathSolverTab.ALPHABET -> AlphabetKeypadGrid(
                     unitHeight = unitHeight,
                     spacing = spacing,
-                    onDeleteChar = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onDeleteChar()
-                    },
-                    onKey = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onInsertChar(it)
-                    }
+                    onDeleteChar = onDeleteChar,
+                    onKey = { onInsertChar(it) }
                 )
             }
 
@@ -179,26 +152,11 @@ fun AdvancedKeypad(
                 isToolBarExpanded = isToolBarExpanded,
                 onToggleToolBar = onToggleToolBar,
                 onNavigate = onNavigate,
-                onCycleFormat = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onCycleFormat()
-                },
-                onClearAll = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onClearAll()
-                },
-                onMoveCursorLeft = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onMoveCursorLeft()
-                },
-                onMoveCursorRight = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onMoveCursorRight()
-                },
-                onExecute = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onExecute()
-                }
+                onCycleFormat = onCycleFormat,
+                onClearAll = onClearAll,
+                onMoveCursorLeft = onMoveCursorLeft,
+                onMoveCursorRight = onMoveCursorRight,
+                onExecute = onExecute
             )
         }
     }

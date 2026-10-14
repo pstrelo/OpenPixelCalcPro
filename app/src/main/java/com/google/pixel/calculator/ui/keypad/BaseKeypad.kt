@@ -2,6 +2,7 @@ package com.google.pixel.calculator.ui.keypad
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -87,12 +88,12 @@ fun BaseKeypad(
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val effectiveProMode = if (isLandscape) true else isProMode
 
-    val targetBtnHeight = if (isLandscape) 48.dp else if (effectiveProMode) 52.dp else 82.dp
-    val targetSpacing = if (isLandscape) 6.dp else if (effectiveProMode) 6.dp else 12.dp
+    val targetBtnHeight = if (isLandscape) 48.dp else if (effectiveProMode) 52.dp else 81.dp
+    val targetSpacing = if (isLandscape) 6.dp else if (effectiveProMode) 6.dp else 11.8.dp
 
     val keyAnimationSpec = spring<Dp>(
         dampingRatio = Spring.DampingRatioNoBouncy,
-        stiffness = Spring.StiffnessMediumLow
+        stiffness = Spring.StiffnessLow
     )
 
     val btnHeight by animateDpAsState(
@@ -113,8 +114,9 @@ fun BaseKeypad(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .then(if (!isLandscape) Modifier.height(516.dp) else Modifier)
             .padding(horizontal = if (isLandscape) 10.dp else 16.dp, vertical = if (isLandscape) 2.dp else 6.dp),
-        verticalArrangement = Arrangement.spacedBy(spacing)
+        verticalArrangement = if (!isLandscape) Arrangement.spacedBy(spacing, Alignment.Bottom) else Arrangement.spacedBy(spacing)
     ) {
         // Scientific expansion lever/arrow (only in portrait, hidden in landscape)
         if (!isLandscape) {
@@ -136,7 +138,7 @@ fun BaseKeypad(
                         targetValue = if (effectiveProMode) 180f else 0f,
                         animationSpec = spring(
                             dampingRatio = Spring.DampingRatioNoBouncy,
-                            stiffness = Spring.StiffnessMediumLow
+                            stiffness = Spring.StiffnessLow
                         ),
                         label = "ProModeArrowRotation"
                     )
@@ -158,22 +160,22 @@ fun BaseKeypad(
                 enter = expandVertically(
                     animationSpec = spring(
                         dampingRatio = Spring.DampingRatioNoBouncy,
-                        stiffness = Spring.StiffnessMediumLow
+                        stiffness = Spring.StiffnessLow
                     ),
                     expandFrom = Alignment.Top,
                     clip = true
                 ) + fadeIn(
-                    animationSpec = tween(durationMillis = 200)
+                    animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)
                 ),
                 exit = shrinkVertically(
                     animationSpec = spring(
                         dampingRatio = Spring.DampingRatioNoBouncy,
-                        stiffness = Spring.StiffnessMediumLow
+                        stiffness = Spring.StiffnessLow
                     ),
                     shrinkTowards = Alignment.Top,
                     clip = true
                 ) + fadeOut(
-                    animationSpec = tween(durationMillis = 150)
+                    animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing)
                 )
             ) {
                 Column(

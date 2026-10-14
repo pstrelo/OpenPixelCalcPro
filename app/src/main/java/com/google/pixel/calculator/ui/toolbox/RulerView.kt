@@ -1,6 +1,11 @@
 package com.google.pixel.calculator.ui.toolbox
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -83,19 +88,23 @@ fun RulerView(
     var showMmTicks by rememberSaveable { mutableStateOf(false) }
     var useClassicYellow by rememberSaveable { mutableStateOf(false) }
 
+    // TopAppBar overlay visibility (reappears with single tap, disappears with double tap)
+    var showTopBar by rememberSaveable { mutableStateOf(true) }
+    var lastTapTime by remember { mutableLongStateOf(0L) }
+
     // Slider position in pixels. Defaults to 5.00 cm
     var sliderY by rememberSaveable { mutableFloatStateOf(-1f) }
 
-    // Layout dimensions
-    val zeroY = with(density) { 32.dp.toPx() }
+    // Layout dimensions (0f starts exactly at the physical top of the screen)
+    val zeroY = 0f
     val rulerWidth = 84.dp
     val rulerWidthPx = with(density) { rulerWidth.toPx() }
     val bottomToolbarClearance = with(density) { if (isLandscape) 56.dp.toPx() else 96.dp.toPx() }
 
-    LaunchedEffect(effectiveYdpi, zeroY) {
+    LaunchedEffect(effectiveYdpi) {
         if (sliderY < 0f) {
             val initial5cmPx = RulerUtils.cmToPixels(5.0f, effectiveYdpi)
-            sliderY = zeroY + initial5cmPx
+            sliderY = initial5cmPx
         }
     }
 
@@ -152,167 +161,69 @@ fun RulerView(
         }
     }
 
-    Scaffold(
-        containerColor = backgroundColor,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.ruler_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = onSurfaceColor
-                    )
-                },
-                navigationIcon = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(start = 4.dp)
-                    ) {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.back),
-                                tint = onSurfaceColor
-                            )
-                        }
-                        IconButton(
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                showMmTicks = !showMmTicks
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Straighten,
-                                contentDescription = if (showMmTicks) {
-                                    stringResource(R.string.hide_mm_ticks)
-                                } else {
-                                    stringResource(R.string.show_mm_ticks)
-                                },
-                                tint = if (showMmTicks) accentContainer else onSurfaceColor.copy(alpha = 0.65f)
-                            )
-                        }
-                    }
-                },
-                actions = {
-                    // Quick unit toggle chip (cm / mm / in)
-                    FilterChip(
-                        selected = false,
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            selectedUnit = when (selectedUnit) {
-                                RulerUnit.CM -> RulerUnit.MM
-                                RulerUnit.MM -> RulerUnit.INCH
-                                RulerUnit.INCH -> RulerUnit.CM
-                            }
-                        },
-                        label = {
-                            Text(
-                                text = selectedUnit.shortLabel,
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.labelMedium
-                            )
-                        },
-                        shape = RoundedCornerShape(percent = 50),
-                        colors = FilterChipDefaults.filterChipColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh ?: Color(0xFF282A30),
-                            labelColor = onSurfaceColor
-                        ),
-                        modifier = Modifier.padding(end = 4.dp)
-                    )
-
-                    // Options dropdown menu
-                    var showMenu by remember { mutableStateOf(false) }
-                    Box {
-                        IconButton(onClick = { showMenu = true }) {
-                            Icon(
-                                imageVector = Icons.Default.MoreVert,
-                                contentDescription = stringResource(R.string.more_options),
-                                tint = onSurfaceColor
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        if (showMmTicks) {
-                                            stringResource(R.string.hide_mm_ticks)
-                                        } else {
-                                            stringResource(R.string.show_mm_ticks)
-                                        }
-                                    )
-                                },
-                                onClick = {
-                                    showMmTicks = !showMmTicks
-                                    showMenu = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        if (useClassicYellow) {
-                                            stringResource(R.string.use_layout_accent_color)
-                                        } else {
-                                            stringResource(R.string.use_classic_yellow_color)
-                                        }
-                                    )
-                                },
-                                onClick = {
-                                    useClassicYellow = !useClassicYellow
-                                    showMenu = false
-                                }
-                            )
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = backgroundColor,
-                    titleContentColor = onSurfaceColor,
-                    navigationIconContentColor = onSurfaceColor
-                )
-            )
-        }
-    ) { padding ->
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundColor)
+    ) {
+        // Interactive gesture area
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-        ) {
-            // Interactive gesture area
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .pointerInput(zeroY, effectiveYdpi, bottomToolbarClearance) {
-                        awaitEachGesture {
-                            val down = awaitFirstDown(requireUnconsumed = false)
-                            val maxY = size.height - bottomToolbarClearance
-                            val targetY = down.position.y.coerceIn(zeroY, maxY)
-                            sliderY = targetY
+                .pointerInput(zeroY, effectiveYdpi, bottomToolbarClearance) {
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false)
+                        val downTime = System.currentTimeMillis()
+                        val downPos = down.position
+                        val maxY = size.height - bottomToolbarClearance
+                        val targetY = down.position.y.coerceIn(zeroY, maxY)
+                        sliderY = targetY
 
-                            val pxPerCm = RulerUtils.cmToPixels(1f, effectiveYdpi)
-                            var lastCm = ((targetY - zeroY) / pxPerCm).toInt()
+                        val pxPerCm = RulerUtils.cmToPixels(1f, effectiveYdpi)
+                        var lastCm = ((targetY - zeroY) / pxPerCm).toInt()
+                        var isDrag = false
 
-                            while (true) {
-                                val event = awaitPointerEvent()
-                                val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                                if (!change.pressed) break
-                                change.consume()
-
-                                val currentY = change.position.y.coerceIn(zeroY, maxY)
-                                sliderY = currentY
-
-                                val currentCm = ((currentY - zeroY) / pxPerCm).toInt()
-                                if (currentCm != lastCm) {
-                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    lastCm = currentCm
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                            if (!change.pressed) {
+                                val upTime = System.currentTimeMillis()
+                                val duration = upTime - downTime
+                                val distance = (change.position - downPos).getDistance()
+                                if (duration < 350 && distance < 20f && !isDrag) {
+                                    if (upTime - lastTapTime < 350) {
+                                        // Double tap: hide top bar
+                                        showTopBar = false
+                                        lastTapTime = 0L
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    } else {
+                                        // Single tap: show top bar if hidden
+                                        lastTapTime = upTime
+                                        if (!showTopBar) {
+                                            showTopBar = true
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        }
+                                    }
                                 }
+                                break
+                            }
+                            change.consume()
+
+                            val currentY = change.position.y.coerceIn(zeroY, maxY)
+                            sliderY = currentY
+                            if (kotlin.math.abs(currentY - downPos.y) > 10f) {
+                                isDrag = true
+                            }
+
+                            val currentCm = ((currentY - zeroY) / pxPerCm).toInt()
+                            if (currentCm != lastCm) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                lastCm = currentCm
                             }
                         }
                     }
-            ) {
+                }
+        ) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val width = size.width
                     val height = size.height
@@ -354,7 +265,7 @@ fun RulerView(
                             )
 
                             premeasuredNumbers[i]?.let { layoutResult ->
-                                val textY = y - (layoutResult.size.height / 2f)
+                                val textY = if (i == 0) y + 2.dp.toPx() else y - (layoutResult.size.height / 2f)
                                 val textX = 56.dp.toPx()
                                 drawText(
                                     textLayoutResult = layoutResult,
@@ -411,7 +322,7 @@ fun RulerView(
                             )
 
                             premeasuredNumbers[cm]?.let { layoutResult ->
-                                val textY = y - (layoutResult.size.height / 2f)
+                                val textY = if (cm == 0) y + 2.dp.toPx() else y - (layoutResult.size.height / 2f)
                                 val textX = 56.dp.toPx()
                                 drawText(
                                     textLayoutResult = layoutResult,
@@ -515,13 +426,149 @@ fun RulerView(
                 }
             }
 
-            // Floating bottom toolbar
-            PixelFloatingToolBar(
-                currentScreen = ActiveScreen.TOOLBOX_RULER,
-                onNavigate = onNavigate,
-                modifier = Modifier.align(Alignment.BottomEnd),
-                alignRight = true
-            )
+        // Floating TopAppBar overlay with smooth slide/fade animation
+        AnimatedVisibility(
+            visible = showTopBar,
+            enter = slideInVertically { -it } + fadeIn(),
+            exit = slideOutVertically { -it } + fadeOut(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.TopCenter)
+                .statusBarsPadding()
+        ) {
+            Surface(
+                color = backgroundColor.copy(alpha = 0.94f),
+                shadowElevation = 4.dp,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = stringResource(R.string.ruler_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = onSurfaceColor
+                        )
+                    },
+                    navigationIcon = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(start = 4.dp)
+                        ) {
+                            IconButton(onClick = onBack) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = stringResource(R.string.back),
+                                    tint = onSurfaceColor
+                                )
+                            }
+                            IconButton(
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    showMmTicks = !showMmTicks
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Straighten,
+                                    contentDescription = if (showMmTicks) {
+                                        stringResource(R.string.hide_mm_ticks)
+                                    } else {
+                                        stringResource(R.string.show_mm_ticks)
+                                    },
+                                    tint = if (showMmTicks) accentContainer else onSurfaceColor.copy(alpha = 0.65f)
+                                )
+                            }
+                        }
+                    },
+                    actions = {
+                        // Quick unit toggle chip (cm / mm / in)
+                        FilterChip(
+                            selected = false,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                selectedUnit = when (selectedUnit) {
+                                    RulerUnit.CM -> RulerUnit.MM
+                                    RulerUnit.MM -> RulerUnit.INCH
+                                    RulerUnit.INCH -> RulerUnit.CM
+                                }
+                            },
+                            label = {
+                                Text(
+                                    text = selectedUnit.shortLabel,
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                            },
+                            shape = RoundedCornerShape(percent = 50),
+                            colors = FilterChipDefaults.filterChipColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh ?: Color(0xFF282A30),
+                                labelColor = onSurfaceColor
+                            ),
+                            modifier = Modifier.padding(end = 4.dp)
+                        )
+
+                        // Options dropdown menu
+                        var showMenu by remember { mutableStateOf(false) }
+                        Box {
+                            IconButton(onClick = { showMenu = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = stringResource(R.string.more_options),
+                                    tint = onSurfaceColor
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            if (showMmTicks) {
+                                                stringResource(R.string.hide_mm_ticks)
+                                            } else {
+                                                stringResource(R.string.show_mm_ticks)
+                                            }
+                                        )
+                                    },
+                                    onClick = {
+                                        showMmTicks = !showMmTicks
+                                        showMenu = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            if (useClassicYellow) {
+                                                stringResource(R.string.use_layout_accent_color)
+                                            } else {
+                                                stringResource(R.string.use_classic_yellow_color)
+                                            }
+                                        )
+                                    },
+                                    onClick = {
+                                        useClassicYellow = !useClassicYellow
+                                        showMenu = false
+                                    }
+                                )
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = onSurfaceColor,
+                        navigationIconContentColor = onSurfaceColor
+                    )
+                )
+            }
         }
+
+        // Floating bottom toolbar
+        PixelFloatingToolBar(
+            currentScreen = ActiveScreen.TOOLBOX_RULER,
+            onNavigate = onNavigate,
+            modifier = Modifier.align(Alignment.BottomEnd),
+            alignRight = true
+        )
     }
 }
