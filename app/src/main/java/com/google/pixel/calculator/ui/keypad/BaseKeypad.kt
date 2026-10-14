@@ -114,227 +114,233 @@ fun BaseKeypad(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .then(if (!isLandscape) Modifier.height(516.dp) else Modifier)
+            .then(if (!isLandscape) Modifier.height(520.dp) else Modifier)
             .padding(horizontal = if (isLandscape) 10.dp else 16.dp, vertical = if (isLandscape) 2.dp else 6.dp),
         verticalArrangement = if (!isLandscape) Arrangement.spacedBy(spacing, Alignment.Bottom) else Arrangement.spacedBy(spacing)
     ) {
         // Scientific expansion lever/arrow (only in portrait, hidden in landscape)
         if (!isLandscape) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = 2.dp),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.fillMaxWidth()
             ) {
-                IconButton(
-                    onClick = {
-                        triggerHaptic()
-                        onToggleProMode()
-                    },
-                    modifier = Modifier.size(40.dp)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 2.dp),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val arrowRotation by animateFloatAsState(
-                        targetValue = if (effectiveProMode) 180f else 0f,
+                    IconButton(
+                        onClick = {
+                            triggerHaptic()
+                            onToggleProMode()
+                        },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        val arrowRotation by animateFloatAsState(
+                            targetValue = if (effectiveProMode) 180f else 0f,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioNoBouncy,
+                                stiffness = Spring.StiffnessLow
+                            ),
+                            label = "ProModeArrowRotation"
+                        )
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowUp,
+                            contentDescription = if (effectiveProMode) stringResource(R.string.reduce_calc) else stringResource(R.string.expand_scientific),
+                            tint = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.8f),
+                            modifier = Modifier
+                                .size(28.dp)
+                                .rotate(arrowRotation)
+                        )
+                    }
+                }
+
+                // Scientific section (3 rows visible in Pro / Expanded mode)
+                // Expands smoothly from top to bottom while lower keys shrink
+                AnimatedVisibility(
+                    visible = effectiveProMode,
+                    enter = expandVertically(
                         animationSpec = spring(
                             dampingRatio = Spring.DampingRatioNoBouncy,
                             stiffness = Spring.StiffnessLow
                         ),
-                        label = "ProModeArrowRotation"
-                    )
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowUp,
-                        contentDescription = if (effectiveProMode) stringResource(R.string.reduce_calc) else stringResource(R.string.expand_scientific),
-                        tint = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.8f),
-                        modifier = Modifier
-                            .size(28.dp)
-                            .rotate(arrowRotation)
-                    )
-                }
-            }
-
-            // Scientific section (3 rows visible in Pro / Expanded mode)
-            // Expands smoothly from top to bottom while lower keys shrink
-            AnimatedVisibility(
-                visible = effectiveProMode,
-                enter = expandVertically(
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioNoBouncy,
-                        stiffness = Spring.StiffnessLow
+                        expandFrom = Alignment.Top,
+                        clip = true
+                    ) + fadeIn(
+                        animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)
                     ),
-                    expandFrom = Alignment.Top,
-                    clip = true
-                ) + fadeIn(
-                    animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)
-                ),
-                exit = shrinkVertically(
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioNoBouncy,
-                        stiffness = Spring.StiffnessLow
-                    ),
-                    shrinkTowards = Alignment.Top,
-                    clip = true
-                ) + fadeOut(
-                    animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing)
-                )
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(scientificSpacing)
+                    exit = shrinkVertically(
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioNoBouncy,
+                            stiffness = Spring.StiffnessLow
+                        ),
+                        shrinkTowards = Alignment.Top,
+                        clip = true
+                    ) + fadeOut(
+                        animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing)
+                    )
                 ) {
-                    // SCIENTIFIC ROW 1: [⇧ Shift] [Rad/Deg] [^] [( )]
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(scientificSpacing)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = scientificSpacing),
+                        verticalArrangement = Arrangement.spacedBy(scientificSpacing)
                     ) {
-                        PixelIconButton(
-                            type = if (isShiftActive) PixelButtonType.SHIFT_ACTIVE else PixelButtonType.SCIENTIFIC,
-                            height = scientificBtnHeight,
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                triggerHaptic()
-                                onToggleShift()
-                            }
+                        // SCIENTIFIC ROW 1: [⇧ Shift] [Rad/Deg] [^] [( )]
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(scientificSpacing)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowUpward,
-                                contentDescription = "Shift",
-                                modifier = Modifier.size(24.dp)
+                            PixelIconButton(
+                                type = if (isShiftActive) PixelButtonType.SHIFT_ACTIVE else PixelButtonType.SCIENTIFIC,
+                                height = scientificBtnHeight,
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    triggerHaptic()
+                                    onToggleShift()
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowUpward,
+                                    contentDescription = "Shift",
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+
+                            PixelButton(
+                                text = if (isRadians) "Rad" else "Deg",
+                                type = PixelButtonType.SCIENTIFIC,
+                                height = scientificBtnHeight,
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    triggerHaptic()
+                                    onToggleAngleUnit()
+                                }
+                            )
+
+                            PixelButton(
+                                text = "^",
+                                type = PixelButtonType.SCIENTIFIC,
+                                height = scientificBtnHeight,
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    triggerHaptic()
+                                    onOperator("^")
+                                }
+                            )
+
+                            PixelButton(
+                                text = "( )",
+                                type = PixelButtonType.SCIENTIFIC,
+                                height = scientificBtnHeight,
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    triggerHaptic()
+                                    onSmartParenthesis()
+                                }
                             )
                         }
 
-                        PixelButton(
-                            text = if (isRadians) "Rad" else "Deg",
-                            type = PixelButtonType.SCIENTIFIC,
-                            height = scientificBtnHeight,
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                triggerHaptic()
-                                onToggleAngleUnit()
-                            }
-                        )
+                        // SCIENTIFIC ROW 2: [e / ln] [log / 10ˣ] [√ / ʸ√x] [!]
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(scientificSpacing)
+                        ) {
+                            PixelButton(
+                                text = if (isShiftActive) "ln" else "e",
+                                type = PixelButtonType.SCIENTIFIC,
+                                height = scientificBtnHeight,
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    triggerHaptic()
+                                    if (isShiftActive) onFunction("ln") else onConstant("e")
+                                }
+                            )
 
-                        PixelButton(
-                            text = "^",
-                            type = PixelButtonType.SCIENTIFIC,
-                            height = scientificBtnHeight,
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                triggerHaptic()
-                                onOperator("^")
-                            }
-                        )
+                            PixelButton(
+                                text = if (isShiftActive) "10ˣ" else "log",
+                                type = PixelButtonType.SCIENTIFIC,
+                                height = scientificBtnHeight,
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    triggerHaptic()
+                                    if (isShiftActive) onOperator("10^") else onFunction("log")
+                                }
+                            )
 
-                        PixelButton(
-                            text = "( )",
-                            type = PixelButtonType.SCIENTIFIC,
-                            height = scientificBtnHeight,
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                triggerHaptic()
-                                onSmartParenthesis()
-                            }
-                        )
-                    }
+                            PixelButton(
+                                text = if (isShiftActive) "ʸ√x" else "√",
+                                type = PixelButtonType.SCIENTIFIC,
+                                height = scientificBtnHeight,
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    triggerHaptic()
+                                    if (isShiftActive) onFunction("root") else onFunction("sqrt")
+                                }
+                            )
 
-                    // SCIENTIFIC ROW 2: [e / ln] [log / 10ˣ] [√ / ʸ√x] [!]
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(scientificSpacing)
-                    ) {
-                        PixelButton(
-                            text = if (isShiftActive) "ln" else "e",
-                            type = PixelButtonType.SCIENTIFIC,
-                            height = scientificBtnHeight,
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                triggerHaptic()
-                                if (isShiftActive) onFunction("ln") else onConstant("e")
-                            }
-                        )
+                            PixelButton(
+                                text = "!",
+                                type = PixelButtonType.SCIENTIFIC,
+                                height = scientificBtnHeight,
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    triggerHaptic()
+                                    onOperator("!")
+                                }
+                            )
+                        }
 
-                        PixelButton(
-                            text = if (isShiftActive) "10ˣ" else "log",
-                            type = PixelButtonType.SCIENTIFIC,
-                            height = scientificBtnHeight,
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                triggerHaptic()
-                                if (isShiftActive) onOperator("10^") else onFunction("log")
-                            }
-                        )
+                        // SCIENTIFIC ROW 3: [sin / sin⁻¹] [cos / cos⁻¹] [tan / tan⁻¹] [π]
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(scientificSpacing)
+                        ) {
+                            PixelButton(
+                                text = if (isShiftActive) "sin⁻¹" else "sin",
+                                type = PixelButtonType.SCIENTIFIC,
+                                height = scientificBtnHeight,
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    triggerHaptic()
+                                    if (isShiftActive) onFunction("sin⁻¹") else onFunction("sin")
+                                }
+                            )
 
-                        PixelButton(
-                            text = if (isShiftActive) "ʸ√x" else "√",
-                            type = PixelButtonType.SCIENTIFIC,
-                            height = scientificBtnHeight,
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                triggerHaptic()
-                                if (isShiftActive) onFunction("root") else onFunction("sqrt")
-                            }
-                        )
+                            PixelButton(
+                                text = if (isShiftActive) "cos⁻¹" else "cos",
+                                type = PixelButtonType.SCIENTIFIC,
+                                height = scientificBtnHeight,
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    triggerHaptic()
+                                    if (isShiftActive) onFunction("cos⁻¹") else onFunction("cos")
+                                }
+                            )
 
-                        PixelButton(
-                            text = "!",
-                            type = PixelButtonType.SCIENTIFIC,
-                            height = scientificBtnHeight,
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                triggerHaptic()
-                                onOperator("!")
-                            }
-                        )
-                    }
+                            PixelButton(
+                                text = if (isShiftActive) "tan⁻¹" else "tan",
+                                type = PixelButtonType.SCIENTIFIC,
+                                height = scientificBtnHeight,
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    triggerHaptic()
+                                    if (isShiftActive) onFunction("tan⁻¹") else onFunction("tan")
+                                }
+                            )
 
-                    // SCIENTIFIC ROW 3: [sin / sin⁻¹] [cos / cos⁻¹] [tan / tan⁻¹] [π]
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(scientificSpacing)
-                    ) {
-                        PixelButton(
-                            text = if (isShiftActive) "sin⁻¹" else "sin",
-                            type = PixelButtonType.SCIENTIFIC,
-                            height = scientificBtnHeight,
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                triggerHaptic()
-                                if (isShiftActive) onFunction("sin⁻¹") else onFunction("sin")
-                            }
-                        )
-
-                        PixelButton(
-                            text = if (isShiftActive) "cos⁻¹" else "cos",
-                            type = PixelButtonType.SCIENTIFIC,
-                            height = scientificBtnHeight,
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                triggerHaptic()
-                                if (isShiftActive) onFunction("cos⁻¹") else onFunction("cos")
-                            }
-                        )
-
-                        PixelButton(
-                            text = if (isShiftActive) "tan⁻¹" else "tan",
-                            type = PixelButtonType.SCIENTIFIC,
-                            height = scientificBtnHeight,
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                triggerHaptic()
-                                if (isShiftActive) onFunction("tan⁻¹") else onFunction("tan")
-                            }
-                        )
-
-                        PixelButton(
-                            text = "π",
-                            type = PixelButtonType.SCIENTIFIC,
-                            height = scientificBtnHeight,
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                triggerHaptic()
-                                onConstant("π")
-                            }
-                        )
+                            PixelButton(
+                                text = "π",
+                                type = PixelButtonType.SCIENTIFIC,
+                                height = scientificBtnHeight,
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    triggerHaptic()
+                                    onConstant("π")
+                                }
+                            )
+                        }
                     }
                 }
             }
