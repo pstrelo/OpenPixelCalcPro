@@ -1,6 +1,6 @@
 # OpenPixelCalcPro 📐✨
 
-[![Download APK](https://img.shields.io/badge/📲_Download_APK-OpenPixelCalcPro.apk-2ea44f?style=for-the-badge&logo=android)](https://github.com/trinatilorenzo/OpenPixelCalcPro/releases/latest)
+[![Download APK](https://img.shields.io/badge/📲_Download_APK-OpenPixelCalcPro.apk-2ea44f?style=for-the-badge&logo=android)](https://github.com/pstrelo/OpenPixelCalcPro/releases/latest)
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Android Min SDK](https://img.shields.io/badge/Min%20SDK-34-brightgreen.svg)](https://developer.android.com/about/versions/14)
@@ -20,7 +20,7 @@ Born out of personal necessity: the stock calculator felt too limited for daily 
 
 Ready to install immediately on your Android 14+ device:
 
-👉 **[Download OpenPixelCalcPro.apk (Latest Release)](https://github.com/trinatilorenzo/OpenPixelCalcPro/releases/latest)**
+👉 **[Download OpenPixelCalcPro.apk (Latest Release)](https://github.com/pstrelo/OpenPixelCalcPro/releases/latest)**
 
 *(Simply enable "Install unknown apps" when prompted by your Android system).*
 
@@ -102,7 +102,7 @@ Integrated utility tools leveraging device sensors:
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/trinatilorenzo/OpenPixelCalcPro.git
+   git clone https://github.com/pstrelo/OpenPixelCalcPro.git
    cd OpenPixelCalcPro
    ```
 
