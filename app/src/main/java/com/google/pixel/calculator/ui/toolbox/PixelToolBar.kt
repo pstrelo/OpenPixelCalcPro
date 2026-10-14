@@ -174,7 +174,7 @@ fun PixelToolToggleButton(
     }
 
     val cornerRadius by animateDpAsState(
-        targetValue = if (isExpanded) 18.dp else if (height <= 56.dp) (height / 2) else 36.dp,
+        targetValue = if (isExpanded) 18.dp else (height / 2),
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessMediumLow
