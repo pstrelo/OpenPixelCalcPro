@@ -331,6 +331,7 @@
     <string name="reset_view">Ripristina Vista</string>
     <string name="fullscreen">Schermo Intero</string>
     <string name="subtab_letters">Lettere</string>
+    <string name="subtab_greek">Greco</string>
     <string name="subtab_constants">Costanti</string>
     <string name="subtab_si_prefixes">Prefissi SI</string>
     <string name="catalog_tab_trig">📐 Goniometria</string>

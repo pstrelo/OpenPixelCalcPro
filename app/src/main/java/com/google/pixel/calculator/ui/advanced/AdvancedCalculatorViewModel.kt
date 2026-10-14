@@ -167,6 +167,16 @@ class AdvancedCalculatorViewModel(
         val pos = eq.cursorPosition.coerceIn(0, expr.length)
 
         val (newExpr, newPos) = when {
+            text == "(x)" -> {
+                // Quick function argument insertion: insert "(x)" and place cursor after ')'
+                val updated = expr.substring(0, pos) + "(x)" + expr.substring(pos)
+                Pair(updated, pos + 3)
+            }
+            text == "()" || text == "( )" -> {
+                // Auto-close: insert "()" and place cursor inside
+                val updated = expr.substring(0, pos) + "()" + expr.substring(pos)
+                Pair(updated, pos + 1)
+            }
             text == "(" -> {
                 // Auto-close: insert "()" and place cursor inside
                 val updated = expr.substring(0, pos) + "()" + expr.substring(pos)
@@ -180,6 +190,13 @@ class AdvancedCalculatorViewModel(
                     val updated = expr.substring(0, pos) + ")" + expr.substring(pos)
                     Pair(updated, pos + 1)
                 }
+            }
+            // Smart step-over for binary operators if cursor is right after an argument like "f(x|)"
+            pos < expr.length && expr[pos] == ')' && text in listOf("+", "-", "*", "/", "×", "÷", "^", "=") &&
+                Regex("[a-zA-Z]\\([a-zA-Z0-9]+$").containsMatchIn(expr.substring(0, pos)) -> {
+                // Jump over the closing parenthesis and insert operator outside: "f(x) + "
+                val updated = expr.substring(0, pos + 1) + text + expr.substring(pos + 1)
+                Pair(updated, pos + 1 + text.length)
             }
             text == "|" -> {
                 // If next character is already '|', skip over it

@@ -331,6 +331,7 @@
     <string name="reset_view">Reset View</string>
     <string name="fullscreen">Fullscreen</string>
     <string name="subtab_letters">Letters</string>
+    <string name="subtab_greek">Greek</string>
     <string name="subtab_constants">Constants</string>
     <string name="subtab_si_prefixes">SI Prefixes</string>
     <string name="catalog_tab_trig">📐 Trigonometry</string>

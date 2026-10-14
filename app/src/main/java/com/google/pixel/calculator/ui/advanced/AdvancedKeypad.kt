@@ -801,6 +801,7 @@ private fun CalculusKeypadGrid(
 
 enum class AlphabetSubTab(val labelRes: Int) {
     LETTERS(R.string.subtab_letters),
+    GREEK(R.string.subtab_greek),
     CONSTANTS(R.string.subtab_constants),
     SI_PREFIXES(R.string.subtab_si_prefixes)
 }
@@ -817,6 +818,17 @@ private fun AlphabetKeypadGrid(
     val tabAccent = MathSolverTab.ALPHABET.accentColor
     val fnBg = if (isDark) MathSolverTheme.alphabetFunctionContainer else tabAccent.copy(alpha = 0.12f)
     val fnColor = if (isDark) MathSolverTheme.alphabetFunctionContent else Color(0xFFC2410C)
+
+    // Highlighted styles for mathematical functions (f, g, h) and variables (x, y)
+    val fnSpecialBg = if (isDark) Color(0xFF38294A) else Color(0xFFEDE9FE)
+    val fnSpecialColor = if (isDark) Color(0xFFD8B4FE) else Color(0xFF7C3AED)
+    val varSpecialBg = if (isDark) Color(0xFF1E3A5F) else Color(0xFFE0F2FE)
+    val varSpecialColor = if (isDark) Color(0xFF7DD3FC) else Color(0xFF0284C7)
+    val funcArgBg = if (isDark) Color(0xFF3B2D54) else Color(0xFFF3E8FF)
+    val funcArgColor = if (isDark) Color(0xFFC084FC) else Color(0xFF9333EA)
+    val opBg = if (isDark) Color(0xFF33384B) else Color(0xFFE2E8F0)
+    val opColor = if (isDark) Color(0xFFF1F5F9) else Color(0xFF0F172A)
+
     val delBg = if (isDark) Color(0xFF452427) else Color(0xFFFFE4E6)
     val delColor = if (isDark) Color(0xFFF87171) else Color(0xFFE11D48)
     val doubleHeight = unitHeight * 2 + spacing
@@ -844,9 +856,10 @@ private fun AlphabetKeypadGrid(
                 ) {
                     Text(
                         text = stringResource(tab.labelRes),
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                        color = chipText
+                        color = chipText,
+                        maxLines = 1
                     )
                 }
             }
@@ -858,43 +871,48 @@ private fun AlphabetKeypadGrid(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(spacing)
                 ) {
-                    // Col 1: a, b, c, d, k
+                    // Col 1: a, b, c, d, e
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
-                        listOf("a", "b", "c", "d", "k").forEach { key ->
+                        listOf("a", "b", "c", "d", "e").forEach { key ->
                             SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey(key) }
                         }
                     }
-                    // Col 2: m, n, p, r, s
+                    // Col 2: f, g, h, i, j (f, g, h highlighted as standard function names)
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
-                        listOf("m", "n", "p", "r", "s").forEach { key ->
+                        SquircleKey("f", fnSpecialBg, fnSpecialColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 16.sp) { onKey("f") }
+                        SquircleKey("g", fnSpecialBg, fnSpecialColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 16.sp) { onKey("g") }
+                        SquircleKey("h", fnSpecialBg, fnSpecialColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 16.sp) { onKey("h") }
+                        SquircleKey("i", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey("i") }
+                        SquircleKey("j", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey("j") }
+                    }
+                    // Col 3: k, l, m, n, o
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
+                        listOf("k", "l", "m", "n", "o").forEach { key ->
                             SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey(key) }
                         }
                     }
-                    // Col 3: t, u, v, w, z
+                    // Col 4: p, q, r, s, t
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
-                        listOf("t", "u", "v", "w", "z").forEach { key ->
+                        listOf("p", "q", "r", "s", "t").forEach { key ->
                             SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey(key) }
                         }
                     }
-                    // Col 4: α, β, γ, δ, ε
+                    // Col 5: u, v, w, x, y (x, y highlighted as variables)
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
-                        listOf("α", "β", "γ", "δ", "ε").forEach { key ->
-                            SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey(key) }
-                        }
+                        SquircleKey("u", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey("u") }
+                        SquircleKey("v", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey("v") }
+                        SquircleKey("w", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey("w") }
+                        SquircleKey("x", varSpecialBg, varSpecialColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 16.sp) { onKey("x") }
+                        SquircleKey("y", varSpecialBg, varSpecialColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 16.sp) { onKey("y") }
                     }
-                    // Col 5: λ, μ, φ, ω, i
+                    // Col 6: z, (x), ( ), +, DEL
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
-                        listOf("λ", "μ", "φ", "ω", "i").forEach { key ->
-                            SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey(key) }
-                        }
-                    }
-                    // Col 6: Δ, Σ, Ω, [ ⌫ (double height) ]
-                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
-                        listOf("Δ", "Σ", "Ω").forEach { key ->
-                            SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey(key) }
-                        }
+                        SquircleKey("z", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey("z") }
+                        SquircleKey("(x)", funcArgBg, funcArgColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 13.sp) { onKey("(x)") }
+                        SquircleKey("( )", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 13.sp) { onKey("()") }
+                        SquircleKey("+", opBg, opColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 16.sp) { onKey("+") }
                         SquareSystemKey(
-                            height = doubleHeight,
+                            height = unitHeight,
                             modifier = Modifier.fillMaxWidth(),
                             bgColor = delBg,
                             contentColor = delColor,
@@ -904,7 +922,65 @@ private fun AlphabetKeypadGrid(
                                 imageVector = Icons.AutoMirrored.Filled.Backspace,
                                 contentDescription = stringResource(R.string.delete_digit),
                                 tint = delColor,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            AlphabetSubTab.GREEK -> {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(spacing)
+                ) {
+                    // Col 1: α, β, γ, δ, ε
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
+                        listOf("α", "β", "γ", "δ", "ε").forEach { key ->
+                            SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey(key) }
+                        }
+                    }
+                    // Col 2: ζ, η, θ, ι, κ
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
+                        listOf("ζ", "η", "θ", "ι", "κ").forEach { key ->
+                            SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey(key) }
+                        }
+                    }
+                    // Col 3: λ, μ, ν, ξ, π
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
+                        listOf("λ", "μ", "ν", "ξ", "π").forEach { key ->
+                            SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey(key) }
+                        }
+                    }
+                    // Col 4: ρ, σ, τ, υ, φ
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
+                        listOf("ρ", "σ", "τ", "υ", "φ").forEach { key ->
+                            SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey(key) }
+                        }
+                    }
+                    // Col 5: χ, ψ, ω, Δ, Σ
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
+                        listOf("χ", "ψ", "ω", "Δ", "Σ").forEach { key ->
+                            SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey(key) }
+                        }
+                    }
+                    // Col 6: Ω, Π, Φ, Ψ, DEL
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
+                        listOf("Ω", "Π", "Φ", "Ψ").forEach { key ->
+                            SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey(key) }
+                        }
+                        SquareSystemKey(
+                            height = unitHeight,
+                            modifier = Modifier.fillMaxWidth(),
+                            bgColor = delBg,
+                            contentColor = delColor,
+                            onClick = onDeleteChar
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Backspace,
+                                contentDescription = stringResource(R.string.delete_digit),
+                                tint = delColor,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
