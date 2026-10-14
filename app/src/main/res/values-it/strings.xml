@@ -101,7 +101,6 @@
     <string name="category_temperature">Temperatura</string>
     <string name="category_area">Area</string>
     <string name="category_volume">Volume</string>
-    <string name="category_complex">Complesse &amp; Geometriche</string>
     <string name="category_speed">Velocità</string>
     <string name="category_time">Tempo</string>
     <string name="category_pressure">Pressione</string>
@@ -164,20 +163,29 @@
     <string name="unit_m2">Metri quadrati</string>
     <string name="unit_km2">Chilometri quadrati</string>
     <string name="unit_ha">Ettari</string>
+    <string name="unit_a">Are</string>
     <string name="unit_ac">Acri</string>
+    <string name="unit_dm2">Decimetri quadrati</string>
     <string name="unit_cm2">Centimetri quadrati</string>
     <string name="unit_mm2">Millimetri quadrati</string>
+    <string name="unit_yd2">Iarde quadrate</string>
     <string name="unit_ft2">Piedi quadrati</string>
     <string name="unit_in2">Pollici quadrati</string>
     <string name="unit_mi2">Miglia quadrate</string>
 
     <!-- Units: Volume -->
-    <string name="unit_l">Litri</string>
-    <string name="unit_ml">Millilitri</string>
-    <string name="unit_cl">Centilitri</string>
-    <string name="unit_dl">Decilitri</string>
     <string name="unit_m3">Metri cubi</string>
+    <string name="unit_dm3">Decimetri cubi</string>
     <string name="unit_cm3">Centimetri cubi</string>
+    <string name="unit_mm3">Millimetri cubi</string>
+    <string name="unit_hl">Ettolitri</string>
+    <string name="unit_l">Litri</string>
+    <string name="unit_dl">Decilitri</string>
+    <string name="unit_cl">Centilitri</string>
+    <string name="unit_ml">Millilitri</string>
+    <string name="unit_yd3">Iarde cubiche</string>
+    <string name="unit_ft3">Piedi cubi</string>
+    <string name="unit_in3">Pollici cubi</string>
     <string name="unit_gal_us">Galloni USA</string>
     <string name="unit_gal_uk">Galloni UK (Imperiali)</string>
     <string name="unit_pt_us">Pinte USA</string>

@@ -39,7 +39,6 @@ fun getCategoryMaterialIcon(category: UnitConverter.Category): ImageVector = whe
     UnitConverter.Category.TEMPERATURE -> Icons.Default.Thermostat
     UnitConverter.Category.AREA -> Icons.Default.GridOn
     UnitConverter.Category.VOLUME -> Icons.Default.WaterDrop
-    UnitConverter.Category.COMPLEX -> Icons.Default.Transform
     UnitConverter.Category.SPEED -> Icons.Default.Speed
     UnitConverter.Category.TIME -> Icons.Default.Schedule
     UnitConverter.Category.PRESSURE -> Icons.Default.Compress
@@ -228,8 +227,7 @@ fun UnitPickerSheet(
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(16.dp))
                                 .clickable {
-                                    val catToPass = if (selectedCategory == UnitConverter.Category.COMPLEX) UnitConverter.Category.COMPLEX else unit.category
-                                    onSelectUnit(catToPass, unit.code)
+                                    onSelectUnit(unit.category, unit.code)
                                     onDismiss()
                                 }
                         ) {

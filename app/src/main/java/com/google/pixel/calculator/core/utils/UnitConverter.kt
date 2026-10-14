@@ -26,7 +26,6 @@ class UnitConverter(
         TEMPERATURE("Temperatura", R.string.category_temperature),
         AREA("Area", R.string.category_area),
         VOLUME("Volume", R.string.category_volume),
-        COMPLEX("Complesse & Geometriche", R.string.category_complex),
         SPEED("Velocità", R.string.category_speed),
         TIME("Tempo", R.string.category_time),
         PRESSURE("Pressione", R.string.category_pressure),
@@ -105,47 +104,36 @@ class UnitConverter(
                 UnitDefinition("m2", "Metri quadrati", "m²", 1.0, Category.AREA, R.string.unit_m2),
                 UnitDefinition("km2", "Chilometri quadrati", "km²", 1_000_000.0, Category.AREA, R.string.unit_km2),
                 UnitDefinition("ha", "Ettari", "ha", 10_000.0, Category.AREA, R.string.unit_ha),
+                UnitDefinition("a", "Are", "a", 100.0, Category.AREA, R.string.unit_a),
                 UnitDefinition("ac", "Acri", "ac", 4046.8564224, Category.AREA, R.string.unit_ac),
+                UnitDefinition("dm2", "Decimetri quadrati", "dm²", 0.01, Category.AREA, R.string.unit_dm2),
                 UnitDefinition("cm2", "Centimetri quadrati", "cm²", 0.0001, Category.AREA, R.string.unit_cm2),
                 UnitDefinition("mm2", "Millimetri quadrati", "mm²", 1e-6, Category.AREA, R.string.unit_mm2),
+                UnitDefinition("yd2", "Iarde quadrate", "yd²", 0.83612736, Category.AREA, R.string.unit_yd2),
                 UnitDefinition("ft2", "Piedi quadrati", "ft²", 0.09290304, Category.AREA, R.string.unit_ft2),
                 UnitDefinition("in2", "Pollici quadrati", "in²", 0.00064516, Category.AREA, R.string.unit_in2),
                 UnitDefinition("mi2", "Miglia quadrate", "mi²", 2_589_988.110336, Category.AREA, R.string.unit_mi2)
             )
 
             Category.VOLUME -> listOf(
-                UnitDefinition("l", "Litri", "L", 0.001, Category.VOLUME, R.string.unit_l),
-                UnitDefinition("ml", "Millilitri", "mL", 1e-6, Category.VOLUME, R.string.unit_ml),
-                UnitDefinition("cl", "Centilitri", "cL", 1e-5, Category.VOLUME, R.string.unit_cl),
-                UnitDefinition("dl", "Decilitri", "dL", 1e-4, Category.VOLUME, R.string.unit_dl),
                 UnitDefinition("m3", "Metri cubi", "m³", 1.0, Category.VOLUME, R.string.unit_m3),
+                UnitDefinition("dm3", "Decimetri cubi", "dm³", 0.001, Category.VOLUME, R.string.unit_dm3),
                 UnitDefinition("cm3", "Centimetri cubi", "cm³", 1e-6, Category.VOLUME, R.string.unit_cm3),
+                UnitDefinition("mm3", "Millimetri cubi", "mm³", 1e-9, Category.VOLUME, R.string.unit_mm3),
+                UnitDefinition("hl", "Ettolitri", "hL", 0.1, Category.VOLUME, R.string.unit_hl),
+                UnitDefinition("l", "Litri", "L", 0.001, Category.VOLUME, R.string.unit_l),
+                UnitDefinition("dl", "Decilitri", "dL", 1e-4, Category.VOLUME, R.string.unit_dl),
+                UnitDefinition("cl", "Centilitri", "cL", 1e-5, Category.VOLUME, R.string.unit_cl),
+                UnitDefinition("ml", "Millilitri", "mL", 1e-6, Category.VOLUME, R.string.unit_ml),
+                UnitDefinition("yd3", "Iarde cubiche", "yd³", 0.764554857984, Category.VOLUME, R.string.unit_yd3),
+                UnitDefinition("ft3", "Piedi cubi", "ft³", 0.028316846592, Category.VOLUME, R.string.unit_ft3),
+                UnitDefinition("in3", "Pollici cubi", "in³", 0.000016387064, Category.VOLUME, R.string.unit_in3),
                 UnitDefinition("gal_us", "Galloni USA", "gal US", 0.003785411784, Category.VOLUME, R.string.unit_gal_us),
                 UnitDefinition("gal_uk", "Galloni UK (Imperiali)", "gal UK", 0.00454609, Category.VOLUME, R.string.unit_gal_uk),
                 UnitDefinition("pt_us", "Pinte USA", "pt US", 0.000473176473, Category.VOLUME, R.string.unit_pt_us),
                 UnitDefinition("pt_uk", "Pinte UK", "pt UK", 0.00056826125, Category.VOLUME, R.string.unit_pt_uk),
                 UnitDefinition("floz_us", "Once fluide USA", "fl oz US", 0.0000295735295625, Category.VOLUME, R.string.unit_floz_us),
                 UnitDefinition("floz_uk", "Once fluide UK", "fl oz UK", 0.0000284130625, Category.VOLUME, R.string.unit_floz_uk)
-            )
-
-            Category.COMPLEX -> listOf(
-                UnitDefinition("m2", "Metri quadrati", "m²", 1.0, Category.AREA, R.string.unit_m2),
-                UnitDefinition("m", "Metri (lato equiv.)", "m", 1.0, Category.LENGTH, R.string.unit_m),
-                UnitDefinition("l", "Litri (capacità)", "L", 0.001, Category.VOLUME, R.string.unit_l),
-                UnitDefinition("m3", "Metri cubi", "m³", 1.0, Category.VOLUME, R.string.unit_m3),
-                UnitDefinition("cm2", "Centimetri quadrati", "cm²", 0.0001, Category.AREA, R.string.unit_cm2),
-                UnitDefinition("cm", "Centimetri (lato)", "cm", 0.01, Category.LENGTH, R.string.unit_cm),
-                UnitDefinition("mm2", "Millimetri quadrati", "mm²", 1e-6, Category.AREA, R.string.unit_mm2),
-                UnitDefinition("mm", "Millimetri (lato)", "mm", 0.001, Category.LENGTH, R.string.unit_mm),
-                UnitDefinition("ha", "Ettari", "ha", 10_000.0, Category.AREA, R.string.unit_ha),
-                UnitDefinition("km2", "Chilometri quadrati", "km²", 1_000_000.0, Category.AREA, R.string.unit_km2),
-                UnitDefinition("km", "Chilometri (lato)", "km", 1000.0, Category.LENGTH, R.string.unit_km),
-                UnitDefinition("ft2", "Piedi quadrati", "ft²", 0.09290304, Category.AREA, R.string.unit_ft2),
-                UnitDefinition("ft", "Piedi (lato)", "ft", 0.3048, Category.LENGTH, R.string.unit_ft),
-                UnitDefinition("in2", "Pollici quadrati", "in²", 0.00064516, Category.AREA, R.string.unit_in2),
-                UnitDefinition("in", "Pollici (lato)", "in", 0.0254, Category.LENGTH, R.string.unit_in),
-                UnitDefinition("kg", "Chilogrammi (acqua H₂O)", "kg", 1.0, Category.MASS, R.string.unit_kg),
-                UnitDefinition("g", "Grammi (acqua H₂O)", "g", 0.001, Category.MASS, R.string.unit_g)
             )
 
             Category.SPEED -> listOf(
@@ -294,167 +282,12 @@ class UnitConverter(
             return convertFuel(value, fromCode, toCode)
         }
 
-        // Resolve units across categories or within given category
+        // 4. Same category linear conversion based on SI base ratio
         val fromUnit = findUnit(fromCode, category) ?: return value
         val toUnit = findUnit(toCode, category) ?: return value
 
-        // 4. Same category linear conversion based on SI base ratio
-        if (fromUnit.category == toUnit.category) {
-            val baseValue = value * fromUnit.toBaseRatio
-            return baseValue / toUnit.toBaseRatio
-        }
-
-        // 5. Cross-dimensional and geometric complex conversions
-        return convertCrossCategory(value, fromUnit, toUnit)
-    }
-
-    /**
-     * Handles cross-dimensional, geometric, and physical equivalence conversions:
-     * - Area <-> Length (L = √A, A = L²)
-     * - Volume <-> Area (A = V^(2/3), V = A^(3/2))
-     * - Volume <-> Length (L = ∛V, V = L³)
-     * - Volume <-> Mass (water density ρ = 1000 kg/m³, 1 L = 1 kg)
-     * - Mass <-> Area / Length (via water volume & cube geometry)
-     * - Cooking <-> Volume / Mass
-     */
-    fun convertCrossCategory(
-        value: Double,
-        fromUnit: UnitDefinition,
-        toUnit: UnitDefinition
-    ): Double {
-        val fromCat = fromUnit.category
-        val toCat = toUnit.category
-
-        // Area <-> Length (L = √A, A = L²)
-        if (fromCat == Category.AREA && toCat == Category.LENGTH) {
-            val baseM2 = value * fromUnit.toBaseRatio
-            if (baseM2 < 0.0) return 0.0
-            val baseM = kotlin.math.sqrt(baseM2)
-            return baseM / toUnit.toBaseRatio
-        }
-        if (fromCat == Category.LENGTH && toCat == Category.AREA) {
-            val baseM = value * fromUnit.toBaseRatio
-            val baseM2 = baseM * baseM
-            return baseM2 / toUnit.toBaseRatio
-        }
-
-        // Volume <-> Area (cube base/face: A = V^(2/3), V = A^(3/2))
-        if (fromCat == Category.VOLUME && toCat == Category.AREA) {
-            val baseM3 = value * fromUnit.toBaseRatio
-            if (baseM3 < 0.0) return 0.0
-            val baseM2 = Math.pow(baseM3, 2.0 / 3.0)
-            return baseM2 / toUnit.toBaseRatio
-        }
-        if (fromCat == Category.AREA && toCat == Category.VOLUME) {
-            val baseM2 = value * fromUnit.toBaseRatio
-            if (baseM2 < 0.0) return 0.0
-            val baseM3 = Math.pow(baseM2, 1.5)
-            return baseM3 / toUnit.toBaseRatio
-        }
-
-        // Volume <-> Length (cube side: L = ∛V, V = L³)
-        if (fromCat == Category.VOLUME && toCat == Category.LENGTH) {
-            val baseM3 = value * fromUnit.toBaseRatio
-            if (baseM3 < 0.0) return 0.0
-            val baseM = Math.cbrt(baseM3)
-            return baseM / toUnit.toBaseRatio
-        }
-        if (fromCat == Category.LENGTH && toCat == Category.VOLUME) {
-            val baseM = value * fromUnit.toBaseRatio
-            val baseM3 = baseM * baseM * baseM
-            return baseM3 / toUnit.toBaseRatio
-        }
-
-        // Volume <-> Mass (water density: 1000 kg/m³ -> 1 L = 1 kg)
-        if (fromCat == Category.VOLUME && toCat == Category.MASS) {
-            val baseM3 = value * fromUnit.toBaseRatio
-            val baseKg = baseM3 * 1000.0
-            return baseKg / toUnit.toBaseRatio
-        }
-        if (fromCat == Category.MASS && toCat == Category.VOLUME) {
-            val baseKg = value * fromUnit.toBaseRatio
-            val baseM3 = baseKg / 1000.0
-            return baseM3 / toUnit.toBaseRatio
-        }
-
-        // Mass <-> Area (via water volume & cube base)
-        if (fromCat == Category.MASS && toCat == Category.AREA) {
-            val baseKg = value * fromUnit.toBaseRatio
-            if (baseKg < 0.0) return 0.0
-            val baseM3 = baseKg / 1000.0
-            val baseM2 = Math.pow(baseM3, 2.0 / 3.0)
-            return baseM2 / toUnit.toBaseRatio
-        }
-        if (fromCat == Category.AREA && toCat == Category.MASS) {
-            val baseM2 = value * fromUnit.toBaseRatio
-            if (baseM2 < 0.0) return 0.0
-            val baseM3 = Math.pow(baseM2, 1.5)
-            val baseKg = baseM3 * 1000.0
-            return baseKg / toUnit.toBaseRatio
-        }
-
-        // Mass <-> Length (via water volume & cube side)
-        if (fromCat == Category.MASS && toCat == Category.LENGTH) {
-            val baseKg = value * fromUnit.toBaseRatio
-            if (baseKg < 0.0) return 0.0
-            val baseM3 = baseKg / 1000.0
-            val baseM = Math.cbrt(baseM3)
-            return baseM / toUnit.toBaseRatio
-        }
-        if (fromCat == Category.LENGTH && toCat == Category.MASS) {
-            val baseM = value * fromUnit.toBaseRatio
-            val baseM3 = baseM * baseM * baseM
-            val baseKg = baseM3 * 1000.0
-            return baseKg / toUnit.toBaseRatio
-        }
-
-        // Cooking <-> Volume / Mass
-        if (fromCat == Category.COOKING && (toCat == Category.VOLUME || toCat == Category.MASS)) {
-            val baseMl = value * fromUnit.toBaseRatio
-            val baseM3 = baseMl * 1e-6
-            if (toCat == Category.VOLUME) return baseM3 / toUnit.toBaseRatio
-            val baseKg = baseM3 * 1000.0
-            return baseKg / toUnit.toBaseRatio
-        }
-        if ((fromCat == Category.VOLUME || fromCat == Category.MASS) && toCat == Category.COOKING) {
-            val baseM3 = if (fromCat == Category.VOLUME) value * fromUnit.toBaseRatio else (value * fromUnit.toBaseRatio) / 1000.0
-            val baseMl = baseM3 * 1e6
-            return baseMl / toUnit.toBaseRatio
-        }
-
-        return value
-    }
-
-    /**
-     * Returns a concise description / formula badge for cross-dimensional conversions.
-     */
-    fun getConversionExplanation(fromCode: String, toCode: String): String? {
-        val fromUnit = findUnit(fromCode) ?: return null
-        val toUnit = findUnit(toCode) ?: return null
-        val fromCat = fromUnit.category
-        val toCat = toUnit.category
-
-        return when {
-            fromCat == Category.AREA && toCat == Category.LENGTH ->
-                "Lato quadrato equiv.: L = √Area"
-            fromCat == Category.LENGTH && toCat == Category.AREA ->
-                "Area quadrato equiv.: Area = L²"
-            fromCat == Category.VOLUME && toCat == Category.AREA ->
-                "Base cubo equiv.: Area = Volume^(2/3)"
-            fromCat == Category.AREA && toCat == Category.VOLUME ->
-                "Volume cubo equiv.: Volume = Area^(3/2)"
-            fromCat == Category.VOLUME && toCat == Category.LENGTH ->
-                "Spigolo cubo equiv.: L = ∛Volume"
-            fromCat == Category.LENGTH && toCat == Category.VOLUME ->
-                "Volume cubo equiv.: Volume = L³"
-            (fromCat == Category.VOLUME && toCat == Category.MASS) || (fromCat == Category.MASS && toCat == Category.VOLUME) ->
-                "Equivalenza acqua: 1 L H₂O = 1 kg (ρ = 1 kg/L)"
-            (fromCat == Category.MASS && toCat == Category.AREA) || (fromCat == Category.AREA && toCat == Category.MASS) ->
-                "Equivalenza acqua/cubo: Massa → Base cubo"
-            (fromCat == Category.MASS && toCat == Category.LENGTH) || (fromCat == Category.LENGTH && toCat == Category.MASS) ->
-                "Equivalenza acqua/cubo: Massa → Spigolo cubo"
-            else -> null
-        }
+        val baseValue = value * fromUnit.toBaseRatio
+        return baseValue / toUnit.toBaseRatio
     }
 
     private fun fallbackCurrencyConvert(value: Double, fromCode: String, toCode: String): Double {

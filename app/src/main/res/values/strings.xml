@@ -101,7 +101,6 @@
     <string name="category_temperature">Temperature</string>
     <string name="category_area">Area</string>
     <string name="category_volume">Volume</string>
-    <string name="category_complex">Complex / Geometry</string>
     <string name="category_speed">Speed</string>
     <string name="category_time">Time</string>
     <string name="category_pressure">Pressure</string>
@@ -164,20 +163,29 @@
     <string name="unit_m2">Square meters</string>
     <string name="unit_km2">Square kilometers</string>
     <string name="unit_ha">Hectares</string>
+    <string name="unit_a">Ares</string>
     <string name="unit_ac">Acres</string>
+    <string name="unit_dm2">Square decimeters</string>
     <string name="unit_cm2">Square centimeters</string>
     <string name="unit_mm2">Square millimeters</string>
+    <string name="unit_yd2">Square yards</string>
     <string name="unit_ft2">Square feet</string>
     <string name="unit_in2">Square inches</string>
     <string name="unit_mi2">Square miles</string>
 
     <!-- Units: Volume -->
-    <string name="unit_l">Liters</string>
-    <string name="unit_ml">Milliliters</string>
-    <string name="unit_cl">Centiliters</string>
-    <string name="unit_dl">Deciliters</string>
     <string name="unit_m3">Cubic meters</string>
+    <string name="unit_dm3">Cubic decimeters</string>
     <string name="unit_cm3">Cubic centimeters</string>
+    <string name="unit_mm3">Cubic millimeters</string>
+    <string name="unit_hl">Hectoliters</string>
+    <string name="unit_l">Liters</string>
+    <string name="unit_dl">Deciliters</string>
+    <string name="unit_cl">Centiliters</string>
+    <string name="unit_ml">Milliliters</string>
+    <string name="unit_yd3">Cubic yards</string>
+    <string name="unit_ft3">Cubic feet</string>
+    <string name="unit_in3">Cubic inches</string>
     <string name="unit_gal_us">US Gallons</string>
     <string name="unit_gal_uk">UK Gallons</string>
     <string name="unit_pt_us">US Pints</string>

@@ -61,7 +61,6 @@ fun ConvertDisplay(
     onSwap: () -> Unit,
     onSelectTopUnit: () -> Unit,
     onSelectBottomUnit: () -> Unit,
-    explanation: String? = null,
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
@@ -142,23 +141,6 @@ fun ConvertDisplay(
             }
 
             Spacer(modifier = Modifier.width(8.dp))
-
-            if (explanation != null) {
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = CalculatorTheme.colors.equalsContainer.copy(alpha = 0.15f),
-                    contentColor = CalculatorTheme.colors.onSurface
-                ) {
-                    Text(
-                        text = explanation,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Medium,
-                        color = CalculatorTheme.colors.equalsContainer,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-            }
 
             HorizontalDivider(
                 color = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.15f),
