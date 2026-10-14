@@ -2,12 +2,12 @@
 
 [![Download APK](https://img.shields.io/badge/📲_Download_APK-OpenPixelCalcPro.apk-2ea44f?style=for-the-badge&logo=android)](https://github.com/trinatilorenzo/OpenPixelCalcPro/releases/latest)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Android Min SDK](https://img.shields.io/badge/Min%20SDK-34-brightgreen.svg)](https://developer.android.com/about/versions/14)
+[![Android Min SDK](https://img.shields.io/badge/Min%20SDK-26-brightgreen.svg)](https://developer.android.com/about/versions/oreo)
 [![Android Target SDK](https://img.shields.io/badge/Target%20SDK-35-green.svg)](https://developer.android.com/about/versions/15)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0.0-purple.svg)](https://kotlinlang.org)
 [![Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-blueviolet.svg)](https://developer.android.com/jetpack/compose)
 
-A modern, expressive, open-source Android calculator crafted for Google Pixel devices and Android 14+. Built from the ground up using **Jetpack Compose**, **Material 3 Expressive**, and pure Kotlin, combining advanced numerical math, real-time 2D Cartesian graphing, offline unit & currency conversion, and hardware sensor tools into a cohesive experience.
+A modern, expressive, open-source Android calculator crafted for Android devices (Android 8.0+ / API 26 to 35). Built from the ground up using **Jetpack Compose**, **Material 3 Expressive**, and pure Kotlin, combining advanced numerical math, real-time 2D Cartesian graphing, offline unit & currency conversion, and hardware sensor tools into a cohesive experience.
 
 *On device launcher, the app displays cleanly as **"Calculator"**.*
 
@@ -15,7 +15,7 @@ A modern, expressive, open-source Android calculator crafted for Google Pixel de
 
 ## 📥 Direct APK Download
 
-Ready to install immediately on your Android 14+ device:
+Ready to install immediately on your Android device (Android 8.0+):
 
 👉 **[Download OpenPixelCalcPro.apk (Latest Release)](https://github.com/trinatilorenzo/OpenPixelCalcPro/releases/latest)**
 
