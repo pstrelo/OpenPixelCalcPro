@@ -171,10 +171,15 @@ class AdvancedCalculatorViewModel(
         val pos = eq.cursorPosition.coerceIn(0, expr.length)
 
         val (newExpr, newPos) = when {
-            text == "log_" || text == "log_□" -> {
+            text == "log_" || text == "log_□" || text == "log₍□₎" -> {
                 // Inserts log_□(□) template with cursor placed at the base box
                 val updated = expr.substring(0, pos) + "log_□(□)" + expr.substring(pos)
-                Pair(updated, pos + 4) // cursor inside the base placeholder '□' (selection/position at □)
+                Pair(updated, pos + 4) // cursor inside the base placeholder '□'
+            }
+            text == "ⁿ√□" || text == "ʸ√" || text == "□√□" -> {
+                // Inserts □√(□) template with cursor placed at the index box
+                val updated = expr.substring(0, pos) + "□√(□)" + expr.substring(pos)
+                Pair(updated, pos) // cursor right at the index placeholder '□'
             }
             text == "(x)" -> {
                 // Quick function argument insertion: insert "(x)" and place cursor after ')'
@@ -205,9 +210,12 @@ class AdvancedCalculatorViewModel(
                 val updated = expr.substring(0, pos) + text + expr.substring(pos + 1)
                 Pair(updated, pos + text.length)
             }
-            // If user typed '(' while inside log_base(□), advance cursor to argument placeholder
-            text == "(" && pos < expr.length && expr[pos] == '(' -> {
-                val nextPos = if (pos + 1 < expr.length && expr[pos + 1] == '□') pos + 1 else pos + 1
+            // If user typed '(' or '√' while at the boundary of argument placeholder, advance into it
+            (text == "(" || text == "√" || text == "sqrt(") && pos < expr.length && (expr[pos] == '(' || expr[pos] == '√') -> {
+                val targetIdx = expr.indexOf('(', pos)
+                val nextPos = if (targetIdx != -1) {
+                    if (targetIdx + 1 < expr.length && expr[targetIdx + 1] == '□') targetIdx + 1 else targetIdx + 1
+                } else pos + 1
                 Pair(expr, nextPos)
             }
             // Smart step-over for binary operators if cursor is right after an argument like "f(x|)"
@@ -431,13 +439,13 @@ class AdvancedCalculatorViewModel(
             }
             "xⁿ", "x□", "□^□" -> insertCharacter("^")
             "x²", "□²" -> insertCharacter("^2")
-            "ⁿ√", "ⁿ√□" -> insertCharacter("ʸ√")
+            "ⁿ√", "ⁿ√□", "□√□", "ʸ√" -> insertCharacter("ⁿ√□")
             "√", "√□" -> insertCharacter("sqrt(")
             "□/□" -> insertCharacter("/")
             "|x|", "|□|" -> insertCharacter("|")
             "n!", "x!", "□!" -> insertCharacter("!")
             "log" -> insertCharacter("log(")
-            "log_□", "log_", "logₙ", "logn" -> insertCharacter("log_")
+            "log_□", "log_", "logₙ", "logn", "log₍□₎" -> insertCharacter("log_□")
             "ln" -> insertCharacter("ln(")
             "f(x)" -> openCatalog()
             "CATALOG" -> openCatalog()

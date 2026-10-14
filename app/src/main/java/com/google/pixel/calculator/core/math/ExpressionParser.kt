@@ -99,6 +99,10 @@ class ExpressionParser {
             val normalDigits = supDigits.map { superscriptMap[it] ?: it }.joinToString("")
             "(${normalDigits})ʸ√"
         }
+        // Support n-th root entered as [number]√(expr) or ([expr])√(expr)
+        s = Regex("""([0-9a-zA-Z\.]+)√\(([^\)]*)\)""").replace(s) { m ->
+            "(${m.groupValues[1]})ʸ√(${m.groupValues[2]})"
+        }
         return s
     }
 
