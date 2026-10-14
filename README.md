@@ -1,0 +1,132 @@
+# Pixel Calculator 📐✨
+
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Android Min SDK](https://img.shields.io/badge/Min%20SDK-34-brightgreen.svg)](https://developer.android.com/about/versions/14)
+[![Android Target SDK](https://img.shields.io/badge/Target%20SDK-35-green.svg)](https://developer.android.com/about/versions/15)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.0.0-purple.svg)](https://kotlinlang.org)
+[![Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-blueviolet.svg)](https://developer.android.com/jetpack/compose)
+
+A modern, expressive, open-source Android calculator crafted for Google Pixel devices and Android 14+. Built from the ground up using **Jetpack Compose**, **Material 3 Expressive**, and pure Kotlin, combining advanced numerical math, real-time 2D Cartesian graphing, offline unit & currency conversion, and hardware sensor tools into a cohesive experience.
+
+---
+
+## ✨ Features
+
+### 1. Standard & Scientific Calculator
+- **Instant Mathematical Evaluation**: Real-time expression parsing with support for parentheses balancing, standard operators, percentage calculations, powers, and roots.
+- **Persistent Calculation History**: Local history storage organized by timestamp with one-tap recall and clear actions.
+- **Angle Modes**: Seamless switching between Degrees (`DEG`) and Radians (`RAD`).
+- **Tactile Feedback**: Configurable haptic feedback on keypress.
+
+### 2. Advanced Math Solver & 2D Graphs
+Inspired by modern math solvers and graphing utilities:
+- **4 Thematic Keypad Tabs**:
+  - 🟣 **Algebra**: Powers, roots, log/ln, absolute values, factorials, permutations, and combinatorics.
+  - 🟢 **Trigonometry**: Sine, cosine, tangent, secant, cosecant, cotangent, hyperbolic functions, and inverses.
+  - 🔴 **Calculus**: Numerical derivatives, definite integrals (Simpson's rule), limits, and summations.
+  - 🟠 **Alphabet & Constants**: Mathematical and physical constants ($\pi$, $e$, $\varphi$, $c$, $h$, $G$), SI prefixes, and Greek letters.
+- **Multi-Equation 2D Graphing**:
+  - Interactive Cartesian coordinate system with smooth pan and centroid-anchored pinch-to-zoom.
+  - Color-coded equation badges matching curve strokes on canvas.
+  - Root, intercept, and intersection snap detection.
+  - Inequality shading ($y > f(x)$, $y \le f(x)$).
+- **Brent-Dekker Equation Solver**: Robust root finding for non-linear equations with exact interval and bracketed solution matrices.
+- **Flexible Format Modes**: Quickly cycle results through Decimal (`DEC`), Fractions (`FRAC`), Engineering notation (`ENG`), Degrees/Minutes/Seconds (`DMS`), and Polar coordinates (`POL`).
+
+### 3. Comprehensive Unit & Currency Converter
+- **17 Offline Categories**:
+  - Length, Mass / Weight, Temperature, Area, Volume, Speed, Time, Pressure, Energy, Power, Digital Data, Angle, Fuel Consumption, Cooking / Recipes, Typography, Frequency, and Currencies.
+- **Offline & Online Currency Exchange**: Pre-loaded offline exchange rates with support for automatic and manual updates.
+- **Quick Search & Swap**: Fast unit lookup with instant reciprocal conversion.
+
+### 4. Pixel Hardware Sensor Toolbox
+Integrated utility tools leveraging device sensors:
+- 🧭 **Digital Compass**: Real-time 360° magnetic heading, true north calculation, cardinal direction indicators, GPS coordinates (DMS and Decimal), altitude, and an interactive 8-figure calibration wizard.
+- 🟢 **Digital Bubble Level**: Dual-axis surface tilt measurement powered by the accelerometer with roll & pitch readouts and zero-angle alignment haptics.
+- 📏 **Calibrated Digital Ruler**: On-screen ruler with millimeter and inch scales physically calibrated to Pixel display metrics, complete with tick toggle and custom accent colors.
+
+### 5. Material You & Dynamic App Icons
+- **Dynamic Theming**: Full support for Android Dynamic Color (Material You), System Auto, Standard Light/Dark, and vibrant custom themes (**Candy Pop** and **Retro Cyber**).
+- **Dynamic Launcher Icon**: Automatically synchronizes the app launcher icon on your home screen to match your selected theme palette.
+
+---
+
+## 🛠️ Architecture & Tech Stack
+
+- **UI Layer**: 100% Jetpack Compose with Material 3 Expressive components, custom Canvas rendering for graphs and gauges.
+- **Architecture**: MVI (Model-View-Intent) with immutable states and unidirectional data flow.
+- **Language**: Kotlin 2.0 with Kotlin Compose compiler plugin.
+- **Minimum Requirements**: Android 14 (API level 34).
+- **Target SDK**: Android 15 (API level 35).
+- **Sensors**: Hardware sensor managers using `SensorManager` (Accelerometer, Magnetic Field, Rotation Vector) and `LocationManager`.
+- **Zero Heavy Dependencies**: Pure Kotlin numerical solvers and parsing engine without external heavyweight math engines.
+
+---
+
+## 🚀 Building from Source
+
+### Prerequisites
+- **Android Studio** Ladybug (2024.2.1+) or newer.
+- **JDK**: Java Development Kit 17.
+- **Android SDK**: Platforms 34 & 35 installed.
+
+### Build Steps
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/trinatilorenzo/Calcolatrice-Pixel.git
+   cd Calcolatrice-Pixel
+   ```
+
+2. **Assemble Debug APK**:
+   ```bash
+   ./gradlew assembleDebug
+   ```
+   The generated APK will be located at:
+   `app/build/outputs/apk/debug/app-debug.apk`
+
+3. **Install on a connected device / emulator**:
+   ```bash
+   ./gradlew installDebug
+   ```
+
+---
+
+## 📂 Project Structure
+
+```text
+Calcolatrice-Pixel/
+├── app/
+│   ├── build.gradle.kts           # Module build configuration
+│   ├── proguard-rules.pro         # Proguard/R8 rules for release
+│   └── src/main/
+│       ├── AndroidManifest.xml    # App manifest with dynamic launcher aliases
+│       ├── java/com/google/pixel/calculator/
+│       │   ├── MainActivity.kt    # Single activity entry point
+│       │   ├── core/
+│       │   │   ├── advanced/      # AdvancedMathEngine (Brent-Dekker, calculus)
+│       │   │   ├── math/          # ExpressionParser, MathEvaluator, AST Nodes
+│       │   │   ├── sensors/       # Compass, Level & Location managers
+│       │   │   └── utils/         # UnitConverter, Currency rates, Ruler calibration
+│       │   ├── data/              # Storage, Theme & Converter preferences
+│       │   └── ui/                # Compose screens, widgets, keypads, and themes
+│       └── res/                   # Drawables, mipmaps, fonts, and localization
+├── gradle/wrapper/                # Gradle wrapper binaries & properties
+├── build.gradle.kts               # Root Gradle configuration
+├── settings.gradle.kts            # Project settings & repositories
+├── LICENSE                        # GNU General Public License v3.0
+└── README.md                      # Project documentation
+```
+
+---
+
+## 📄 License
+
+This project is licensed under the terms of the **GNU General Public License v3.0** (GPL-3.0). See the [LICENSE](LICENSE) file for complete details.
+
+---
+
+## 👤 Author
+
+Developed by **Lorenzo Trinati**.  
+Contributions, suggestions, and pull requests are warmly welcome!
