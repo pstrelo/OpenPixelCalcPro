@@ -819,11 +819,6 @@ private fun AlphabetKeypadGrid(
     val fnBg = if (isDark) MathSolverTheme.alphabetFunctionContainer else tabAccent.copy(alpha = 0.12f)
     val fnColor = if (isDark) MathSolverTheme.alphabetFunctionContent else Color(0xFFC2410C)
 
-    // Orange highlighted style for functions (f, g, h) and function argument (x)
-    val orangeBg = if (isDark) Color(0xFF43281C) else Color(0xFFFFEDD5)
-    val orangeColor = if (isDark) Color(0xFFFB923C) else Color(0xFFEA580C)
-    val varSpecialBg = if (isDark) Color(0xFF1E3A5F) else Color(0xFFE0F2FE)
-    val varSpecialColor = if (isDark) Color(0xFF7DD3FC) else Color(0xFF0284C7)
     val opBg = if (isDark) Color(0xFF33384B) else Color(0xFFE2E8F0)
     val opColor = if (isDark) Color(0xFFF1F5F9) else Color(0xFF0F172A)
 
@@ -875,13 +870,11 @@ private fun AlphabetKeypadGrid(
                             SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey(key) }
                         }
                     }
-                    // Col 2: f, g, h, i, j (f, g, h highlighted in orange)
+                    // Col 2: f, g, h, i, j
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
-                        SquircleKey("f", orangeBg, orangeColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 16.sp) { onKey("f") }
-                        SquircleKey("g", orangeBg, orangeColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 16.sp) { onKey("g") }
-                        SquircleKey("h", orangeBg, orangeColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 16.sp) { onKey("h") }
-                        SquircleKey("i", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey("i") }
-                        SquircleKey("j", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey("j") }
+                        listOf("f", "g", "h", "i", "j").forEach { key ->
+                            SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey(key) }
+                        }
                     }
                     // Col 3: k, l, m, n, o
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
@@ -895,18 +888,16 @@ private fun AlphabetKeypadGrid(
                             SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey(key) }
                         }
                     }
-                    // Col 5: u, v, w, x, y (x, y highlighted as variables)
+                    // Col 5: u, v, w, x, y
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
-                        SquircleKey("u", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey("u") }
-                        SquircleKey("v", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey("v") }
-                        SquircleKey("w", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey("w") }
-                        SquircleKey("x", varSpecialBg, varSpecialColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 16.sp) { onKey("x") }
-                        SquircleKey("y", varSpecialBg, varSpecialColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 16.sp) { onKey("y") }
+                        listOf("u", "v", "w", "x", "y").forEach { key ->
+                            SquircleKey(key, fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey(key) }
+                        }
                     }
-                    // Col 6: z, (x), ( ), +, DEL (x key highlighted in orange)
+                    // Col 6: z, (x), ( ), +, DEL
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
                         SquircleKey("z", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey("z") }
-                        SquircleKey("(x)", orangeBg, orangeColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 13.sp) { onKey("(x)") }
+                        SquircleKey("(x)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 13.sp) { onKey("(x)") }
                         SquircleKey("( )", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 13.sp) { onKey("()") }
                         SquircleKey("+", opBg, opColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 16.sp) { onKey("+") }
                         SquareSystemKey(
