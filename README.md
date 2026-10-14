@@ -9,7 +9,7 @@
 
 A modern, expressive, open-source Android calculator crafted for Google Pixel devices and Android 14+. Built from the ground up using **Jetpack Compose**, **Material 3 Expressive**, and pure Kotlin, combining advanced numerical math, real-time 2D Cartesian graphing, offline unit & currency conversion, and hardware sensor tools into a cohesive experience.
 
-*On device launcher, the app displays cleanly as **"Calculator"**.*
+*On device launcher, the app displays cleanly as **"OpenPixelCalcPro"**.*
 
 ---
 
