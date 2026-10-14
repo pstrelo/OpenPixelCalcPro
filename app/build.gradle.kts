@@ -9,14 +9,21 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.google.pixel.calculator"
-        minSdk = 26
+        applicationId = "com.openpixelcalcpro"
+        minSdk = 34
         targetSdk = 35
-        versionCode = 4
-        versionName = "1.0.3"
+        versionCode = 5
+        versionName = "1.0.4"
 
         vectorDrawables {
             useSupportLibrary = true
+        }
+    }
+
+    signingConfigs {
+        getByName("debug") {
+            enableV1Signing = true
+            enableV2Signing = true
         }
     }
 
