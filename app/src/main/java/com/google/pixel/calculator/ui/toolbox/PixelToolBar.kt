@@ -434,27 +434,57 @@ fun PixelKeypadToolRow(
 ) {
     val haptic = LocalHapticFeedback.current
 
-    val pillWeight = if (!isLandscape && onEquals != null) 3f else 2f
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val totalCols = if (!isLandscape && onEquals != null) 4 else 3
+        val spacingCount = totalCols - 1
+        val btnWidth = (maxWidth - (spacing * spacingCount)) / totalCols
+        val remainingWidth = maxWidth - btnWidth - spacing
 
-    Box(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(spacing),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Key 1 (bottom left): tool toggle button
-            PixelToolToggleButton(
-                currentScreen = currentScreen,
-                isExpanded = isExpanded,
-                height = btnHeight,
-                onClick = onToggleExpand,
-                modifier = Modifier.weight(1f)
-            )
+            // Key 1 (bottom left): tool toggle button container
+            Box(
+                modifier = Modifier
+                    .width(btnWidth)
+                    .height(btnHeight),
+                contentAlignment = Alignment.Center
+            ) {
+                val circleSize = (minOf(btnWidth, btnHeight) - 4.dp).coerceAtLeast(40.dp)
+                val targetWidth = if (isExpanded) btnWidth else circleSize
+                val targetHeight = if (isExpanded) btnHeight else circleSize
+                val animatedWidth by animateDpAsState(
+                    targetValue = targetWidth,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMediumLow
+                    ),
+                    label = "ToolButtonWidth"
+                )
+                val animatedHeight by animateDpAsState(
+                    targetValue = targetHeight,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMediumLow
+                    ),
+                    label = "ToolButtonHeight"
+                )
+
+                PixelToolToggleButton(
+                    currentScreen = currentScreen,
+                    isExpanded = isExpanded,
+                    height = animatedHeight,
+                    onClick = onToggleExpand,
+                    modifier = Modifier.size(width = animatedWidth, height = animatedHeight)
+                )
+            }
 
             // Keys under the pill container with exit/enter animation
             Box(
                 modifier = Modifier
-                    .weight(pillWeight)
+                    .width(remainingWidth)
                     .height(btnHeight),
                 contentAlignment = Alignment.Center
             ) {
@@ -523,7 +553,7 @@ fun PixelKeypadToolRow(
             horizontalArrangement = Arrangement.spacedBy(spacing),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.width(btnWidth))
 
             androidx.compose.animation.AnimatedVisibility(
                 visible = isExpanded,
@@ -541,7 +571,7 @@ fun PixelKeypadToolRow(
                     ),
                     transformOrigin = TransformOrigin(0f, 0.5f)
                 ),
-                modifier = Modifier.weight(pillWeight)
+                modifier = Modifier.width(remainingWidth)
             ) {
                 PixelToolPillBar(
                     currentScreen = currentScreen,
