@@ -146,14 +146,14 @@ class AdvancedCalculatorViewModel(
     fun moveCursorLeft() {
         val curIndex = _uiState.value.activeEquationIndex
         val eq = _uiState.value.equations.getOrNull(curIndex) ?: return
-        val newPos = (eq.cursorPosition - 1).coerceAtLeast(0)
+        val newPos = Formula2DParser.getPrevCursorPosition(eq.expression, eq.cursorPosition)
         updateEquationAt(curIndex) { it.copy(cursorPosition = newPos) }
     }
 
     fun moveCursorRight() {
         val curIndex = _uiState.value.activeEquationIndex
         val eq = _uiState.value.equations.getOrNull(curIndex) ?: return
-        val newPos = (eq.cursorPosition + 1).coerceAtMost(eq.expression.length)
+        val newPos = Formula2DParser.getNextCursorPosition(eq.expression, eq.cursorPosition)
         updateEquationAt(curIndex) { it.copy(cursorPosition = newPos) }
     }
 
@@ -171,6 +171,38 @@ class AdvancedCalculatorViewModel(
         val pos = eq.cursorPosition.coerceIn(0, expr.length)
 
         val (newExpr, newPos) = when {
+            text == "/" || text == "□/□" -> {
+                // If cursor is at the end of numerator in an existing fraction, typing '/' drops down to denominator
+                val segments = Formula2DParser.parse(expr)
+                val inFraction = segments.filterIsInstance<FormulaSegment.FractionSegment>().firstOrNull { pos == it.numEnd }
+                if (inFraction != null) {
+                    Pair(expr, inFraction.denStart)
+                } else if (pos > 0 && (expr[pos - 1].isLetterOrDigit() || expr[pos - 1] in ")πe")) {
+                    // Preceded by a token: insert '/' and place cursor in denominator
+                    val updated = expr.substring(0, pos) + "/" + expr.substring(pos)
+                    Pair(updated, pos + 1)
+                } else if (expr.isEmpty()) {
+                    Pair("1/", 2)
+                } else {
+                    val updated = expr.substring(0, pos) + "/" + expr.substring(pos)
+                    Pair(updated, pos + 1)
+                }
+            }
+            text == "^" || text == "□ⁿ" || text == "xⁿ" -> {
+                // Power template: insert ^() with cursor inside
+                val updated = expr.substring(0, pos) + "^()" + expr.substring(pos)
+                Pair(updated, pos + 2)
+            }
+            text == "²" || text == "□²" || text == "x²" -> {
+                // Square template: insert ^(2) with cursor placed after ')' on baseline
+                val updated = expr.substring(0, pos) + "^(2)" + expr.substring(pos)
+                Pair(updated, pos + 4)
+            }
+            text == "sqrt(" || text == "√" || text == "√x" || text == "√□" -> {
+                // Radical template: insert sqrt() with cursor inside
+                val updated = expr.substring(0, pos) + "sqrt()" + expr.substring(pos)
+                Pair(updated, pos + 5)
+            }
             text == "log_" || text == "log_□" || text == "log₍□₎" -> {
                 // Inserts log_() template with cursor positioned right after log_ for typing the base
                 val updated = expr.substring(0, pos) + "log_()" + expr.substring(pos)
@@ -186,12 +218,7 @@ class AdvancedCalculatorViewModel(
                 val updated = expr.substring(0, pos) + "(x)" + expr.substring(pos)
                 Pair(updated, pos + 3)
             }
-            text == "()" || text == "( )" -> {
-                // Auto-close: insert "()" and place cursor inside
-                val updated = expr.substring(0, pos) + "()" + expr.substring(pos)
-                Pair(updated, pos + 1)
-            }
-            text == "(" -> {
+            text == "()" || text == "( )" || text == "(" -> {
                 // Auto-close: insert "()" and place cursor inside
                 val updated = expr.substring(0, pos) + "()" + expr.substring(pos)
                 Pair(updated, pos + 1)
@@ -209,14 +236,6 @@ class AdvancedCalculatorViewModel(
             pos < expr.length && expr[pos] == '□' -> {
                 val updated = expr.substring(0, pos) + text + expr.substring(pos + 1)
                 Pair(updated, pos + text.length)
-            }
-            // If user typed '(' or '√' while at the boundary of argument placeholder, advance into it
-            (text == "(" || text == "√" || text == "sqrt(") && pos < expr.length && (expr[pos] == '(' || expr[pos] == '√') -> {
-                val targetIdx = expr.indexOf('(', pos)
-                val nextPos = if (targetIdx != -1) {
-                    if (targetIdx + 1 < expr.length && expr[targetIdx + 1] == '□') targetIdx + 1 else targetIdx + 1
-                } else pos + 1
-                Pair(expr, nextPos)
             }
             // Smart step-over for binary operators if cursor is right after an argument like "f(x|)"
             pos < expr.length && expr[pos] == ')' && text in listOf("+", "-", "*", "/", "×", "÷", "^", "=") &&
@@ -299,6 +318,46 @@ class AdvancedCalculatorViewModel(
                 updateGraphForActiveEquation()
                 return
             }
+        }
+
+        // Smart template deletion: if inside empty ^() or sqrt()
+        if (pos >= 2 && expr.substring(pos - 2, pos) == "^(" && pos < expr.length && expr[pos] == ')') {
+            val newExpr = expr.substring(0, pos - 2) + expr.substring(pos + 1)
+            val newPos = pos - 2
+            val hasIneq = listOf("<=", ">=", "≤", "≥", "<", ">").any { newExpr.contains(it) }
+            updateEquationAt(curIndex) {
+                it.copy(
+                    expression = newExpr,
+                    cursorPosition = newPos,
+                    formattedResult = "",
+                    lastSolveResult = null,
+                    roots = emptyList(),
+                    inequality2D = if (hasIneq) it.inequality2D else null,
+                    shadedIntervals = if (hasIneq) it.shadedIntervals else emptyList(),
+                    isError = false
+                )
+            }
+            updateGraphForActiveEquation()
+            return
+        }
+        if (pos >= 5 && expr.substring(pos - 5, pos) == "sqrt(" && pos < expr.length && expr[pos] == ')') {
+            val newExpr = expr.substring(0, pos - 5) + expr.substring(pos + 1)
+            val newPos = pos - 5
+            val hasIneq = listOf("<=", ">=", "≤", "≥", "<", ">").any { newExpr.contains(it) }
+            updateEquationAt(curIndex) {
+                it.copy(
+                    expression = newExpr,
+                    cursorPosition = newPos,
+                    formattedResult = "",
+                    lastSolveResult = null,
+                    roots = emptyList(),
+                    inequality2D = if (hasIneq) it.inequality2D else null,
+                    shadedIntervals = if (hasIneq) it.shadedIntervals else emptyList(),
+                    isError = false
+                )
+            }
+            updateGraphForActiveEquation()
+            return
         }
 
         // Multi-character token handling: if preceded by " = ", delete all 3 characters

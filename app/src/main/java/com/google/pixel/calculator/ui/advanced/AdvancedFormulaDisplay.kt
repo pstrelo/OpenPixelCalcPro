@@ -10,8 +10,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.animation.core.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -309,7 +311,11 @@ fun SolutionMatrixBracket(
 }
 
 /**
- * Renders formulas with superscript exponents (x², xⁿ), 2D fractions, and dynamic in-place cursor.
+ * Renders 2D math formulas with:
+ * - 2D Fractions (numerator over denominator with horizontal fraction bar)
+ * - Elevated exponents with halved cursor height
+ * - Radicals with root overbar
+ * - Dynamic blinking cursor positioned exactly in the active math block
  */
 @Composable
 fun FormulaMath2DRenderer(
@@ -322,6 +328,7 @@ fun FormulaMath2DRenderer(
     val textColor = if (isDark) Color.White else CalculatorTheme.colors.onSurface
     val placeholderColor = if (isDark) Color(0xFF64748B) else CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.6f)
     val divBarColor = if (isDark) Color(0xFFE2E8F0) else CalculatorTheme.colors.onSurfaceVariant
+    val cursorColor = Color(0xFF60A5FA)
 
     if (expression.isBlank()) {
         Row(
@@ -329,12 +336,7 @@ fun FormulaMath2DRenderer(
             modifier = modifier
         ) {
             if (isActive) {
-                Box(
-                    modifier = Modifier
-                        .width(2.dp)
-                        .height(18.dp)
-                        .background(Color(0xFF60A5FA), RoundedCornerShape(1.dp))
-                )
+                BlinkingCursor(height = 20.dp, color = cursorColor)
                 Spacer(modifier = Modifier.width(4.dp))
             }
             Text(
@@ -346,82 +348,255 @@ fun FormulaMath2DRenderer(
         return
     }
 
-    // Linear with exact in-place cursor positioning for all expressions including division/fractions
     val safeCursor = cursorPosition.coerceIn(0, expression.length)
-    val beforeCursor = expression.substring(0, safeCursor)
-    val afterCursor = expression.substring(safeCursor)
+    val segments = Formula2DParser.parse(expression)
+
+    // Check if cursor was rendered inside any segment
+    var cursorRendered = false
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
     ) {
-        val formattedBefore = formatExponents(beforeCursor)
-        val formattedAfter = formatExponents(afterCursor)
+        segments.forEach { seg ->
+            when (seg) {
+                is FormulaSegment.SimpleText -> {
+                    val inSeg = isActive && safeCursor >= seg.startOffset && safeCursor < seg.endOffset
+                    if (inSeg) {
+                        cursorRendered = true
+                        val localPos = safeCursor - seg.startOffset
+                        val before = seg.text.substring(0, localPos)
+                        val after = seg.text.substring(localPos)
+                        if (before.isNotEmpty()) {
+                            Text(text = before, color = textColor, fontSize = 16.sp)
+                        }
+                        BlinkingCursor(height = 20.dp, color = cursorColor)
+                        if (after.isNotEmpty()) {
+                            Text(text = after, color = textColor, fontSize = 16.sp)
+                        }
+                    } else {
+                        Text(text = seg.text, color = textColor, fontSize = 16.sp)
+                    }
+                }
 
-        if (formattedBefore.isNotEmpty()) {
-            Text(
-                text = formattedBefore,
-                color = textColor,
-                fontSize = 16.sp,
-                fontFamily = FontFamily.SansSerif,
-                fontWeight = FontWeight.Normal
-            )
+                is FormulaSegment.PowerSegment -> {
+                    Row(
+                        verticalAlignment = Alignment.Bottom,
+                        modifier = Modifier.padding(horizontal = 1.dp)
+                    ) {
+                        // Base on baseline
+                        val inBase = isActive && safeCursor >= seg.baseStart && safeCursor < seg.baseEnd
+                        if (inBase) {
+                            cursorRendered = true
+                            val localPos = safeCursor - seg.baseStart
+                            val before = seg.baseText.substring(0, localPos)
+                            val after = seg.baseText.substring(localPos)
+                            if (before.isNotEmpty()) Text(text = before, color = textColor, fontSize = 16.sp)
+                            BlinkingCursor(height = 20.dp, color = cursorColor)
+                            if (after.isNotEmpty()) Text(text = after, color = textColor, fontSize = 16.sp)
+                        } else {
+                            Text(text = seg.baseText, color = textColor, fontSize = 16.sp)
+                        }
+
+                        // Elevated exponent (dimezzato in altezza e dimensione)
+                        val inExp = isActive && safeCursor >= seg.expStart && safeCursor <= seg.expEnd
+                        Box(
+                            modifier = Modifier.padding(bottom = 8.dp),
+                            contentAlignment = Alignment.BottomCenter
+                        ) {
+                            if (inExp) {
+                                cursorRendered = true
+                                val localPos = (safeCursor - seg.expStart).coerceIn(0, seg.expText.length)
+                                val before = seg.expText.substring(0, localPos)
+                                val after = seg.expText.substring(localPos)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    if (before.isNotEmpty()) Text(text = before, color = textColor, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                                    BlinkingCursor(height = 10.dp, color = cursorColor)
+                                    if (after.isNotEmpty()) Text(text = after, color = textColor, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                                }
+                            } else {
+                                Text(
+                                    text = if (seg.expText.isEmpty()) "□" else seg.expText,
+                                    color = if (seg.expText.isEmpty()) placeholderColor else textColor,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
+                }
+
+                is FormulaSegment.FractionSegment -> {
+                    val inNum = isActive && safeCursor >= seg.numStart && safeCursor <= seg.numEnd
+                    val inDen = isActive && (safeCursor >= seg.denStart && safeCursor <= seg.denEnd || (seg.denText.isEmpty() && safeCursor == seg.slashPos))
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .width(IntrinsicSize.Max)
+                            .padding(horizontal = 4.dp)
+                    ) {
+                        // Numerator
+                        Box(
+                            modifier = Modifier
+                                .padding(bottom = 1.dp)
+                                .wrapContentWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (inNum) {
+                                cursorRendered = true
+                                val localPos = (safeCursor - seg.numStart).coerceIn(0, seg.numText.length)
+                                val before = seg.numText.substring(0, localPos)
+                                val after = seg.numText.substring(localPos)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    if (before.isNotEmpty()) Text(text = before, color = textColor, fontSize = 14.sp)
+                                    BlinkingCursor(height = 12.dp, color = cursorColor)
+                                    if (after.isNotEmpty()) Text(text = after, color = textColor, fontSize = 14.sp)
+                                }
+                            } else {
+                                Text(
+                                    text = if (seg.numText.isEmpty()) "□" else seg.numText,
+                                    color = if (seg.numText.isEmpty()) placeholderColor else textColor,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+
+                        // Horizontal Fraction Bar
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(1.5.dp)
+                                .background(divBarColor, RoundedCornerShape(1.dp))
+                        )
+
+                        // Denominator
+                        Box(
+                            modifier = Modifier
+                                .padding(top = 1.dp)
+                                .wrapContentWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (inDen) {
+                                cursorRendered = true
+                                val localPos = (safeCursor - seg.denStart).coerceIn(0, seg.denText.length)
+                                val before = seg.denText.substring(0, localPos)
+                                val after = seg.denText.substring(localPos)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    if (before.isNotEmpty()) Text(text = before, color = textColor, fontSize = 14.sp)
+                                    BlinkingCursor(height = 12.dp, color = cursorColor)
+                                    if (after.isNotEmpty()) Text(text = after, color = textColor, fontSize = 14.sp)
+                                }
+                            } else {
+                                Text(
+                                    text = if (seg.denText.isEmpty()) "□" else seg.denText,
+                                    color = if (seg.denText.isEmpty()) placeholderColor else textColor,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    }
+                }
+
+                is FormulaSegment.RadicalSegment -> {
+                    val inRad = isActive && safeCursor >= seg.innerStart && safeCursor <= seg.innerEnd
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 2.dp)
+                    ) {
+                        Text(
+                            text = "√",
+                            fontSize = 18.sp,
+                            color = textColor,
+                            fontWeight = FontWeight.Light
+                        )
+                        Column(modifier = Modifier.width(IntrinsicSize.Max)) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(1.dp)
+                                    .background(textColor)
+                            )
+                            Box(modifier = Modifier.padding(top = 1.dp, start = 2.dp, end = 2.dp)) {
+                                if (inRad) {
+                                    cursorRendered = true
+                                    val localPos = (safeCursor - seg.innerStart).coerceIn(0, seg.innerText.length)
+                                    val before = seg.innerText.substring(0, localPos)
+                                    val after = seg.innerText.substring(localPos)
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        if (before.isNotEmpty()) Text(text = before, color = textColor, fontSize = 14.sp)
+                                        BlinkingCursor(height = 12.dp, color = cursorColor)
+                                        if (after.isNotEmpty()) Text(text = after, color = textColor, fontSize = 14.sp)
+                                    }
+                                } else {
+                                    Text(
+                                        text = if (seg.innerText.isEmpty()) "□" else seg.innerText,
+                                        color = if (seg.innerText.isEmpty()) placeholderColor else textColor,
+                                        fontSize = 14.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                is FormulaSegment.AbsSegment -> {
+                    val inAbs = isActive && safeCursor >= seg.innerStart && safeCursor <= seg.innerEnd
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 2.dp)
+                    ) {
+                        Text(text = "|", fontSize = 18.sp, color = textColor, fontWeight = FontWeight.Bold)
+                        Box(modifier = Modifier.padding(horizontal = 2.dp)) {
+                            if (inAbs) {
+                                cursorRendered = true
+                                val localPos = (safeCursor - seg.innerStart).coerceIn(0, seg.innerText.length)
+                                val before = seg.innerText.substring(0, localPos)
+                                val after = seg.innerText.substring(localPos)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    if (before.isNotEmpty()) Text(text = before, color = textColor, fontSize = 16.sp)
+                                    BlinkingCursor(height = 20.dp, color = cursorColor)
+                                    if (after.isNotEmpty()) Text(text = after, color = textColor, fontSize = 16.sp)
+                                }
+                            } else {
+                                Text(text = seg.innerText, color = textColor, fontSize = 16.sp)
+                            }
+                        }
+                        Text(text = "|", fontSize = 18.sp, color = textColor, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
         }
 
-        if (isActive) {
-            Box(
-                modifier = Modifier
-                    .width(2.dp)
-                    .height(20.dp)
-                    .background(Color(0xFF60A5FA), RoundedCornerShape(1.dp))
-            )
-        }
-
-        if (formattedAfter.isNotEmpty()) {
-            Text(
-                text = formattedAfter,
-                color = textColor,
-                fontSize = 16.sp,
-                fontFamily = FontFamily.SansSerif,
-                fontWeight = FontWeight.Normal
-            )
+        // If cursor was at the end of the entire expression or after the last block
+        if (isActive && (!cursorRendered || safeCursor == expression.length)) {
+            BlinkingCursor(height = 20.dp, color = cursorColor)
         }
     }
 }
 
-private fun formatExponents(text: String): String {
-    val subscriptMap = mapOf(
-        '0' to '₀', '1' to '₁', '2' to '₂', '3' to '₃', '4' to '₄',
-        '5' to '₅', '6' to '₆', '7' to '₇', '8' to '₈', '9' to '₉',
-        'n' to 'ₙ', 'b' to 'ᵦ', 'x' to 'ₓ', 'y' to 'ᵧ'
+@Composable
+fun BlinkingCursor(
+    height: androidx.compose.ui.unit.Dp,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "cursor")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 0f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            animation = androidx.compose.animation.core.tween(500),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+        ),
+        label = "cursorAlpha"
     )
-    val formattedLog = Regex("""log_([0-9a-zA-Z]+)""").replace(text) { m ->
-        val rawBase = m.groupValues[1]
-        val subBase = rawBase.map { subscriptMap[it] ?: it }.joinToString("")
-        "log$subBase"
-    }
 
-    val superscriptMap = mapOf(
-        '0' to '⁰', '1' to '¹', '2' to '²', '3' to '³', '4' to '⁴',
-        '5' to '⁵', '6' to '⁶', '7' to '⁷', '8' to '⁸', '9' to '⁹',
-        '+' to '⁺', '-' to '⁻', '=' to '⁼', '(' to '⁽', ')' to '⁾',
-        'n' to 'ⁿ', 'i' to 'ⁱ', 'x' to 'ˣ', 'y' to 'ʸ', 'a' to 'ᵃ', 'b' to 'ᵇ'
+    Box(
+        modifier = modifier
+            .width(2.dp)
+            .height(height)
+            .background(color.copy(alpha = alpha), RoundedCornerShape(1.dp))
     )
-    // 1. Parenthesized exponents: ^(2+x) -> ²⁺ˣ
-    val formattedParenthesized = Regex("""\^\(([^)]+)\)""").replace(formattedLog) { m ->
-        val rawExp = m.groupValues[1]
-        rawExp.map { superscriptMap[it] ?: it }.joinToString("")
-    }
-    // 2. Simple exponent: ^ followed by digits (optionally signed, like ^-1) or single variable
-    val formattedExponents = Regex("""\^(-?[0-9]+|[a-zA-Z])""").replace(formattedParenthesized) { m ->
-        val rawExp = m.groupValues[1]
-        rawExp.map { superscriptMap[it] ?: it }.joinToString("")
-    }
-
-    return formattedExponents
-        .replace("sqrt(", "√(")
-        .replace("logn(", "logₙ(")
-        .replace("log_□", "log")
-        .replace("log_", "log")
-        .replace("□", "")
 }
