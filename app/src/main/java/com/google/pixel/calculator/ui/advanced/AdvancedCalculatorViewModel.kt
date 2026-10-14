@@ -944,49 +944,76 @@ class AdvancedCalculatorViewModel(
             val computedMap = mutableMapOf<Any, ComputedEquationData>()
 
             for ((idx, entry) in state.equations.withIndex()) {
-                val plotExpr = preparePlotExpression(entry.expression)
-                if (plotExpr.isBlank()) {
+                val rawExpr = entry.expression.trim()
+                if (rawExpr.isBlank()) {
                     computedMap[entry.id] = ComputedEquationData(emptyList(), null, emptyList())
                     continue
                 }
 
-                val fastCustomFns = getCustomFunctionsFast(excludeIndex = idx, isRadians = state.isRadians, customVars = doubleVars)
-                val foundIneq = ineqOps.firstOrNull { entry.expression.contains(it) }
-                val ineq2DInfo = if (foundIneq != null) engine.parseInequality2D(entry.expression, foundIneq, customVars) else null
-                val ineq2DData = ineq2DInfo?.let {
-                    Inequality2DData(
-                        boundaryExpr = it.boundaryExpr,
-                        isAbove = it.isAbove,
-                        isStrict = it.isStrict
-                    )
+                // If user typed e.g. "> 2" or ">= x", treat as 2D inequality "y > 2"
+                val normalizedExpr = if (ineqOps.any { rawExpr.startsWith(it) }) {
+                    "y $rawExpr"
+                } else {
+                    rawExpr
                 }
 
-                // If 1D inequality, calculate real-time shaded intervals; otherwise emptyList()
-                val intervals = if (foundIneq != null && ineq2DData == null) {
-                    try {
-                        val ineqRes = engine.solve(entry.expression, isRadians = state.isRadians, customVariables = customVars)
-                        if (ineqRes is AdvancedMathEngine.SolveResult.InequalityIntervals) {
-                            ineqRes.intervals
-                        } else {
+                val cleanExpr = engine.stripFunctionDefinition(normalizedExpr.replace("θ", "x")).trim()
+                val foundIneq = ineqOps.firstOrNull { cleanExpr.contains(it) }
+
+                if (foundIneq != null) {
+                    val ineq2DInfo = engine.parseInequality2D(cleanExpr, foundIneq, customVars)
+                    if (ineq2DInfo != null) {
+                        // 2D inequality (e.g. y > x, y >= 2, x + y > 3)
+                        val ineq2DData = Inequality2DData(
+                            boundaryExpr = ineq2DInfo.boundaryExpr,
+                            isAbove = ineq2DInfo.isAbove,
+                            isStrict = ineq2DInfo.isStrict
+                        )
+                        val fastCustomFns = getCustomFunctionsFast(excludeIndex = idx, isRadians = state.isRadians, customVars = doubleVars)
+                        val pts = engine.sampleFunction(
+                            expr = ineq2DInfo.boundaryExpr,
+                            xMin = xMin,
+                            xMax = xMax,
+                            steps = 1100,
+                            isRadians = state.isRadians,
+                            customVariables = customVars,
+                            fastCustomFunctions = fastCustomFns
+                        )
+                        computedMap[entry.id] = ComputedEquationData(pts, ineq2DData, emptyList())
+                    } else {
+                        // 1D inequality in x (e.g. x > 2, x <= -1, x^2 - 4 <= 0)
+                        val intervals = try {
+                            val ineqRes = engine.solveInequality(cleanExpr, foundIneq, isRadians = state.isRadians, customVariables = customVars)
+                            if (ineqRes is AdvancedMathEngine.SolveResult.InequalityIntervals) {
+                                ineqRes.intervals
+                            } else {
+                                emptyList()
+                            }
+                        } catch (e: Exception) {
                             emptyList()
                         }
-                    } catch (e: Exception) {
-                        emptyList()
+                        computedMap[entry.id] = ComputedEquationData(emptyList(), null, intervals)
                     }
                 } else {
-                    emptyList()
-                }
+                    // Standard function / equation
+                    val plotExpr = preparePlotExpression(cleanExpr)
+                    if (plotExpr.isBlank()) {
+                        computedMap[entry.id] = ComputedEquationData(emptyList(), null, emptyList())
+                        continue
+                    }
 
-                val pts = engine.sampleFunction(
-                    expr = plotExpr,
-                    xMin = xMin,
-                    xMax = xMax,
-                    steps = 1100,
-                    isRadians = state.isRadians,
-                    customVariables = customVars,
-                    fastCustomFunctions = fastCustomFns
-                )
-                computedMap[entry.id] = ComputedEquationData(pts, ineq2DData, intervals)
+                    val fastCustomFns = getCustomFunctionsFast(excludeIndex = idx, isRadians = state.isRadians, customVars = doubleVars)
+                    val pts = engine.sampleFunction(
+                        expr = plotExpr,
+                        xMin = xMin,
+                        xMax = xMax,
+                        steps = 1100,
+                        isRadians = state.isRadians,
+                        customVariables = customVars,
+                        fastCustomFunctions = fastCustomFns
+                    )
+                    computedMap[entry.id] = ComputedEquationData(pts, null, emptyList())
+                }
             }
 
             // Safe update by Equation ID to prevent wiping concurrent user edits

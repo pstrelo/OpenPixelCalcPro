@@ -152,34 +152,42 @@ fun AdvancedGraphCanvas(
             val anyEqHasIntervals = state.equations.any { it.shadedIntervals.isNotEmpty() }
             if (anyEqHasIntervals) {
                 for (eq in state.equations) {
+                    val isStrict = listOf("<", ">").any { eq.expression.contains(it) } &&
+                        listOf("<=", ">=", "≤", "≥").none { eq.expression.contains(it) }
+                    val pathEffect = if (isStrict) PathEffect.dashPathEffect(floatArrayOf(16f, 10f), 0f) else null
+
                     for (interval in eq.shadedIntervals) {
                         val xLeft = viewport.mathToScreen(interval.from.toDouble(), 0.0, canvasSize).x
                         val xRight = viewport.mathToScreen(interval.to.toDouble(), 0.0, canvasSize).x
                         val leftClamped = xLeft.coerceIn(0f, width)
                         val rightClamped = xRight.coerceIn(0f, width)
 
-                        // Translucent region background matching equation color
-                        drawRect(
-                            color = eq.color.copy(alpha = 0.20f),
-                            topLeft = Offset(leftClamped, 0f),
-                            size = Size(rightClamped - leftClamped, height)
-                        )
+                        if (rightClamped > leftClamped) {
+                            // Translucent region background matching equation color
+                            drawRect(
+                                color = eq.color.copy(alpha = 0.22f),
+                                topLeft = Offset(leftClamped, 0f),
+                                size = Size(rightClamped - leftClamped, height)
+                            )
+                        }
 
-                        // Vertical boundary lines matching equation color
-                        if (xLeft in 0f..width) {
+                        // Vertical boundary lines matching equation color (omit infinite bounds at +/-50)
+                        if (interval.from > -45f && xLeft in 0f..width) {
                             drawLine(
                                 color = eq.color,
                                 start = Offset(xLeft, 0f),
                                 end = Offset(xLeft, height),
-                                strokeWidth = 2.dp.toPx()
+                                strokeWidth = 2.5.dp.toPx(),
+                                pathEffect = pathEffect
                             )
                         }
-                        if (xRight in 0f..width) {
+                        if (interval.to < 45f && xRight in 0f..width) {
                             drawLine(
                                 color = eq.color,
                                 start = Offset(xRight, 0f),
                                 end = Offset(xRight, height),
-                                strokeWidth = 2.dp.toPx()
+                                strokeWidth = 2.5.dp.toPx(),
+                                pathEffect = pathEffect
                             )
                         }
                     }
