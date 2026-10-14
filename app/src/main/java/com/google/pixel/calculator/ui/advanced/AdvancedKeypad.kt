@@ -551,7 +551,7 @@ private fun AlgebraKeypadGrid(
             SquircleKey("□²", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("^2") }
             SquircleKey("□ⁿ", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("^") }
             SquircleKey("log", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth()) { onKey("log(") }
-            SquircleKey("log₍□₎", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 12.sp) { onKey("log_□") }
+            SquircleKey("log□", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 13.sp) { onKey("log_□") }
         }
 
         // Col 2: [ y ], [ □/□ ], [ √x ], [ ⁿ√□ ], [ |x| ]
@@ -758,7 +758,7 @@ private fun CalculusKeypadGrid(
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
             SquircleKey("e", fnBg, tabAccent, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 17.sp) { onKey("e") }
             SquircleKey("lim", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 13.sp) { onKey("lim(") }
-            SquircleKey("log₍□₎", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 12.sp) { onKey("log_□") }
+            SquircleKey("log□", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 13.sp) { onKey("log_□") }
             SquircleKey("rand", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 11.sp) { onKey("rand()") }
             SquircleKey("normcdf", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 9.sp) { onKey("normcdf(") }
         }
