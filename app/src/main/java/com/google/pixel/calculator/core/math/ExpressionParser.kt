@@ -103,6 +103,16 @@ class ExpressionParser {
         s = Regex("""([0-9a-zA-Z\.]+)√\(([^\)]*)\)""").replace(s) { m ->
             "(${m.groupValues[1]})ʸ√(${m.groupValues[2]})"
         }
+        // Normalize standalone superscripts (e.g. x², xⁿ, 5³) into ^(exponent)
+        val fullSuperscriptMap = mapOf(
+            '⁰' to '0', '¹' to '1', '²' to '2', '³' to '3', '⁴' to '4',
+            '⁵' to '5', '⁶' to '6', '⁷' to '7', '⁸' to '8', '⁹' to '9',
+            'ⁿ' to 'n', 'ⁱ' to 'i', 'ˣ' to 'x', 'ʸ' to 'y', 'ᵃ' to 'a', 'ᵇ' to 'b'
+        )
+        s = Regex("([⁰¹²³⁴⁵⁶⁷⁸⁹ⁿⁱˣʸᵃᵇ]+)").replace(s) { m ->
+            val normal = m.value.map { fullSuperscriptMap[it] ?: it }.joinToString("")
+            "^($normal)"
+        }
         return s
     }
 

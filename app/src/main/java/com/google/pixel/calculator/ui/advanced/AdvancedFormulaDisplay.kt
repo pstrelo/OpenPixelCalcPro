@@ -476,11 +476,18 @@ private fun formatExponents(text: String): String {
         "log$subBase"
     }
 
-    return formattedLog
-        .replace("^2", "²")
-        .replace("^3", "³")
-        .replace("^4", "⁴")
-        .replace("^5", "⁵")
+    val superscriptMap = mapOf(
+        '0' to '⁰', '1' to '¹', '2' to '²', '3' to '³', '4' to '⁴',
+        '5' to '⁵', '6' to '⁶', '7' to '⁷', '8' to '⁸', '9' to '⁹',
+        '+' to '⁺', '-' to '⁻', '=' to '⁼', '(' to '⁽', ')' to '⁾',
+        'n' to 'ⁿ', 'i' to 'ⁱ', 'x' to 'ˣ', 'y' to 'ʸ', 'a' to 'ᵃ', 'b' to 'ᵇ'
+    )
+    val formattedExponents = Regex("""\^([0-9a-zA-Z\+\-]+)""").replace(formattedLog) { m ->
+        val rawExp = m.groupValues[1]
+        rawExp.map { superscriptMap[it] ?: it }.joinToString("")
+    }
+
+    return formattedExponents
         .replace("sqrt(", "√(")
         .replace("logn(", "logₙ(")
         .replace("log_□", "log")
