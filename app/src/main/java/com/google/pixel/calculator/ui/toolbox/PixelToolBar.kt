@@ -174,7 +174,7 @@ fun PixelToolToggleButton(
     }
 
     val cornerRadius by animateDpAsState(
-        targetValue = if (isExpanded) 18.dp else (height / 2),
+        targetValue = if (isExpanded) 18.dp else if (height <= 56.dp) (height / 2) else 28.dp,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessMediumLow
@@ -223,7 +223,7 @@ fun PixelToolToggleButton(
                 imageVector = currentDestination.icon,
                 contentDescription = if (isExpanded) stringResource(R.string.close_toolbar) else stringResource(R.string.open_toolbar, titleStr),
                 tint = contentColor,
-                modifier = Modifier.size(if (height <= 48.dp) 20.dp else 26.dp)
+                modifier = Modifier.size(26.dp)
             )
         }
     }
@@ -445,41 +445,14 @@ fun PixelKeypadToolRow(
             horizontalArrangement = Arrangement.spacedBy(spacing),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Key 1 (bottom left): tool toggle button container
-            Box(
-                modifier = Modifier
-                    .width(btnWidth)
-                    .height(btnHeight),
-                contentAlignment = Alignment.Center
-            ) {
-                val circleSize = (minOf(btnWidth, btnHeight) - 4.dp).coerceAtLeast(40.dp)
-                val targetWidth = if (isExpanded) btnWidth else circleSize
-                val targetHeight = if (isExpanded) btnHeight else circleSize
-                val animatedWidth by animateDpAsState(
-                    targetValue = targetWidth,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMediumLow
-                    ),
-                    label = "ToolButtonWidth"
-                )
-                val animatedHeight by animateDpAsState(
-                    targetValue = targetHeight,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMediumLow
-                    ),
-                    label = "ToolButtonHeight"
-                )
-
-                PixelToolToggleButton(
-                    currentScreen = currentScreen,
-                    isExpanded = isExpanded,
-                    height = animatedHeight,
-                    onClick = onToggleExpand,
-                    modifier = Modifier.size(width = animatedWidth, height = animatedHeight)
-                )
-            }
+            // Key 1 (bottom left): tool toggle button
+            PixelToolToggleButton(
+                currentScreen = currentScreen,
+                isExpanded = isExpanded,
+                height = btnHeight,
+                onClick = onToggleExpand,
+                modifier = Modifier.width(btnWidth)
+            )
 
             // Keys under the pill container with exit/enter animation
             Box(
