@@ -411,7 +411,12 @@ fun FormulaMath2DRenderer(
 
             if (restPart.isNotEmpty()) {
                 Spacer(modifier = Modifier.width(6.dp))
-                RenderFormattedFormulaSegment(formatExponents(restPart), textColor)
+                Text(
+                    text = formatExponents(restPart),
+                    color = textColor,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Normal
+                )
             }
         }
     } else {
@@ -427,7 +432,15 @@ fun FormulaMath2DRenderer(
             val formattedBefore = formatExponents(beforeCursor)
             val formattedAfter = formatExponents(afterCursor)
 
-            RenderFormattedFormulaSegment(formattedBefore, textColor)
+            if (formattedBefore.isNotEmpty()) {
+                Text(
+                    text = formattedBefore,
+                    color = textColor,
+                    fontSize = 16.sp,
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.Normal
+                )
+            }
 
             if (isActive) {
                 Box(
@@ -438,35 +451,15 @@ fun FormulaMath2DRenderer(
                 )
             }
 
-            RenderFormattedFormulaSegment(formattedAfter, textColor)
-        }
-    }
-}
-
-@Composable
-private fun RenderFormattedFormulaSegment(text: String, textColor: Color) {
-    if (text.isEmpty()) return
-    val parts = text.split("□")
-    parts.forEachIndexed { index, part ->
-        if (part.isNotEmpty()) {
-            Text(
-                text = part,
-                color = textColor,
-                fontSize = 16.sp,
-                fontFamily = FontFamily.SansSerif,
-                fontWeight = FontWeight.Normal
-            )
-        }
-        if (index < parts.size - 1) {
-            // Semitransparent rounded square box for placeholder
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = 2.dp)
-                    .size(13.dp)
-                    .clip(RoundedCornerShape(3.dp))
-                    .background(textColor.copy(alpha = 0.22f))
-                    .border(1.dp, textColor.copy(alpha = 0.45f), RoundedCornerShape(3.dp))
-            )
+            if (formattedAfter.isNotEmpty()) {
+                Text(
+                    text = formattedAfter,
+                    color = textColor,
+                    fontSize = 16.sp,
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.Normal
+                )
+            }
         }
     }
 }
@@ -490,6 +483,7 @@ private fun formatExponents(text: String): String {
         .replace("^5", "⁵")
         .replace("sqrt(", "√(")
         .replace("logn(", "logₙ(")
-        .replace("log_□", "log□")
+        .replace("log_□", "log")
         .replace("log_", "log")
+        .replace("□", "")
 }

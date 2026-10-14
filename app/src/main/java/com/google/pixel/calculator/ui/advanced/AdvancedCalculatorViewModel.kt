@@ -172,14 +172,14 @@ class AdvancedCalculatorViewModel(
 
         val (newExpr, newPos) = when {
             text == "log_" || text == "log_□" || text == "log₍□₎" -> {
-                // Inserts log_□(□) template with cursor placed at the base box
-                val updated = expr.substring(0, pos) + "log_□(□)" + expr.substring(pos)
-                Pair(updated, pos + 4) // cursor inside the base placeholder '□'
+                // Inserts log_() template with cursor positioned right after log_ for typing the base
+                val updated = expr.substring(0, pos) + "log_()" + expr.substring(pos)
+                Pair(updated, pos + 4) // cursor at base position right after "log_"
             }
             text == "ⁿ√□" || text == "ʸ√" || text == "□√□" -> {
-                // Inserts □√(□) template with cursor placed at the index box
-                val updated = expr.substring(0, pos) + "□√(□)" + expr.substring(pos)
-                Pair(updated, pos) // cursor right at the index placeholder '□'
+                // Inserts √() template with cursor positioned right before √ for typing the root index
+                val updated = expr.substring(0, pos) + "√()" + expr.substring(pos)
+                Pair(updated, pos) // cursor right before '√' for typing the index
             }
             text == "(x)" -> {
                 // Quick function argument insertion: insert "(x)" and place cursor after ')'
