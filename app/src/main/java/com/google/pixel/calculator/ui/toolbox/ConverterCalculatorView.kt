@@ -191,27 +191,12 @@ fun ConverterCalculatorView(
                     }
                 },
                 title = {
-                    Column {
-                        Text(
-                            text = stringResource(R.string.tool_converter),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = CalculatorTheme.colors.onSurface
-                        )
-                        if (selectedCategory == UnitConverter.Category.CURRENCY) {
-                            Text(
-                                text = currencyRepo.getLastUpdateText(context),
-                                fontSize = 11.sp,
-                                color = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.8f)
-                            )
-                        } else {
-                            Text(
-                                text = if (selectedCategory.nameRes != 0) stringResource(selectedCategory.nameRes) else selectedCategory.displayName,
-                                fontSize = 12.sp,
-                                color = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.8f)
-                            )
-                        }
-                    }
+                    Text(
+                        text = stringResource(R.string.tool_converter),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = CalculatorTheme.colors.onSurface
+                    )
                 },
                 actions = {
                     val infiniteTransition = rememberInfiniteTransition(label = "SyncRotation")
