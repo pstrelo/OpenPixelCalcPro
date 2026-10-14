@@ -1,5 +1,6 @@
-# Pixel Calculator 📐✨
+# OpenPixelCalcPro 📐✨
 
+[![Download APK](https://img.shields.io/badge/📲_Download_APK-OpenPixelCalcPro.apk-2ea44f?style=for-the-badge&logo=android)](https://github.com/trinatilorenzo/OpenPixelCalcPro/releases/latest)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Android Min SDK](https://img.shields.io/badge/Min%20SDK-34-brightgreen.svg)](https://developer.android.com/about/versions/14)
 [![Android Target SDK](https://img.shields.io/badge/Target%20SDK-35-green.svg)](https://developer.android.com/about/versions/15)
@@ -7,6 +8,18 @@
 [![Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-blueviolet.svg)](https://developer.android.com/jetpack/compose)
 
 A modern, expressive, open-source Android calculator crafted for Google Pixel devices and Android 14+. Built from the ground up using **Jetpack Compose**, **Material 3 Expressive**, and pure Kotlin, combining advanced numerical math, real-time 2D Cartesian graphing, offline unit & currency conversion, and hardware sensor tools into a cohesive experience.
+
+*On device launcher, the app displays cleanly as **"Calculator"**.*
+
+---
+
+## 📥 Direct APK Download
+
+Ready to install immediately on your Android 14+ device:
+
+👉 **[Download OpenPixelCalcPro.apk (Latest Release)](https://github.com/trinatilorenzo/OpenPixelCalcPro/releases/latest)**
+
+*(Simply enable "Install unknown apps" when prompted by your Android system).*
 
 ---
 
@@ -24,12 +37,13 @@ Inspired by modern math solvers and graphing utilities:
   - 🟣 **Algebra**: Powers, roots, log/ln, absolute values, factorials, permutations, and combinatorics.
   - 🟢 **Trigonometry**: Sine, cosine, tangent, secant, cosecant, cotangent, hyperbolic functions, and inverses.
   - 🔴 **Calculus**: Numerical derivatives, definite integrals (Simpson's rule), limits, and summations.
-  - 🟠 **Alphabet & Constants**: Mathematical and physical constants ($\pi$, $e$, $\varphi$, $c$, $h$, $G$), SI prefixes, and Greek letters.
+  - 🟠 **Alphabet & Constants**: Mathematical and physical constants ($\pi$, $e$, $\varphi$, $c$, $h$, $G$), SI prefixes, Greek letters, and custom functions ($f, g, h, x, y$).
 - **Multi-Equation 2D Graphing**:
   - Interactive Cartesian coordinate system with smooth pan and centroid-anchored pinch-to-zoom.
   - Color-coded equation badges matching curve strokes on canvas.
   - Root, intercept, and intersection snap detection.
-  - Inequality shading ($y > f(x)$, $y \le f(x)$).
+  - Asymptote and singularity break handling without spurious connecting lines.
+  - 1D and 2D inequality interval solving with dynamic region shading ($y > f(x)$, $y \le f(x)$, $x > a$).
 - **Brent-Dekker Equation Solver**: Robust root finding for non-linear equations with exact interval and bracketed solution matrices.
 - **Flexible Format Modes**: Quickly cycle results through Decimal (`DEC`), Fractions (`FRAC`), Engineering notation (`ENG`), Degrees/Minutes/Seconds (`DMS`), and Polar coordinates (`POL`).
 
@@ -74,20 +88,20 @@ Integrated utility tools leveraging device sensors:
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/trinatilorenzo/Calcolatrice-Pixel.git
-   cd Calcolatrice-Pixel
+   git clone https://github.com/trinatilorenzo/OpenPixelCalcPro.git
+   cd OpenPixelCalcPro
    ```
 
-2. **Assemble Debug APK**:
+2. **Assemble Release APK**:
    ```bash
-   ./gradlew assembleDebug
+   ./gradlew assembleRelease
    ```
    The generated APK will be located at:
-   `app/build/outputs/apk/debug/app-debug.apk`
+   `app/build/outputs/apk/release/OpenPixelCalcPro.apk`
 
 3. **Install on a connected device / emulator**:
    ```bash
-   ./gradlew installDebug
+   ./gradlew installRelease
    ```
 
 ---
@@ -95,9 +109,9 @@ Integrated utility tools leveraging device sensors:
 ## 📂 Project Structure
 
 ```text
-Calcolatrice-Pixel/
+OpenPixelCalcPro/
 ├── app/
-│   ├── build.gradle.kts           # Module build configuration
+│   ├── build.gradle.kts           # Module build configuration (APK: OpenPixelCalcPro.apk)
 │   ├── proguard-rules.pro         # Proguard/R8 rules for release
 │   └── src/main/
 │       ├── AndroidManifest.xml    # App manifest with dynamic launcher aliases
@@ -105,7 +119,7 @@ Calcolatrice-Pixel/
 │       │   ├── MainActivity.kt    # Single activity entry point
 │       │   ├── core/
 │       │   │   ├── advanced/      # AdvancedMathEngine (Brent-Dekker, calculus)
-│       │   │   ├── math/          # ExpressionParser, MathEvaluator, AST Nodes
+│       │   │   ├── math/          # ExpressionParser, MathEvaluator, FastDoubleEvaluator
 │       │   │   ├── sensors/       # Compass, Level & Location managers
 │       │   │   └── utils/         # UnitConverter, Currency rates, Ruler calibration
 │       │   ├── data/              # Storage, Theme & Converter preferences

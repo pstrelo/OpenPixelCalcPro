@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Calcolatrice-Pixel"
+rootProject.name = "OpenPixelCalcPro"
 include(":app")

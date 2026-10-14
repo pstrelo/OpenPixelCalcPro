@@ -1,6 +1,6 @@
 <resources>
     <!-- Application Name (Italian) -->
-    <string name="app_name">Calcolatrice Pixel</string>
+    <string name="app_name">Calculator</string>
 
     <!-- Main Calculator & Top Bar -->
     <string name="calc_history_desc">Cronologia calcoli</string>

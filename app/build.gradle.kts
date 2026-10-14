@@ -53,6 +53,21 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+    base {
+        archivesName.set("OpenPixelCalcPro")
+    }
+
+    applicationVariants.all {
+        outputs.all {
+            val output = this as? com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            if (buildType.name == "release") {
+                output?.outputFileName = "OpenPixelCalcPro.apk"
+            } else {
+                output?.outputFileName = "OpenPixelCalcPro-debug.apk"
+            }
+        }
+    }
 }
 
 dependencies {
