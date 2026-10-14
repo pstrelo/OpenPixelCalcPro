@@ -96,18 +96,20 @@ fun RulerView(
     // Slider position in pixels. Defaults to 5.00 cm
     var sliderY by rememberSaveable { mutableFloatStateOf(-1f) }
 
-    // Layout dimensions (0f starts exactly at the physical top of the screen)
-    val zeroY = 0f
+    // Layout dimensions: 0 starts where 1 used to be (1 cm / 1 inch from top)
+    val zeroY = remember(selectedUnit, effectiveYdpi) {
+        if (selectedUnit == RulerUnit.INCH) {
+            RulerUtils.inchesToPixels(1f, effectiveYdpi)
+        } else {
+            RulerUtils.cmToPixels(1f, effectiveYdpi)
+        }
+    }
     val rulerWidth = 84.dp
     val rulerWidthPx = with(density) { rulerWidth.toPx() }
-    val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    val bottomToolbarClearance = with(density) {
-        ((if (isLandscape) 56.dp else 96.dp) + navBarBottom).toPx()
-    }
 
-    LaunchedEffect(effectiveYdpi) {
-        if (sliderY < 0f) {
-            val initial5cmPx = RulerUtils.cmToPixels(5.0f, effectiveYdpi)
+    LaunchedEffect(effectiveYdpi, zeroY) {
+        if (sliderY < zeroY) {
+            val initial5cmPx = zeroY + RulerUtils.cmToPixels(5.0f, effectiveYdpi)
             sliderY = initial5cmPx
         }
     }
@@ -155,9 +157,9 @@ fun RulerView(
         color = onSurfaceVariantColor
     )
 
-    // Pre-measure numbers 0..30 to eliminate allocation during drag
+    // Pre-measure numbers 0..100 to eliminate allocation during drag on all screen sizes
     val premeasuredNumbers = remember(onSurfaceVariantColor) {
-        (0..30).associateWith { num ->
+        (0..100).associateWith { num ->
             textMeasurer.measure(
                 text = AnnotatedString("$num"),
                 style = numberStyle
@@ -174,12 +176,12 @@ fun RulerView(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .pointerInput(zeroY, effectiveYdpi, bottomToolbarClearance) {
+                .pointerInput(zeroY, effectiveYdpi) {
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)
                         val downTime = System.currentTimeMillis()
                         val downPos = down.position
-                        val maxY = size.height - bottomToolbarClearance
+                        val maxY = size.height.toFloat()
                         val targetY = down.position.y.coerceIn(zeroY, maxY)
                         sliderY = targetY
 
@@ -227,7 +229,7 @@ fun RulerView(
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val width = size.width
                     val height = size.height
-                    val maxY = height - bottomToolbarClearance
+                    val maxY = height
 
                     // 1. Left vertical lane
                     drawRect(
@@ -264,14 +266,16 @@ fun RulerView(
                                 strokeWidth = 2.2.dp.toPx()
                             )
 
-                            premeasuredNumbers[i]?.let { layoutResult ->
-                                val textY = if (i == 0) y + 2.dp.toPx() else y - (layoutResult.size.height / 2f)
-                                val textX = 56.dp.toPx()
-                                drawText(
-                                    textLayoutResult = layoutResult,
-                                    topLeft = Offset(textX, textY)
-                                )
-                            }
+                            val layoutResult = premeasuredNumbers[i] ?: textMeasurer.measure(
+                                text = AnnotatedString("$i"),
+                                style = numberStyle
+                            )
+                            val textY = if (i == 0) y + 2.dp.toPx() else y - (layoutResult.size.height / 2f)
+                            val textX = 56.dp.toPx()
+                            drawText(
+                                textLayoutResult = layoutResult,
+                                topLeft = Offset(textX, textY)
+                            )
 
                             val yHalf = y + (inStepPx / 2f)
                             if (yHalf <= maxY) {
@@ -321,14 +325,16 @@ fun RulerView(
                                 strokeWidth = 2.2.dp.toPx()
                             )
 
-                            premeasuredNumbers[cm]?.let { layoutResult ->
-                                val textY = if (cm == 0) y + 2.dp.toPx() else y - (layoutResult.size.height / 2f)
-                                val textX = 56.dp.toPx()
-                                drawText(
-                                    textLayoutResult = layoutResult,
-                                    topLeft = Offset(textX, textY)
-                                )
-                            }
+                            val layoutResult = premeasuredNumbers[cm] ?: textMeasurer.measure(
+                                text = AnnotatedString("$cm"),
+                                style = numberStyle
+                            )
+                            val textY = if (cm == 0) y + 2.dp.toPx() else y - (layoutResult.size.height / 2f)
+                            val textX = 56.dp.toPx()
+                            drawText(
+                                textLayoutResult = layoutResult,
+                                topLeft = Offset(textX, textY)
+                            )
 
                             val yHalf = y + halfCmStepPx
                             if (yHalf <= maxY) {

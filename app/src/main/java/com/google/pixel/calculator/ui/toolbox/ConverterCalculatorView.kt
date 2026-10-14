@@ -361,6 +361,7 @@ fun ConverterCalculatorView(
                             pickerTarget = UnitPickerTarget.TO
                             showPicker = true
                         },
+                        explanation = converter.getConversionExplanation(topUnitCode, bottomUnitCode),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -491,16 +492,38 @@ fun ConverterCalculatorView(
             onSelectUnit = { category, unitCode ->
                 val newTop: String
                 val newBottom: String
-                if (category != selectedCategory) {
-                    selectedCategory = category
-                    val units = converter.getUnitsForCategory(category)
-                    val companion = units.firstOrNull { it.code != unitCode }?.code ?: unitCode
+                if (category == UnitConverter.Category.COMPLEX || selectedCategory == UnitConverter.Category.COMPLEX) {
+                    selectedCategory = UnitConverter.Category.COMPLEX
                     if (pickerTarget == UnitPickerTarget.FROM) {
                         newTop = unitCode
-                        newBottom = companion
+                        newBottom = bottomUnitCode
                     } else {
-                        newTop = companion
+                        newTop = topUnitCode
                         newBottom = unitCode
+                    }
+                } else if (category != selectedCategory) {
+                    val oppositeCode = if (pickerTarget == UnitPickerTarget.FROM) bottomUnitCode else topUnitCode
+                    val hasCross = converter.getConversionExplanation(unitCode, oppositeCode) != null
+                    if (hasCross) {
+                        selectedCategory = UnitConverter.Category.COMPLEX
+                        if (pickerTarget == UnitPickerTarget.FROM) {
+                            newTop = unitCode
+                            newBottom = bottomUnitCode
+                        } else {
+                            newTop = topUnitCode
+                            newBottom = unitCode
+                        }
+                    } else {
+                        selectedCategory = category
+                        val units = converter.getUnitsForCategory(category)
+                        val companion = units.firstOrNull { it.code != unitCode }?.code ?: unitCode
+                        if (pickerTarget == UnitPickerTarget.FROM) {
+                            newTop = unitCode
+                            newBottom = companion
+                        } else {
+                            newTop = companion
+                            newBottom = unitCode
+                        }
                     }
                 } else {
                     if (pickerTarget == UnitPickerTarget.FROM) {
@@ -513,7 +536,7 @@ fun ConverterCalculatorView(
                 }
                 topUnitCode = newTop
                 bottomUnitCode = newBottom
-                converterPrefs.saveSelection(category, newTop, newBottom)
+                converterPrefs.saveSelection(selectedCategory, newTop, newBottom)
             }
         )
     }

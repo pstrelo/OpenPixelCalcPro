@@ -101,6 +101,7 @@
     <string name="category_temperature">Temperatura</string>
     <string name="category_area">Area</string>
     <string name="category_volume">Volume</string>
+    <string name="category_complex">Complesse &amp; Geometriche</string>
     <string name="category_speed">Velocità</string>
     <string name="category_time">Tempo</string>
     <string name="category_pressure">Pressione</string>
