@@ -161,4 +161,16 @@ class GraphRenderingAndSamplingTest {
             }
         }
     }
+
+    @Test
+    fun testInequalityIntervalsSolvingAndEmptyOnStandardFunctions() {
+        val ineqResult = engine.solve("x > 2")
+        assertTrue("Solving x > 2 should yield InequalityIntervals", ineqResult is AdvancedMathEngine.SolveResult.InequalityIntervals)
+        val intervals = (ineqResult as AdvancedMathEngine.SolveResult.InequalityIntervals).intervals
+        assertTrue("Intervals must not be empty for x > 2", intervals.isNotEmpty())
+
+        val standardFuncResult = engine.solve("1 / x")
+        assertFalse("1/x must not produce inequality intervals", standardFuncResult is AdvancedMathEngine.SolveResult.InequalityIntervals)
+    }
 }
+

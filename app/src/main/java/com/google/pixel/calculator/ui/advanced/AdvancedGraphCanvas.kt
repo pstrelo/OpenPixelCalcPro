@@ -148,36 +148,72 @@ fun AdvancedGraphCanvas(
                 curY += gridStepPx
             }
 
-            // 2. Shaded inequality regions (Shaded Intervals)
-            for (interval in state.shadedIntervals) {
-                val xLeft = viewport.mathToScreen(interval.from.toDouble(), 0.0, canvasSize).x
-                val xRight = viewport.mathToScreen(interval.to.toDouble(), 0.0, canvasSize).x
-                val leftClamped = xLeft.coerceIn(0f, width)
-                val rightClamped = xRight.coerceIn(0f, width)
+            // 2. Shaded inequality regions (Per-Equation Shaded Intervals)
+            val anyEqHasIntervals = state.equations.any { it.shadedIntervals.isNotEmpty() }
+            if (anyEqHasIntervals) {
+                for (eq in state.equations) {
+                    for (interval in eq.shadedIntervals) {
+                        val xLeft = viewport.mathToScreen(interval.from.toDouble(), 0.0, canvasSize).x
+                        val xRight = viewport.mathToScreen(interval.to.toDouble(), 0.0, canvasSize).x
+                        val leftClamped = xLeft.coerceIn(0f, width)
+                        val rightClamped = xRight.coerceIn(0f, width)
 
-                // Translucent region background
-                drawRect(
-                    color = Color(0x2810B981),
-                    topLeft = Offset(leftClamped, 0f),
-                    size = Size(rightClamped - leftClamped, height)
-                )
+                        // Translucent region background matching equation color
+                        drawRect(
+                            color = eq.color.copy(alpha = 0.20f),
+                            topLeft = Offset(leftClamped, 0f),
+                            size = Size(rightClamped - leftClamped, height)
+                        )
 
-                // Vertical boundary lines
-                if (xLeft in 0f..width) {
-                    drawLine(
-                        color = Color(0xFF10B981),
-                        start = Offset(xLeft, 0f),
-                        end = Offset(xLeft, height),
-                        strokeWidth = 2.dp.toPx()
-                    )
+                        // Vertical boundary lines matching equation color
+                        if (xLeft in 0f..width) {
+                            drawLine(
+                                color = eq.color,
+                                start = Offset(xLeft, 0f),
+                                end = Offset(xLeft, height),
+                                strokeWidth = 2.dp.toPx()
+                            )
+                        }
+                        if (xRight in 0f..width) {
+                            drawLine(
+                                color = eq.color,
+                                start = Offset(xRight, 0f),
+                                end = Offset(xRight, height),
+                                strokeWidth = 2.dp.toPx()
+                            )
+                        }
+                    }
                 }
-                if (xRight in 0f..width) {
-                    drawLine(
-                        color = Color(0xFF10B981),
-                        start = Offset(xRight, 0f),
-                        end = Offset(xRight, height),
-                        strokeWidth = 2.dp.toPx()
+            } else if (state.shadedIntervals.isNotEmpty() && state.equations.any { listOf("<=", ">=", "≤", "≥", "<", ">").any { op -> it.expression.contains(op) } }) {
+                // Fallback for legacy state when an inequality equation is present
+                for (interval in state.shadedIntervals) {
+                    val xLeft = viewport.mathToScreen(interval.from.toDouble(), 0.0, canvasSize).x
+                    val xRight = viewport.mathToScreen(interval.to.toDouble(), 0.0, canvasSize).x
+                    val leftClamped = xLeft.coerceIn(0f, width)
+                    val rightClamped = xRight.coerceIn(0f, width)
+
+                    drawRect(
+                        color = Color(0x2810B981),
+                        topLeft = Offset(leftClamped, 0f),
+                        size = Size(rightClamped - leftClamped, height)
                     )
+
+                    if (xLeft in 0f..width) {
+                        drawLine(
+                            color = Color(0xFF10B981),
+                            start = Offset(xLeft, 0f),
+                            end = Offset(xLeft, height),
+                            strokeWidth = 2.dp.toPx()
+                        )
+                    }
+                    if (xRight in 0f..width) {
+                        drawLine(
+                            color = Color(0xFF10B981),
+                            start = Offset(xRight, 0f),
+                            end = Offset(xRight, height),
+                            strokeWidth = 2.dp.toPx()
+                        )
+                    }
                 }
             }
 

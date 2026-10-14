@@ -145,7 +145,8 @@ data class EquationItem(
     val roots: List<Double> = emptyList(),
     val sampledPoints: List<AdvancedMathEngine.Point?> = emptyList(),
     val isError: Boolean = false,
-    val inequality2D: Inequality2DData? = null
+    val inequality2D: Inequality2DData? = null,
+    val shadedIntervals: List<AdvancedMathEngine.ShadedInterval> = emptyList()
 ) {
     // Backward compatibility constructor for legacy FormulaEntry references with Int id
     constructor(
@@ -170,7 +171,8 @@ data class EquationItem(
         roots = roots,
         sampledPoints = sampledPoints,
         isError = isError,
-        inequality2D = null
+        inequality2D = null,
+        shadedIntervals = emptyList()
     )
 
     // Legacy property aliases

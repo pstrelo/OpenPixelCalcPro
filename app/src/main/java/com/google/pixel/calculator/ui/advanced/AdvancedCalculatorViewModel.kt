@@ -92,9 +92,12 @@ class AdvancedCalculatorViewModel(
                     lastSolveResult = null,
                     roots = emptyList(),
                     sampledPoints = emptyList(),
+                    shadedIntervals = emptyList(),
+                    inequality2D = null,
                     isError = false
                 )
             }
+            _uiState.update { it.copy(shadedIntervals = emptyList()) }
             updateAllGraphPoints()
             return
         }
@@ -107,7 +110,8 @@ class AdvancedCalculatorViewModel(
         _uiState.update {
             it.copy(
                 equations = updated,
-                activeEquationIndex = newActiveIndex
+                activeEquationIndex = newActiveIndex,
+                shadedIntervals = updated.flatMap { eq -> eq.shadedIntervals }
             )
         }
         updateAllGraphPoints()
@@ -214,6 +218,7 @@ class AdvancedCalculatorViewModel(
             }
         }
 
+        val hasIneq = listOf("<=", ">=", "≤", "≥", "<", ">").any { newExpr.contains(it) }
         updateEquationAt(curIndex) {
             it.copy(
                 expression = newExpr,
@@ -221,8 +226,15 @@ class AdvancedCalculatorViewModel(
                 formattedResult = "",
                 lastSolveResult = null,
                 roots = emptyList(),
+                inequality2D = if (hasIneq) it.inequality2D else null,
+                shadedIntervals = if (hasIneq) it.shadedIntervals else emptyList(),
                 isError = false
             )
+        }
+        if (!hasIneq) {
+            _uiState.update { current ->
+                current.copy(shadedIntervals = current.equations.flatMap { it.shadedIntervals })
+            }
         }
         updateGraphForActiveEquation()
     }
@@ -243,6 +255,7 @@ class AdvancedCalculatorViewModel(
             if ((prevChar == '(' && nextChar == ')') || (prevChar == '|' && nextChar == '|')) {
                 val newExpr = expr.substring(0, pos - 1) + expr.substring(pos + 1)
                 val newPos = pos - 1
+                val hasIneq = listOf("<=", ">=", "≤", "≥", "<", ">").any { newExpr.contains(it) }
                 updateEquationAt(curIndex) {
                     it.copy(
                         expression = newExpr,
@@ -250,8 +263,15 @@ class AdvancedCalculatorViewModel(
                         formattedResult = "",
                         lastSolveResult = null,
                         roots = emptyList(),
+                        inequality2D = if (hasIneq) it.inequality2D else null,
+                        shadedIntervals = if (hasIneq) it.shadedIntervals else emptyList(),
                         isError = false
                     )
+                }
+                if (!hasIneq) {
+                    _uiState.update { current ->
+                        current.copy(shadedIntervals = current.equations.flatMap { it.shadedIntervals })
+                    }
                 }
                 updateGraphForActiveEquation()
                 return
@@ -266,6 +286,7 @@ class AdvancedCalculatorViewModel(
 
         val newExpr = expr.substring(0, pos - deleteLen) + expr.substring(pos)
         val newPos = pos - deleteLen
+        val hasIneq = listOf("<=", ">=", "≤", "≥", "<", ">").any { newExpr.contains(it) }
 
         updateEquationAt(curIndex) {
             it.copy(
@@ -274,8 +295,15 @@ class AdvancedCalculatorViewModel(
                 formattedResult = "",
                 lastSolveResult = null,
                 roots = emptyList(),
+                inequality2D = if (hasIneq) it.inequality2D else null,
+                shadedIntervals = if (hasIneq) it.shadedIntervals else emptyList(),
                 isError = false
             )
+        }
+        if (!hasIneq) {
+            _uiState.update { current ->
+                current.copy(shadedIntervals = current.equations.flatMap { it.shadedIntervals })
+            }
         }
         updateGraphForActiveEquation()
     }
@@ -304,14 +332,20 @@ class AdvancedCalculatorViewModel(
                 lastSolveResult = null,
                 roots = emptyList(),
                 sampledPoints = emptyList(),
+                shadedIntervals = emptyList(),
+                inequality2D = null,
                 isError = false
             )
+        }
+        _uiState.update { current ->
+            current.copy(shadedIntervals = current.equations.flatMap { it.shadedIntervals })
         }
         updateGraphForActiveEquation()
     }
 
     fun updateCurrentExpression(newExpr: String) {
         val curIndex = _uiState.value.activeEquationIndex
+        val hasIneq = listOf("<=", ">=", "≤", "≥", "<", ">").any { newExpr.contains(it) }
         updateEquationAt(curIndex) {
             it.copy(
                 expression = newExpr,
@@ -319,8 +353,15 @@ class AdvancedCalculatorViewModel(
                 formattedResult = "",
                 lastSolveResult = null,
                 roots = emptyList(),
+                inequality2D = if (hasIneq) it.inequality2D else null,
+                shadedIntervals = if (hasIneq) it.shadedIntervals else emptyList(),
                 isError = false
             )
+        }
+        if (!hasIneq) {
+            _uiState.update { current ->
+                current.copy(shadedIntervals = current.equations.flatMap { it.shadedIntervals })
+            }
         }
         updateGraphForActiveEquation()
     }
@@ -546,8 +587,12 @@ class AdvancedCalculatorViewModel(
                             lastSolveResult = result,
                             roots = emptyList(),
                             inequality2D = null,
+                            shadedIntervals = emptyList(),
                             isError = false
                         )
+                    }
+                    _uiState.update { current ->
+                        current.copy(shadedIntervals = current.equations.flatMap { it.shadedIntervals })
                     }
                     updateAllGraphPoints()
                 }
@@ -564,10 +609,13 @@ class AdvancedCalculatorViewModel(
                             lastSolveResult = result,
                             roots = if (isFuncSummary) emptyList() else listOf(result.raw),
                             inequality2D = null,
+                            shadedIntervals = emptyList(),
                             isError = false
                         )
                     }
-                    _uiState.update { it.copy(shadedIntervals = emptyList()) }
+                    _uiState.update { current ->
+                        current.copy(shadedIntervals = current.equations.flatMap { it.shadedIntervals })
+                    }
                 }
                 is AdvancedMathEngine.SolveResult.EquationRoots -> {
                     val formatted = formatRoots(result.roots, format, isRad)
@@ -577,10 +625,13 @@ class AdvancedCalculatorViewModel(
                             lastSolveResult = result,
                             roots = result.roots,
                             inequality2D = null,
+                            shadedIntervals = emptyList(),
                             isError = false
                         )
                     }
-                    _uiState.update { it.copy(shadedIntervals = emptyList()) }
+                    _uiState.update { current ->
+                        current.copy(shadedIntervals = current.equations.flatMap { it.shadedIntervals })
+                    }
                 }
                 is AdvancedMathEngine.SolveResult.InequalityIntervals -> {
                     updateEquationAt(curIndex) {
@@ -588,10 +639,13 @@ class AdvancedCalculatorViewModel(
                             formattedResult = result.text,
                             lastSolveResult = result,
                             inequality2D = null,
+                            shadedIntervals = result.intervals,
                             isError = false
                         )
                     }
-                    _uiState.update { it.copy(shadedIntervals = result.intervals) }
+                    _uiState.update { current ->
+                        current.copy(shadedIntervals = current.equations.flatMap { it.shadedIntervals })
+                    }
                 }
                 is AdvancedMathEngine.SolveResult.Inequality2D -> {
                     updateEquationAt(curIndex) {
@@ -603,11 +657,14 @@ class AdvancedCalculatorViewModel(
                                 isAbove = result.isAbove,
                                 isStrict = result.isStrict
                             ),
+                            shadedIntervals = emptyList(),
                             roots = emptyList(),
                             isError = false
                         )
                     }
-                    _uiState.update { it.copy(shadedIntervals = emptyList()) }
+                    _uiState.update { current ->
+                        current.copy(shadedIntervals = current.equations.flatMap { it.shadedIntervals })
+                    }
                 }
                 is AdvancedMathEngine.SolveResult.SystemSolution -> {
                     updateEquationAt(curIndex) {
@@ -615,8 +672,12 @@ class AdvancedCalculatorViewModel(
                             formattedResult = result.formattedText,
                             lastSolveResult = result,
                             inequality2D = null,
+                            shadedIntervals = emptyList(),
                             isError = false
                         )
+                    }
+                    _uiState.update { current ->
+                        current.copy(shadedIntervals = current.equations.flatMap { it.shadedIntervals })
                     }
                 }
                 is AdvancedMathEngine.SolveResult.Error -> {
@@ -625,8 +686,12 @@ class AdvancedCalculatorViewModel(
                             formattedResult = result.message,
                             lastSolveResult = result,
                             inequality2D = null,
+                            shadedIntervals = emptyList(),
                             isError = true
                         )
+                    }
+                    _uiState.update { current ->
+                        current.copy(shadedIntervals = current.equations.flatMap { it.shadedIntervals })
                     }
                 }
             }
@@ -839,10 +904,14 @@ class AdvancedCalculatorViewModel(
                 it.copy(
                     sampledPoints = emptyList(),
                     inequality2D = null,
+                    shadedIntervals = emptyList(),
                     roots = emptyList(),
                     formattedResult = "",
                     lastSolveResult = null
                 )
+            }
+            _uiState.update { current ->
+                current.copy(shadedIntervals = current.equations.flatMap { it.shadedIntervals })
             }
             updateAllGraphPoints()
             return
@@ -850,6 +919,12 @@ class AdvancedCalculatorViewModel(
 
         updateAllGraphPoints()
     }
+
+    private data class ComputedEquationData(
+        val points: List<AdvancedMathEngine.Point?>,
+        val inequality2D: Inequality2DData?,
+        val shadedIntervals: List<AdvancedMathEngine.ShadedInterval>
+    )
 
     private fun updateAllGraphPoints() {
         graphSamplingJob?.cancel()
@@ -866,12 +941,12 @@ class AdvancedCalculatorViewModel(
             val doubleVars = customVars.mapValues { it.value.toDouble() }
             val ineqOps = listOf("<=", ">=", "≤", "≥", "<", ">")
 
-            val computedMap = mutableMapOf<Any, Pair<List<AdvancedMathEngine.Point?>, Inequality2DData?>>()
+            val computedMap = mutableMapOf<Any, ComputedEquationData>()
 
             for ((idx, entry) in state.equations.withIndex()) {
                 val plotExpr = preparePlotExpression(entry.expression)
                 if (plotExpr.isBlank()) {
-                    computedMap[entry.id] = Pair(emptyList(), null)
+                    computedMap[entry.id] = ComputedEquationData(emptyList(), null, emptyList())
                     continue
                 }
 
@@ -886,6 +961,22 @@ class AdvancedCalculatorViewModel(
                     )
                 }
 
+                // If 1D inequality, calculate real-time shaded intervals; otherwise emptyList()
+                val intervals = if (foundIneq != null && ineq2DData == null) {
+                    try {
+                        val ineqRes = engine.solve(entry.expression, isRadians = state.isRadians, customVariables = customVars)
+                        if (ineqRes is AdvancedMathEngine.SolveResult.InequalityIntervals) {
+                            ineqRes.intervals
+                        } else {
+                            emptyList()
+                        }
+                    } catch (e: Exception) {
+                        emptyList()
+                    }
+                } else {
+                    emptyList()
+                }
+
                 val pts = engine.sampleFunction(
                     expr = plotExpr,
                     xMin = xMin,
@@ -895,7 +986,7 @@ class AdvancedCalculatorViewModel(
                     customVariables = customVars,
                     fastCustomFunctions = fastCustomFns
                 )
-                computedMap[entry.id] = Pair(pts, ineq2DData)
+                computedMap[entry.id] = ComputedEquationData(pts, ineq2DData, intervals)
             }
 
             // Safe update by Equation ID to prevent wiping concurrent user edits
@@ -903,12 +994,17 @@ class AdvancedCalculatorViewModel(
                 val updated = current.equations.map { eq ->
                     val computed = computedMap[eq.id]
                     if (computed != null) {
-                        eq.copy(sampledPoints = computed.first, inequality2D = computed.second)
+                        eq.copy(
+                            sampledPoints = computed.points,
+                            inequality2D = computed.inequality2D,
+                            shadedIntervals = computed.shadedIntervals
+                        )
                     } else {
                         eq
                     }
                 }
-                current.copy(equations = updated)
+                val allIntervals = updated.flatMap { it.shadedIntervals }
+                current.copy(equations = updated, shadedIntervals = allIntervals)
             }
         }
     }
@@ -925,12 +1021,9 @@ class AdvancedCalculatorViewModel(
             if (ineq2D != null) {
                 return ineq2D.boundaryExpr
             }
-            val parts = cleanExpr.split(foundIneq)
-            return if (parts.size == 2) {
-                val lhs = parts[0].trim()
-                val rhs = parts[1].trim()
-                if (rhs == "0" || rhs.isEmpty()) lhs else "($lhs) - ($rhs)"
-            } else cleanExpr
+            // For 1D inequalities (e.g. x > 2), do not sample a fake diagonal y = x - 2 line;
+            // only the shaded intervals are rendered on the Cartesian plane.
+            return ""
         }
         return if (cleanExpr.contains("=")) {
             val parts = cleanExpr.split("=")
