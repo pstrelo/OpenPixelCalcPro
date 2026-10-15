@@ -84,13 +84,7 @@ sealed class MathNode {
                 }
                 "ʸ√", "nroot", "root", "ˣ√", "ⁿ√" -> {
                     // l = index (y), r = radicand (x) -> y-th root of x
-                    val index = l.toDouble()
-                    val radicand = r.toDouble()
-                    if (index == 0.0) throw ArithmeticException("Indice della radice non può essere zero")
-                    if (radicand < 0.0 && (index % 2.0 == 0.0)) throw ArithmeticException("Radice di indice pari con radicando negativo")
-                    val res = if (radicand < 0.0) -kotlin.math.abs(radicand).pow(1.0 / index) else radicand.pow(1.0 / index)
-                    if (res.isNaN() || res.isInfinite()) throw ArithmeticException("Risultato radice non valido")
-                    BigDecimal(res, context.mathContext)
+                    computeNthRoot(radicand = r, index = l, context = context)
                 }
                 else -> throw UnsupportedOperationException("Operatore non supportato: $operator")
             }
@@ -110,7 +104,7 @@ sealed class MathNode {
                 "ʸ√", "nroot", "root", "√" -> {
                     // If used as unary operator without index, defaults to square root
                     if (v.signum() < 0) throw ArithmeticException("Radice quadrata di numero negativo")
-                    BigDecimal(sqrt(v.toDouble()), context.mathContext)
+                    v.sqrt(context.mathContext)
                 }
                 "!" -> {
                     val n = v.toInt()
@@ -208,26 +202,30 @@ sealed class MathNode {
                 "sqrt", "√" -> {
                     val v = evaluatedArgs[0]
                     if (v.signum() < 0) throw ArithmeticException("Radice quadrata di numero negativo")
-                    BigDecimal(sqrt(v.toDouble()), mc)
+                    v.sqrt(mc)
                 }
-                "root", "nroot" -> {
+                "nroot" -> {
                     if (evaluatedArgs.size == 1) {
                         val v = evaluatedArgs[0]
                         if (v.signum() < 0) throw ArithmeticException("Radice quadrata di numero negativo")
-                        BigDecimal(sqrt(v.toDouble()), mc)
+                        v.sqrt(mc)
                     } else {
-                        val x = evaluatedArgs[0].toDouble()
-                        val n = evaluatedArgs[1].toDouble()
-                        if (n == 0.0) throw ArithmeticException("Indice della radice non può essere zero")
-                        if (x < 0 && (n % 2.0 == 0.0)) throw ArithmeticException("Radice di indice pari con radicando negativo")
-                        val res = if (x < 0) -kotlin.math.abs(x).pow(1.0 / n) else x.pow(1.0 / n)
-                        if (res.isNaN() || res.isInfinite()) throw ArithmeticException("Risultato radice non valido")
-                        BigDecimal(res, mc)
+                        // nroot(index, radicand)
+                        computeNthRoot(radicand = evaluatedArgs[1], index = evaluatedArgs[0], context = context)
+                    }
+                }
+                "root" -> {
+                    if (evaluatedArgs.size == 1) {
+                        val v = evaluatedArgs[0]
+                        if (v.signum() < 0) throw ArithmeticException("Radice quadrata di numero negativo")
+                        v.sqrt(mc)
+                    } else {
+                        // root(radicand, index)
+                        computeNthRoot(radicand = evaluatedArgs[0], index = evaluatedArgs[1], context = context)
                     }
                 }
                 "cbrt" -> {
-                    val v = evaluatedArgs[0].toDouble()
-                    BigDecimal(cbrt(v), mc)
+                    computeNthRoot(radicand = evaluatedArgs[0], index = BigDecimal("3"), context = context)
                 }
                 "ln" -> {
                     val v = evaluatedArgs[0].toDouble()

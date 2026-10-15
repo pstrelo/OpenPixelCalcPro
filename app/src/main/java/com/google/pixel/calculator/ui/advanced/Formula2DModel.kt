@@ -114,35 +114,62 @@ object Formula2DParser {
         while (index < len) {
             val globalIdx = baseOffset + index
 
-            // 1. Check for Logarithm with base: log_(base)(arg) or log_base(arg) or log_()
-            if (expr.startsWith("log_", index)) {
-                val logStart = globalIdx
-                val afterLogUnder = index + 4
-                var baseStartLocal = afterLogUnder
-                var baseEndLocal = afterLogUnder
-                var afterBaseLocal = afterLogUnder
+            // 1. Check for Logarithm with base: log_(base)(arg) or log2(arg) or log[base](arg) or log_()
+            val isLogWithBase = expr.startsWith("log_", index) ||
+                expr.startsWith("log[", index) ||
+                expr.startsWith("log{", index) ||
+                (expr.startsWith("log", index) && index + 3 < len && (expr[index + 3].isDigit() || (expr[index + 3].isLetter() && expr[index + 3] != 'e' && expr[index + 3] != 'n' && expr[index + 3] != '(')))
 
-                if (afterLogUnder < len && expr[afterLogUnder] == '(') {
-                    val closeParen = findMatchingParen(expr, afterLogUnder)
-                    if (closeParen != -1) {
-                        baseStartLocal = afterLogUnder + 1
-                        baseEndLocal = closeParen
-                        afterBaseLocal = closeParen + 1
+            if (isLogWithBase) {
+                val logStart = globalIdx
+                var baseStartLocal = index + 3
+                var baseEndLocal = index + 3
+                var afterBaseLocal = index + 3
+
+                if (expr.startsWith("log_", index)) {
+                    val afterLogUnder = index + 4
+                    baseStartLocal = afterLogUnder
+                    baseEndLocal = afterLogUnder
+                    afterBaseLocal = afterLogUnder
+
+                    if (afterLogUnder < len && expr[afterLogUnder] == '(') {
+                        val closeParen = findMatchingParen(expr, afterLogUnder)
+                        if (closeParen != -1) {
+                            baseStartLocal = afterLogUnder + 1
+                            baseEndLocal = closeParen
+                            afterBaseLocal = closeParen + 1
+                        }
+                    } else if (afterLogUnder < len && expr[afterLogUnder] == '{') {
+                        val closeBrace = expr.indexOf('}', afterLogUnder)
+                        if (closeBrace != -1) {
+                            baseStartLocal = afterLogUnder + 1
+                            baseEndLocal = closeBrace
+                            afterBaseLocal = closeBrace + 1
+                        }
+                    } else {
+                        var bEnd = afterLogUnder
+                        while (bEnd < len && expr[bEnd].isLetterOrDigit()) {
+                            bEnd++
+                        }
+                        baseStartLocal = afterLogUnder
+                        baseEndLocal = bEnd
+                        afterBaseLocal = bEnd
                     }
-                } else if (afterLogUnder < len && expr[afterLogUnder] == '{') {
-                    val closeBrace = expr.indexOf('}', afterLogUnder)
-                    if (closeBrace != -1) {
-                        baseStartLocal = afterLogUnder + 1
-                        baseEndLocal = closeBrace
-                        afterBaseLocal = closeBrace + 1
-                    }
+                } else if (expr.startsWith("log[", index) || expr.startsWith("log{", index)) {
+                    val closeCh = if (expr[index + 3] == '[') ']' else '}'
+                    val closeIdx = expr.indexOf(closeCh, index + 4)
+                    val endB = if (closeIdx != -1) closeIdx else len
+                    baseStartLocal = index + 4
+                    baseEndLocal = endB
+                    afterBaseLocal = if (closeIdx != -1) closeIdx + 1 else len
                 } else {
-                    // Simple token base
-                    var bEnd = afterLogUnder
+                    // Direct token base, e.g. log2(...) or log10(...)
+                    val afterLog = index + 3
+                    var bEnd = afterLog
                     while (bEnd < len && expr[bEnd].isLetterOrDigit()) {
                         bEnd++
                     }
-                    baseStartLocal = afterLogUnder
+                    baseStartLocal = afterLog
                     baseEndLocal = bEnd
                     afterBaseLocal = bEnd
                 }
@@ -228,6 +255,54 @@ object Formula2DParser {
                             continue
                         }
                     }
+                }
+            }
+
+            // 2b. Check for N-th root written with superscript characters: e.g. ²√(6) or ³√(8)
+            val isSuperscriptChar = expr[index] in "⁰¹²³⁴⁵⁶⁷⁸⁹ⁿⁱˣᵃᵇ"
+            if (isSuperscriptChar) {
+                var d = index
+                while (d < len && expr[d] in "⁰¹²³⁴⁵⁶⁷⁸⁹ⁿⁱˣᵃᵇ") {
+                    d++
+                }
+                if (d > index && d < len && (expr.startsWith("√(", d) || expr.startsWith("sqrt(", d))) {
+                    val isSqrtLong = expr.startsWith("sqrt(", d)
+                    val prefixLen = if (isSqrtLong) 5 else 2
+                    val innerStartLocal = d + prefixLen
+                    val closeRad = findMatchingParen(expr, innerStartLocal - 1)
+                    val innerEndLocal = if (closeRad != -1) closeRad else len
+                    val radEndLocal = if (closeRad != -1) closeRad + 1 else len
+
+                    val supText = expr.substring(index, d)
+                    val supMap = mapOf(
+                        '⁰' to '0', '¹' to '1', '²' to '2', '³' to '3', '⁴' to '4',
+                        '⁵' to '5', '⁶' to '6', '⁷' to '7', '⁸' to '8', '⁹' to '9',
+                        'ⁿ' to 'n', 'ⁱ' to 'i', 'ˣ' to 'x', 'ᵃ' to 'a', 'ᵇ' to 'b'
+                    )
+                    val normalIndexText = supText.map { supMap[it] ?: it }.joinToString("")
+                    val innerText = expr.substring(innerStartLocal, innerEndLocal)
+                    val idxStartGlobal = baseOffset + index
+                    val idxEndGlobal = baseOffset + d
+                    val inStartGlobal = baseOffset + innerStartLocal
+                    val inEndGlobal = baseOffset + innerEndLocal
+
+                    segments.add(
+                        FormulaSegment.RadicalSegment(
+                            hasIndex = true,
+                            indexText = normalIndexText,
+                            indexStart = idxStartGlobal,
+                            indexEnd = idxEndGlobal,
+                            indexSegments = parse(normalIndexText, idxStartGlobal),
+                            innerText = innerText,
+                            innerStart = inStartGlobal,
+                            innerEnd = inEndGlobal,
+                            innerSegments = parse(innerText, inStartGlobal),
+                            fullStart = idxStartGlobal,
+                            fullEnd = baseOffset + radEndLocal
+                        )
+                    )
+                    index = radEndLocal
+                    continue
                 }
             }
 
@@ -398,18 +473,13 @@ object Formula2DParser {
             // If a fraction is present starting after this token:
             if (slashIdx != -1 && slashIdx > index) {
                 val candidateNum = expr.substring(index, slashIdx)
-                val isParenGroup = candidateNum.startsWith("(") && candidateNum.endsWith(")")
+                val isParenGroup = candidateNum.startsWith("(") && findMatchingParen(candidateNum, 0) == candidateNum.length - 1
                 val hasOperatorBefore = findTopLevelOperatorBefore(candidateNum)
                 if (hasOperatorBefore != -1 && !isParenGroup) {
-                    // Split before operator at depth 0
+                    // Split before operator at depth 0 and parse recursively
                     val textEnd = index + hasOperatorBefore + 1
-                    segments.add(
-                        FormulaSegment.SimpleText(
-                            text = expr.substring(index, textEnd),
-                            startOffset = globalIdx,
-                            endOffset = baseOffset + textEnd
-                        )
-                    )
+                    val beforeChunk = expr.substring(index, textEnd)
+                    segments.addAll(parse(beforeChunk, globalIdx))
                     index = textEnd
                     continue
                 } else {
@@ -561,6 +631,13 @@ object Formula2DParser {
             val c = expr[i]
             if (c == '/' || c == '^' || c == '|' || c == '²' || c == '_') return i
             if (expr.startsWith("sqrt(", i) || expr.startsWith("√(", i) || expr.startsWith("log_", i)) return i
+            if (expr.startsWith("log[", i) || expr.startsWith("log{", i)) return i
+            if (expr.startsWith("log", i) && i + 3 < len && (expr[i + 3].isDigit() || (expr[i + 3].isLetter() && expr[i + 3] != 'e' && expr[i + 3] != 'n' && expr[i + 3] != '('))) return i
+            if (c.isLetterOrDigit()) {
+                var d = i
+                while (d < len && expr[d].isLetterOrDigit()) d++
+                if (d < len && (expr.startsWith("√(", d) || expr.startsWith("sqrt(", d))) return i
+            }
             i++
         }
         return -1
@@ -598,7 +675,7 @@ object Formula2DParser {
             val c = candidate[i]
             if (c == '(') depth++
             else if (c == ')') depth = (depth - 1).coerceAtLeast(0)
-            else if (depth == 0 && c in "+-=<>;, ") {
+            else if (depth == 0 && c in "+-*×÷=<>;, ") {
                 lastOp = i
             }
         }

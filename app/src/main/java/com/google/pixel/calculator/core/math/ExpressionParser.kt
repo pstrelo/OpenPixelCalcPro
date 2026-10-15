@@ -72,7 +72,7 @@ class ExpressionParser {
             '₀' to '0', '₁' to '1', '₂' to '2', '₃' to '3', '₄' to '4',
             '₅' to '5', '₆' to '6', '₇' to '7', '₈' to '8', '₉' to '9'
         )
-        // Convert log_(base)(x) or log₍base₎(x) or log_base(x) into logn(base,x)
+        // Convert log_(base)(x) or log₍base₎(x) or log_base(x) or log[base](x) into logn(base,x)
         s = Regex("""log_\(([^)]+)\)\(([^)]*)\)""").replace(s) { m ->
             "logn(${m.groupValues[1]},${m.groupValues[2]})"
         }
@@ -82,7 +82,16 @@ class ExpressionParser {
         s = Regex("""log_\{([^}]+)\}\(([^\)]*)\)""").replace(s) { m ->
             "logn(${m.groupValues[1]},${m.groupValues[2]})"
         }
+        s = Regex("""log\[([^\]]+)\]\(([^)]*)\)""").replace(s) { m ->
+            "logn(${m.groupValues[1]},${m.groupValues[2]})"
+        }
+        s = Regex("""log([0-9]+)\(([^)]*)\)""").replace(s) { m ->
+            val b = m.groupValues[1]
+            if (b == "2" || b == "10") m.value else "logn($b,${m.groupValues[2]})"
+        }
         s = s.map { subscriptMap[it] ?: it }.joinToString("")
+        // Normalize uppercase variable X to lowercase x when adjacent to digits or operators (e.g. 2^4X)
+        s = Regex("""(?<=[\d\+\-\*\/\^\(\s])X(?=[^\w]|$)""").replace(s, "x")
 
         // Handle |expr| -> abs(expr)
         var absIdx = s.indexOf('|')
@@ -102,23 +111,21 @@ class ExpressionParser {
             val normalDigits = supDigits.map { superscriptMap[it] ?: it }.joinToString("")
             "(${normalDigits})ʸ√"
         }
-        // Support n-th root entered as ^(n)√(expr), ^(n)sqrt(expr), [number]√(expr) or ([expr])√(expr)
-        s = Regex("""\^\(([^)]+)\)√\(([^)]*)\)""").replace(s) { m ->
-            "(${m.groupValues[1]})ʸ√(${m.groupValues[2]})"
+        // Support n-th root entered as ^(n)√(expr), ^(n)sqrt(expr)
+        s = Regex("""\^\(([^)]+)\)√""").replace(s) { m ->
+            "(${m.groupValues[1]})ʸ√"
         }
-        s = Regex("""\^\(([^)]+)\)sqrt\(([^)]*)\)""").replace(s) { m ->
-            "(${m.groupValues[1]})ʸ√(${m.groupValues[2]})"
-        }
-        s = Regex("""([0-9a-zA-Z\.]+)√\(([^\)]*)\)""").replace(s) { m ->
-            "(${m.groupValues[1]})ʸ√(${m.groupValues[2]})"
+        s = Regex("""\^\(([^)]+)\)sqrt""").replace(s) { m ->
+            "(${m.groupValues[1]})ʸ√"
         }
         // Normalize standalone superscripts (e.g. x², xⁿ, 5³) into ^(exponent)
+        // Notice 'ʸ' is explicitly excluded so it remains as the radical operator 'ʸ√'
         val fullSuperscriptMap = mapOf(
             '⁰' to '0', '¹' to '1', '²' to '2', '³' to '3', '⁴' to '4',
             '⁵' to '5', '⁶' to '6', '⁷' to '7', '⁸' to '8', '⁹' to '9',
-            'ⁿ' to 'n', 'ⁱ' to 'i', 'ˣ' to 'x', 'ʸ' to 'y', 'ᵃ' to 'a', 'ᵇ' to 'b'
+            'ⁿ' to 'n', 'ⁱ' to 'i', 'ˣ' to 'x', 'ᵃ' to 'a', 'ᵇ' to 'b'
         )
-        s = Regex("([⁰¹²³⁴⁵⁶⁷⁸⁹ⁿⁱˣʸᵃᵇ]+)").replace(s) { m ->
+        s = Regex("([⁰¹²³⁴⁵⁶⁷⁸⁹ⁿⁱˣᵃᵇ]+)").replace(s) { m ->
             val normal = m.value.map { fullSuperscriptMap[it] ?: it }.joinToString("")
             "^($normal)"
         }
