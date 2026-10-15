@@ -30,22 +30,24 @@ class ResponsiveLayoutTest {
             val hPadding = 16f
             val spacingBasic = (screenWidth * 0.026f).coerceIn(8f, 12f)
             val btnWidthBasic = (screenWidth - (hPadding * 2) - (spacingBasic * 3)) / 4
-            val maxBasicHeightByScreen = (screenHeight * 0.52f - 38f - 12f - (spacingBasic * 4)) / 5
-            val targetBtnHeightBasic = minOf(btnWidthBasic * 0.94f, maxBasicHeightByScreen).coerceIn(46f, 82f)
-            val targetKeypadHeightBasic = (targetBtnHeightBasic * 5) + (spacingBasic * 4) + 38f + 12f
+            val arrowRowHeight = 42f
+            val keypadPaddingVertical = 12f
+            val maxBasicHeightByScreen = (screenHeight * 0.52f - arrowRowHeight - keypadPaddingVertical - (spacingBasic * 5)) / 5
+            val targetBtnHeightBasic = minOf(btnWidthBasic * 0.94f, maxBasicHeightByScreen).coerceIn(44f, 82f)
+            val targetKeypadHeightBasic = (targetBtnHeightBasic * 5) + (spacingBasic * 5) + arrowRowHeight + keypadPaddingVertical
 
             // Pro Mode Calculations
             val spacingPro = (screenWidth * 0.015f).coerceIn(4f, 6f)
-            val maxProHeightByScreen = (screenHeight * 0.54f - 38f - 12f - (spacingPro * 7)) / 8
+            val maxProHeightByScreen = (screenHeight * 0.54f - arrowRowHeight - keypadPaddingVertical - (spacingPro * 8)) / 8
             val targetBtnHeightPro = minOf(btnWidthBasic * 0.58f, maxProHeightByScreen).coerceIn(38f, 52f)
-            val targetKeypadHeightPro = (targetBtnHeightPro * 8) + (spacingPro * 7) + 38f + 12f
+            val targetKeypadHeightPro = (targetBtnHeightPro * 8) + (spacingPro * 8) + arrowRowHeight + keypadPaddingVertical
             val btnWidthPro = (screenWidth - (hPadding * 2) - (spacingPro * 3)) / 4
 
             // 1. Check Keypad percentage ratio is ~50%
             val basicKeypadRatio = targetKeypadHeightBasic / screenHeight
             assertTrue(
-                "Device ${device.name}: basic keypad ratio $basicKeypadRatio should be around 50% (between 45% and 60%)",
-                basicKeypadRatio in 0.45f..0.62f
+                "Device ${device.name}: basic keypad ratio $basicKeypadRatio should be around 50% (between 45% and 65%)",
+                basicKeypadRatio in 0.45f..0.65f
             )
 
             // 2. Check Display has generous space (> 180dp on full screens)

@@ -95,20 +95,20 @@ fun BaseKeypad(
     val spacingBasic = (screenWidth * 0.026f).coerceIn(8.dp, 12.dp)
     val btnWidthBasic = (screenWidth - (hPadding * 2) - (spacingBasic * 3)) / 4
 
-    // Height of button in basic mode matches width for square icons
-    val maxBasicHeightByScreen = (screenHeight * 0.52f - 38.dp - 12.dp - (spacingBasic * 4)) / 5
-    val targetBtnHeightBasic = if (isLandscape) 48.dp else minOf(btnWidthBasic * 0.94f, maxBasicHeightByScreen).coerceIn(46.dp, 82.dp)
-    val targetKeypadHeightBasic = (targetBtnHeightBasic * 5) + (spacingBasic * 4) + 38.dp + 12.dp
+    val arrowRowHeight = 42.dp
+    val keypadPaddingVertical = 12.dp
+
+    // Height of button in basic mode matches width for square icons (5 rows, 5 spacings, arrow row + padding)
+    val maxBasicHeightByScreen = (screenHeight * 0.52f - arrowRowHeight - keypadPaddingVertical - (spacingBasic * 5)) / 5
+    val targetBtnHeightBasic = if (isLandscape) 48.dp else minOf(btnWidthBasic * 0.94f, maxBasicHeightByScreen).coerceIn(44.dp, 82.dp)
 
     // Pro mode (8 rows): compact scientific rows, keypad takes ~50-52% of screen height
     val spacingPro = (screenWidth * 0.015f).coerceIn(4.dp, 6.dp)
-    val maxProHeightByScreen = (screenHeight * 0.54f - 38.dp - 12.dp - (spacingPro * 7)) / 8
+    val maxProHeightByScreen = (screenHeight * 0.54f - arrowRowHeight - keypadPaddingVertical - (spacingPro * 8)) / 8
     val targetBtnHeightPro = if (isLandscape) 48.dp else minOf(btnWidthBasic * 0.58f, maxProHeightByScreen).coerceIn(38.dp, 52.dp)
-    val targetKeypadHeightPro = (targetBtnHeightPro * 8) + (spacingPro * 7) + 38.dp + 12.dp
 
     val targetBtnHeight = if (isLandscape) 48.dp else if (effectiveProMode) targetBtnHeightPro else targetBtnHeightBasic
     val targetSpacing = if (isLandscape) 6.dp else if (effectiveProMode) spacingPro else spacingBasic
-    val targetKeypadHeight = if (isLandscape) 0.dp else if (effectiveProMode) targetKeypadHeightPro else targetKeypadHeightBasic
 
     val keyAnimationSpec = spring<Dp>(
         dampingRatio = Spring.DampingRatioNoBouncy,
@@ -127,19 +127,13 @@ fun BaseKeypad(
         label = "KeypadSpacing"
     )
 
-    val keypadHeight by animateDpAsState(
-        targetValue = targetKeypadHeight,
-        animationSpec = keyAnimationSpec,
-        label = "KeypadTotalHeight"
-    )
-
     val scientificBtnHeight = if (isLandscape) 48.dp else btnHeight
     val scientificSpacing = spacing
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .then(if (!isLandscape) Modifier.height(keypadHeight) else Modifier)
+            .wrapContentHeight()
             .padding(horizontal = if (isLandscape) 10.dp else 16.dp, vertical = if (isLandscape) 2.dp else 6.dp),
         verticalArrangement = if (!isLandscape) Arrangement.spacedBy(spacing, Alignment.Bottom) else Arrangement.spacedBy(spacing)
     ) {
