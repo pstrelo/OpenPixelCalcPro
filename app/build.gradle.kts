@@ -10,10 +10,10 @@ android {
 
     defaultConfig {
         applicationId = "com.openpixelcalcpro"
-        minSdk = 34
+        minSdk = 26
         targetSdk = 35
-        versionCode = 7
-        versionName = "1.0.6"
+        versionCode = 8
+        versionName = "1.0.5"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -24,6 +24,8 @@ android {
         getByName("debug") {
             enableV1Signing = true
             enableV2Signing = true
+            enableV3Signing = true
+            enableV4Signing = false
         }
     }
 
