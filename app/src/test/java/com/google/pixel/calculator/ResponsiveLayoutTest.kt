@@ -32,14 +32,18 @@ class ResponsiveLayoutTest {
             val btnWidthBasic = (screenWidth - (hPadding * 2) - (spacingBasic * 3)) / 4
             val arrowRowHeight = 42f
             val keypadPaddingVertical = 12f
-            val maxBasicHeightByScreen = (screenHeight * 0.52f - arrowRowHeight - keypadPaddingVertical - (spacingBasic * 5)) / 5
-            val targetBtnHeightBasic = minOf(btnWidthBasic * 0.94f, maxBasicHeightByScreen).coerceIn(44f, 82f)
+            val minDisplayReserve = (screenHeight * 0.28f).coerceIn(130f, 280f)
+            val maxKeypadHeightAllowed = screenHeight - minDisplayReserve - 64f
+            val maxBasicHeightByScreen = (maxKeypadHeightAllowed - arrowRowHeight - keypadPaddingVertical - (spacingBasic * 5)) / 5
+            val targetBtnHeightBasic = minOf(btnWidthBasic * 0.96f, maxBasicHeightByScreen).coerceIn(40f, 86f)
             val targetKeypadHeightBasic = (targetBtnHeightBasic * 5) + (spacingBasic * 5) + arrowRowHeight + keypadPaddingVertical
 
             // Pro Mode Calculations
             val spacingPro = (screenWidth * 0.015f).coerceIn(4f, 6f)
-            val maxProHeightByScreen = (screenHeight * 0.54f - arrowRowHeight - keypadPaddingVertical - (spacingPro * 8)) / 8
-            val targetBtnHeightPro = minOf(btnWidthBasic * 0.58f, maxProHeightByScreen).coerceIn(38f, 52f)
+            val minDisplayReservePro = (screenHeight * 0.22f).coerceIn(110f, 220f)
+            val maxKeypadHeightAllowedPro = screenHeight - minDisplayReservePro - 64f
+            val maxProHeightByScreen = (maxKeypadHeightAllowedPro - arrowRowHeight - keypadPaddingVertical - (spacingPro * 8)) / 8
+            val targetBtnHeightPro = minOf(btnWidthBasic * 0.60f, maxProHeightByScreen).coerceIn(34f, 58f)
             val targetKeypadHeightPro = (targetBtnHeightPro * 8) + (spacingPro * 8) + arrowRowHeight + keypadPaddingVertical
             val btnWidthPro = (screenWidth - (hPadding * 2) - (spacingPro * 3)) / 4
 
@@ -86,8 +90,10 @@ class ResponsiveLayoutTest {
             val spacing = 6f
             val btnWidth6Col = (screenWidth - (hPadding * 2) - (spacing * 5)) / 6
 
-            val maxUnitByScreen = (screenHeight * 0.52f - 44f - (spacing * 7) - 12f) / 7.38f
-            val unitHeight = minOf(btnWidth6Col * 0.90f, maxUnitByScreen).coerceIn(34f, 52f)
+            val minDisplayReserveAdv = (screenHeight * 0.26f).coerceIn(140f, 280f)
+            val maxKeypadHeightAdv = screenHeight - minDisplayReserveAdv - 64f
+            val maxUnitByScreen = (maxKeypadHeightAdv - 44f - (spacing * 7) - 12f) / 7.38f
+            val unitHeight = minOf(btnWidth6Col * 0.95f, maxUnitByScreen).coerceIn(34f, 58f)
             val bottomRowHeight = (unitHeight * 1.30f).coerceIn(46f, 68f)
 
             // Aspect ratio of 6-column square keys

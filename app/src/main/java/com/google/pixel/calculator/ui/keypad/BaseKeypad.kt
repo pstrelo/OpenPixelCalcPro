@@ -90,7 +90,9 @@ fun BaseKeypad(
     val screenHeight = configuration.screenHeightDp.dp
     val screenWidth = configuration.screenWidthDp.dp
 
-    // Proportional dimensions: keypad takes ~50% of screen height with square squircle keys (btnHeight ~= btnWidth)
+    // Organic responsive scaling anchored to reference Pixel device (~400x890dp)
+    // Keypad occupies its prominent, comfortable size (~58-62% on Pixel)
+    // and scales down smoothly on compact/split screens to guarantee display visibility.
     val hPadding = if (isLandscape) 10.dp else 16.dp
     val spacingBasic = (screenWidth * 0.026f).coerceIn(8.dp, 12.dp)
     val btnWidthBasic = (screenWidth - (hPadding * 2) - (spacingBasic * 3)) / 4
@@ -98,14 +100,19 @@ fun BaseKeypad(
     val arrowRowHeight = 42.dp
     val keypadPaddingVertical = 12.dp
 
-    // Height of button in basic mode matches width for square icons (5 rows, 5 spacings, arrow row + padding)
-    val maxBasicHeightByScreen = (screenHeight * 0.52f - arrowRowHeight - keypadPaddingVertical - (spacingBasic * 5)) / 5
-    val targetBtnHeightBasic = if (isLandscape) 48.dp else minOf(btnWidthBasic * 0.94f, maxBasicHeightByScreen).coerceIn(44.dp, 82.dp)
+    // Safe display reserve: guarantees converter and display never get squashed
+    val minDisplayReserve = (screenHeight * 0.28f).coerceIn(130.dp, 280.dp)
+    val maxKeypadHeightAllowed = screenHeight - minDisplayReserve - 64.dp
+    val maxBasicHeightByScreen = (maxKeypadHeightAllowed - arrowRowHeight - keypadPaddingVertical - (spacingBasic * 5)) / 5
+    // Buttons are full square squircle keys (~80-84dp on Pixel), gracefully scaled on compact screens, capped at 86dp
+    val targetBtnHeightBasic = if (isLandscape) 48.dp else minOf(btnWidthBasic * 0.96f, maxBasicHeightByScreen).coerceIn(40.dp, 86.dp)
 
-    // Pro mode (8 rows): compact scientific rows, keypad takes ~50-52% of screen height
+    // Pro mode (8 rows): compact scientific rows, scales organically
     val spacingPro = (screenWidth * 0.015f).coerceIn(4.dp, 6.dp)
-    val maxProHeightByScreen = (screenHeight * 0.54f - arrowRowHeight - keypadPaddingVertical - (spacingPro * 8)) / 8
-    val targetBtnHeightPro = if (isLandscape) 48.dp else minOf(btnWidthBasic * 0.58f, maxProHeightByScreen).coerceIn(38.dp, 52.dp)
+    val minDisplayReservePro = (screenHeight * 0.22f).coerceIn(110.dp, 220.dp)
+    val maxKeypadHeightAllowedPro = screenHeight - minDisplayReservePro - 64.dp
+    val maxProHeightByScreen = (maxKeypadHeightAllowedPro - arrowRowHeight - keypadPaddingVertical - (spacingPro * 8)) / 8
+    val targetBtnHeightPro = if (isLandscape) 48.dp else minOf(btnWidthBasic * 0.60f, maxProHeightByScreen).coerceIn(34.dp, 58.dp)
 
     val targetBtnHeight = if (isLandscape) 48.dp else if (effectiveProMode) targetBtnHeightPro else targetBtnHeightBasic
     val targetSpacing = if (isLandscape) 6.dp else if (effectiveProMode) spacingPro else spacingBasic

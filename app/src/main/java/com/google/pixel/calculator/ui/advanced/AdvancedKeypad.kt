@@ -96,9 +96,11 @@ fun AdvancedKeypad(
     } else if (isSplitScreen) {
         (screenHeight * 0.038f).coerceIn(24.dp, 34.dp)
     } else {
-        // Square keys: unitHeight matches ~90% of 6-column button width, keeping keypad ~50% of screen
-        val maxUnitByScreen = (screenHeight * 0.52f - 44.dp - (spacing * 7) - 12.dp) / 7.38f
-        minOf(btnWidth6Col * 0.90f, maxUnitByScreen).coerceIn(34.dp, 52.dp)
+        // Organic responsive scaling: unitHeight matches ~95% of 6-column button width, bounded by display reserve
+        val minDisplayReserveAdv = (screenHeight * 0.26f).coerceIn(140.dp, 280.dp)
+        val maxKeypadHeightAdv = screenHeight - minDisplayReserveAdv - 64.dp
+        val maxUnitByScreen = (maxKeypadHeightAdv - 44.dp - (spacing * 7) - 12.dp) / 7.38f
+        minOf(btnWidth6Col * 0.95f, maxUnitByScreen).coerceIn(34.dp, 58.dp)
     }
 
     val bottomRowHeight = if (isLandscape) {
