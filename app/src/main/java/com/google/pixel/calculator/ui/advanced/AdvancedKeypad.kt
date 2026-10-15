@@ -84,19 +84,21 @@ fun AdvancedKeypad(
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val toolBarDims = rememberToolBarDimensions()
 
+    val hPadding = if (isLandscape) 8.dp else 12.dp
     val spacing = if (isLandscape) 4.dp else if (isSplitScreen) 4.dp else 6.dp
     val screenHeight = configuration.screenHeightDp.dp
     val screenWidth = configuration.screenWidthDp.dp
+
+    val btnWidth6Col = (screenWidth - (hPadding * 2) - (spacing * 5)) / 6
 
     val unitHeight = if (isLandscape) {
         22.dp
     } else if (isSplitScreen) {
         (screenHeight * 0.038f).coerceIn(24.dp, 34.dp)
     } else {
-        // Full advanced calculator: 7.38 units fill ~60% of screen height
-        val targetKeypadHeight = (screenHeight * 0.60f).coerceIn(320.dp, 620.dp)
-        val availableForUnits = targetKeypadHeight - 44.dp - (spacing * 7) - 12.dp
-        (availableForUnits / 7.38f).coerceIn(34.dp, 72.dp)
+        // Square keys: unitHeight matches ~90% of 6-column button width, keeping keypad ~50% of screen
+        val maxUnitByScreen = (screenHeight * 0.52f - 44.dp - (spacing * 7) - 12.dp) / 7.38f
+        minOf(btnWidth6Col * 0.90f, maxUnitByScreen).coerceIn(34.dp, 52.dp)
     }
 
     val bottomRowHeight = if (isLandscape) {
@@ -104,7 +106,7 @@ fun AdvancedKeypad(
     } else if (isSplitScreen) {
         (unitHeight * 1.55f).coerceIn(40.dp, 52.dp)
     } else {
-        (unitHeight * 1.38f).coerceIn(48.dp, 84.dp)
+        (unitHeight * 1.30f).coerceIn(46.dp, 68.dp)
     }
 
     val tabAccent = activeTab.accentColor

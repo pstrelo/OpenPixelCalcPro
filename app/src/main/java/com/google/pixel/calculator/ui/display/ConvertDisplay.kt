@@ -219,24 +219,24 @@ private fun ConverterBox(
                 val isSmallScreen = screenWidthDp < 360
                 val fontSize = if (isCompact) {
                     when {
-                        valueStr.length > 14 -> 14.sp
-                        valueStr.length > 10 -> 17.sp
-                        valueStr.length > 7 -> 20.sp
-                        else -> 24.sp
+                        valueStr.length > 14 -> 15.sp
+                        valueStr.length > 10 -> 18.sp
+                        valueStr.length > 7 -> 22.sp
+                        else -> 26.sp
                     }
                 } else if (isSmallScreen) {
                     when {
-                        valueStr.length > 14 -> 20.sp
-                        valueStr.length > 10 -> 24.sp
-                        valueStr.length > 7 -> 30.sp
-                        else -> 36.sp
+                        valueStr.length > 14 -> 18.sp
+                        valueStr.length > 10 -> 22.sp
+                        valueStr.length > 7 -> 26.sp
+                        else -> 30.sp
                     }
                 } else {
                     when {
-                        valueStr.length > 14 -> 24.sp
-                        valueStr.length > 10 -> 30.sp
-                        valueStr.length > 7 -> 36.sp
-                        else -> 42.sp
+                        valueStr.length > 14 -> 20.sp
+                        valueStr.length > 10 -> 25.sp
+                        valueStr.length > 7 -> 30.sp
+                        else -> 36.sp
                     }
                 }
 

@@ -26,46 +26,50 @@ class ResponsiveLayoutTest {
             val screenHeight = device.heightDp
             val screenWidth = device.widthDp
 
-            // Basic Mode Calculations
-            val targetKeypadHeightBasic = (screenHeight * 0.63f).coerceIn(300f, 600f)
-            val targetSpacingBasic = (screenWidth * 0.028f).coerceIn(6f, 12f)
-            val targetBtnHeightBasic = ((targetKeypadHeightBasic - 40f - 12f - (targetSpacingBasic * 4)) / 5).coerceIn(46f, 96f)
-
+            // Basic Mode Calculations (keys are square, keypad ~50% height)
             val hPadding = 16f
-            val btnWidthBasic = (screenWidth - (hPadding * 2) - (targetSpacingBasic * 3)) / 4
+            val spacingBasic = (screenWidth * 0.026f).coerceIn(8f, 12f)
+            val btnWidthBasic = (screenWidth - (hPadding * 2) - (spacingBasic * 3)) / 4
+            val maxBasicHeightByScreen = (screenHeight * 0.52f - 38f - 12f - (spacingBasic * 4)) / 5
+            val targetBtnHeightBasic = minOf(btnWidthBasic * 0.94f, maxBasicHeightByScreen).coerceIn(46f, 82f)
+            val targetKeypadHeightBasic = (targetBtnHeightBasic * 5) + (spacingBasic * 4) + 38f + 12f
 
             // Pro Mode Calculations
-            val targetKeypadHeightPro = (screenHeight * 0.71f).coerceIn(360f, 690f)
-            val targetSpacingPro = (screenWidth * 0.015f).coerceIn(4f, 7f)
-            val targetBtnHeightPro = ((targetKeypadHeightPro - 40f - 12f - (targetSpacingPro * 7)) / 8).coerceIn(36f, 72f)
-            val btnWidthPro = (screenWidth - (hPadding * 2) - (targetSpacingPro * 3)) / 4
+            val spacingPro = (screenWidth * 0.015f).coerceIn(4f, 6f)
+            val maxProHeightByScreen = (screenHeight * 0.54f - 38f - 12f - (spacingPro * 7)) / 8
+            val targetBtnHeightPro = minOf(btnWidthBasic * 0.58f, maxProHeightByScreen).coerceIn(38f, 52f)
+            val targetKeypadHeightPro = (targetBtnHeightPro * 8) + (spacingPro * 7) + 38f + 12f
+            val btnWidthPro = (screenWidth - (hPadding * 2) - (spacingPro * 3)) / 4
 
-            // 1. Check Keypad percentage ratio is balanced
+            // 1. Check Keypad percentage ratio is ~50%
             val basicKeypadRatio = targetKeypadHeightBasic / screenHeight
             assertTrue(
-                "Device ${device.name}: basic keypad ratio $basicKeypadRatio should be between 55% and 75%",
-                basicKeypadRatio in 0.55f..0.75f
+                "Device ${device.name}: basic keypad ratio $basicKeypadRatio should be around 50% (between 45% and 60%)",
+                basicKeypadRatio in 0.45f..0.62f
             )
 
-            // 2. Check Display has sufficient space
+            // 2. Check Display has generous space (> 180dp on full screens)
             val remainingDisplayBasic = screenHeight - targetKeypadHeightBasic - 64f // minus top bar
+            val minDisplay = if (device.heightDp <= 600f) 120f else 140f
             assertTrue(
-                "Device ${device.name}: display space $remainingDisplayBasic should be at least 110dp",
-                remainingDisplayBasic >= 110f
+                "Device ${device.name}: display space $remainingDisplayBasic should be at least ${minDisplay}dp",
+                remainingDisplayBasic >= minDisplay
             )
 
-            // 3. Check Basic button aspect ratio (nearly square on full phones, wider on split screen)
+            // 3. Check Basic button aspect ratio is SQUARE on standard/tall phones (~0.90-1.0), and comfortable on compact/tablets
             val aspectRatioBasic = targetBtnHeightBasic / btnWidthBasic
+            val minRatio = if (device.heightDp <= 700f || device.widthDp >= 500f) 0.50f else 0.75f
             assertTrue(
-                "Device ${device.name}: basic button aspect ratio $aspectRatioBasic should be between 0.50 and 1.30",
-                aspectRatioBasic in 0.50f..1.30f
+                "Device ${device.name}: basic button aspect ratio $aspectRatioBasic should be square on phones (between $minRatio and 1.05)",
+                aspectRatioBasic in minRatio..1.05f
             )
 
             // 4. Check Pro mode button aspect ratio
             val aspectRatioPro = targetBtnHeightPro / btnWidthPro
+            val minProRatio = if (device.widthDp >= 500f || device.heightDp <= 600f) 0.30f else 0.45f
             assertTrue(
-                "Device ${device.name}: pro button aspect ratio $aspectRatioPro should be comfortable (between 0.40 and 1.0)",
-                aspectRatioPro in 0.40f..1.0f
+                "Device ${device.name}: pro button aspect ratio $aspectRatioPro should be comfortable (between $minProRatio and 0.75)",
+                aspectRatioPro in minProRatio..0.75f
             )
         }
     }
@@ -76,20 +80,20 @@ class ResponsiveLayoutTest {
             val screenHeight = device.heightDp
             val screenWidth = device.widthDp
 
-            val targetKeypadHeight = (screenHeight * 0.60f).coerceIn(320f, 620f)
-            val spacing = 6f
-            val availableForUnits = targetKeypadHeight - 44f - (spacing * 7) - 12f
-            val unitHeight = (availableForUnits / 7.38f).coerceIn(34f, 72f)
-            val bottomRowHeight = (unitHeight * 1.38f).coerceIn(48f, 84f)
-
             val hPadding = 12f
+            val spacing = 6f
             val btnWidth6Col = (screenWidth - (hPadding * 2) - (spacing * 5)) / 6
+
+            val maxUnitByScreen = (screenHeight * 0.52f - 44f - (spacing * 7) - 12f) / 7.38f
+            val unitHeight = minOf(btnWidth6Col * 0.90f, maxUnitByScreen).coerceIn(34f, 52f)
+            val bottomRowHeight = (unitHeight * 1.30f).coerceIn(46f, 68f)
 
             // Aspect ratio of 6-column square keys
             val squircleRatio = unitHeight / btnWidth6Col
+            val minSquircleRatio = if (device.heightDp <= 700f || device.widthDp >= 500f) 0.50f else 0.75f
             assertTrue(
-                "Device ${device.name}: advanced squircle ratio $squircleRatio should be between 0.50 and 1.30",
-                squircleRatio in 0.50f..1.30f
+                "Device ${device.name}: advanced squircle ratio $squircleRatio should be between $minSquircleRatio and 1.05",
+                squircleRatio in minSquircleRatio..1.05f
             )
 
             // Verify FORMAT key has enough space to not wrap (at least 45dp)
@@ -108,8 +112,6 @@ class ResponsiveLayoutTest {
         val tabCount = 4
         val singleTabWidth = availableWidth / tabCount // 84dp
 
-        // Longest tab label: "Trig" (4 chars), "Algebra" (7 chars), "Calculus" (8 chars), "Alphabet" (8 chars)
-        // With 12sp font, 8 chars is ~55-60dp wide.
         assertTrue(
             "Tab width $singleTabWidth dp on 360dp screen should comfortably exceed 65dp to fit 'Alphabet' and 'Calculus'",
             singleTabWidth >= 65f

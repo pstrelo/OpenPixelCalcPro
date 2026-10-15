@@ -90,19 +90,24 @@ fun BaseKeypad(
     val screenHeight = configuration.screenHeightDp.dp
     val screenWidth = configuration.screenWidthDp.dp
 
-    // Dynamic responsive heights based on screen dimensions
-    // Basic mode: keypad takes ~63% of screen height
-    val targetKeypadHeightBasic = (screenHeight * 0.63f).coerceIn(300.dp, 600.dp)
-    val targetSpacingBasic = (screenWidth * 0.028f).coerceIn(6.dp, 12.dp)
-    val targetBtnHeightBasic = ((targetKeypadHeightBasic - 40.dp - 12.dp - (targetSpacingBasic * 4)) / 5).coerceIn(46.dp, 96.dp)
+    // Proportional dimensions: keypad takes ~50% of screen height with square squircle keys (btnHeight ~= btnWidth)
+    val hPadding = if (isLandscape) 10.dp else 16.dp
+    val spacingBasic = (screenWidth * 0.026f).coerceIn(8.dp, 12.dp)
+    val btnWidthBasic = (screenWidth - (hPadding * 2) - (spacingBasic * 3)) / 4
 
-    // Pro mode: keypad takes ~71% of screen height (8 rows)
-    val targetKeypadHeightPro = (screenHeight * 0.71f).coerceIn(360.dp, 690.dp)
-    val targetSpacingPro = (screenWidth * 0.015f).coerceIn(4.dp, 7.dp)
-    val targetBtnHeightPro = ((targetKeypadHeightPro - 40.dp - 12.dp - (targetSpacingPro * 7)) / 8).coerceIn(36.dp, 72.dp)
+    // Height of button in basic mode matches width for square icons
+    val maxBasicHeightByScreen = (screenHeight * 0.52f - 38.dp - 12.dp - (spacingBasic * 4)) / 5
+    val targetBtnHeightBasic = if (isLandscape) 48.dp else minOf(btnWidthBasic * 0.94f, maxBasicHeightByScreen).coerceIn(46.dp, 82.dp)
+    val targetKeypadHeightBasic = (targetBtnHeightBasic * 5) + (spacingBasic * 4) + 38.dp + 12.dp
+
+    // Pro mode (8 rows): compact scientific rows, keypad takes ~50-52% of screen height
+    val spacingPro = (screenWidth * 0.015f).coerceIn(4.dp, 6.dp)
+    val maxProHeightByScreen = (screenHeight * 0.54f - 38.dp - 12.dp - (spacingPro * 7)) / 8
+    val targetBtnHeightPro = if (isLandscape) 48.dp else minOf(btnWidthBasic * 0.58f, maxProHeightByScreen).coerceIn(38.dp, 52.dp)
+    val targetKeypadHeightPro = (targetBtnHeightPro * 8) + (spacingPro * 7) + 38.dp + 12.dp
 
     val targetBtnHeight = if (isLandscape) 48.dp else if (effectiveProMode) targetBtnHeightPro else targetBtnHeightBasic
-    val targetSpacing = if (isLandscape) 6.dp else if (effectiveProMode) targetSpacingPro else targetSpacingBasic
+    val targetSpacing = if (isLandscape) 6.dp else if (effectiveProMode) spacingPro else spacingBasic
     val targetKeypadHeight = if (isLandscape) 0.dp else if (effectiveProMode) targetKeypadHeightPro else targetKeypadHeightBasic
 
     val keyAnimationSpec = spring<Dp>(
