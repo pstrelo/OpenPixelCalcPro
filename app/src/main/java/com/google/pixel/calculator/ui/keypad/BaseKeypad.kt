@@ -87,9 +87,23 @@ fun BaseKeypad(
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val effectiveProMode = if (isLandscape) true else isProMode
+    val screenHeight = configuration.screenHeightDp.dp
+    val screenWidth = configuration.screenWidthDp.dp
 
-    val targetBtnHeight = if (isLandscape) 48.dp else if (effectiveProMode) 52.dp else 81.dp
-    val targetSpacing = if (isLandscape) 6.dp else if (effectiveProMode) 6.dp else 11.8.dp
+    // Dynamic responsive heights based on screen dimensions
+    // Basic mode: keypad takes ~63% of screen height
+    val targetKeypadHeightBasic = (screenHeight * 0.63f).coerceIn(300.dp, 600.dp)
+    val targetSpacingBasic = (screenWidth * 0.028f).coerceIn(6.dp, 12.dp)
+    val targetBtnHeightBasic = ((targetKeypadHeightBasic - 40.dp - 12.dp - (targetSpacingBasic * 4)) / 5).coerceIn(46.dp, 96.dp)
+
+    // Pro mode: keypad takes ~71% of screen height (8 rows)
+    val targetKeypadHeightPro = (screenHeight * 0.71f).coerceIn(360.dp, 690.dp)
+    val targetSpacingPro = (screenWidth * 0.015f).coerceIn(4.dp, 7.dp)
+    val targetBtnHeightPro = ((targetKeypadHeightPro - 40.dp - 12.dp - (targetSpacingPro * 7)) / 8).coerceIn(36.dp, 72.dp)
+
+    val targetBtnHeight = if (isLandscape) 48.dp else if (effectiveProMode) targetBtnHeightPro else targetBtnHeightBasic
+    val targetSpacing = if (isLandscape) 6.dp else if (effectiveProMode) targetSpacingPro else targetSpacingBasic
+    val targetKeypadHeight = if (isLandscape) 0.dp else if (effectiveProMode) targetKeypadHeightPro else targetKeypadHeightBasic
 
     val keyAnimationSpec = spring<Dp>(
         dampingRatio = Spring.DampingRatioNoBouncy,
@@ -108,13 +122,19 @@ fun BaseKeypad(
         label = "KeypadSpacing"
     )
 
-    val scientificBtnHeight = if (isLandscape) 48.dp else 52.dp
-    val scientificSpacing = 6.dp
+    val keypadHeight by animateDpAsState(
+        targetValue = targetKeypadHeight,
+        animationSpec = keyAnimationSpec,
+        label = "KeypadTotalHeight"
+    )
+
+    val scientificBtnHeight = if (isLandscape) 48.dp else btnHeight
+    val scientificSpacing = spacing
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .then(if (!isLandscape) Modifier.height(520.dp) else Modifier)
+            .then(if (!isLandscape) Modifier.height(keypadHeight) else Modifier)
             .padding(horizontal = if (isLandscape) 10.dp else 16.dp, vertical = if (isLandscape) 2.dp else 6.dp),
         verticalArrangement = if (!isLandscape) Arrangement.spacedBy(spacing, Alignment.Bottom) else Arrangement.spacedBy(spacing)
     ) {
@@ -687,9 +707,10 @@ fun PixelButton(
             contentAlignment = Alignment.Center,
             modifier = Modifier.fillMaxSize()
         ) {
+            val fraction = ((height - 48.dp) / 40.dp).coerceIn(0f, 1f)
             val fontSize = when {
                 type == PixelButtonType.SCIENTIFIC -> {
-                    if (text.length > 3) 14.sp else if (height <= 48.dp) 15.sp else 18.sp
+                    if (text.length > 3) (13f + 2f * fraction).sp else if (height <= 48.dp) 15.sp else (15f + 3.5f * fraction).sp
                 }
                 height <= 48.dp -> {
                     when (type) {
@@ -699,11 +720,10 @@ fun PixelButton(
                     }
                 }
                 else -> {
-                    val fraction = ((height - 52.dp) / 30.dp).coerceIn(0f, 1f)
                     when (type) {
-                        PixelButtonType.NUMERIC -> (28f + 5f * fraction).sp
-                        PixelButtonType.OPERATOR, PixelButtonType.EQUALS -> (30f + 5f * fraction).sp
-                        else -> if (text.length > 2) (18f + 2f * fraction).sp else (20f + 5f * fraction).sp
+                        PixelButtonType.NUMERIC -> (26f + 8f * fraction).sp
+                        PixelButtonType.OPERATOR, PixelButtonType.EQUALS -> (28f + 8f * fraction).sp
+                        else -> if (text.length > 2) (18f + 3f * fraction).sp else (20f + 7f * fraction).sp
                     }
                 }
             }

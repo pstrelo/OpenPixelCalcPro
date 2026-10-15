@@ -71,7 +71,7 @@ fun ConvertDisplay(
     }
 
     val isLandscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-    val isCompact = isLandscape
+    val isCompact = isLandscape || isProMode
 
     val topScrollState = rememberScrollState()
     val bottomScrollState = rememberScrollState()
@@ -85,15 +85,15 @@ fun ConvertDisplay(
 
     Column(
         modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = if (isCompact) 2.dp else 6.dp),
-        verticalArrangement = Arrangement.Center
+            .fillMaxSize()
+            .padding(horizontal = 16.dp, vertical = if (isCompact) 2.dp else 4.dp),
+        verticalArrangement = Arrangement.SpaceEvenly
     ) {
         // --- TOP BOX ---
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f, fill = false),
+                .weight(1f),
             contentAlignment = Alignment.Center
         ) {
             ConverterBox(
@@ -117,7 +117,7 @@ fun ConvertDisplay(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = if (isCompact) 1.dp else 4.dp),
+                .padding(vertical = if (isCompact) 1.dp else 2.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(
@@ -126,7 +126,7 @@ fun ConvertDisplay(
                     onSwap()
                 },
                 modifier = Modifier
-                    .size(if (isCompact) 32.dp else 40.dp)
+                    .size(if (isCompact) 32.dp else 38.dp)
                     .background(
                         color = CalculatorTheme.colors.equalsContainer.copy(alpha = 0.20f),
                         shape = CircleShape
@@ -136,7 +136,7 @@ fun ConvertDisplay(
                     imageVector = Icons.Default.SwapVert,
                     contentDescription = stringResource(R.string.swap_units),
                     tint = CalculatorTheme.colors.equalsContainer,
-                    modifier = Modifier.size(if (isCompact) 18.dp else 24.dp)
+                    modifier = Modifier.size(if (isCompact) 18.dp else 22.dp)
                 )
             }
 
@@ -153,7 +153,7 @@ fun ConvertDisplay(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f, fill = false),
+                .weight(1f),
             contentAlignment = Alignment.Center
         ) {
             ConverterBox(

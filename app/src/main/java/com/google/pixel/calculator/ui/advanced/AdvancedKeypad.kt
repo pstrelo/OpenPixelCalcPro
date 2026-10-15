@@ -84,9 +84,28 @@ fun AdvancedKeypad(
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val toolBarDims = rememberToolBarDimensions()
 
-    val spacing = if (isLandscape) 4.dp else 6.dp
-    val unitHeight = if (isLandscape) 22.dp else if (isSplitScreen) 28.dp else 36.dp
-    val bottomRowHeight = if (isLandscape) 44.dp else if (isSplitScreen) 50.dp else 56.dp
+    val spacing = if (isLandscape) 4.dp else if (isSplitScreen) 4.dp else 6.dp
+    val screenHeight = configuration.screenHeightDp.dp
+    val screenWidth = configuration.screenWidthDp.dp
+
+    val unitHeight = if (isLandscape) {
+        22.dp
+    } else if (isSplitScreen) {
+        (screenHeight * 0.038f).coerceIn(24.dp, 34.dp)
+    } else {
+        // Full advanced calculator: 7.38 units fill ~60% of screen height
+        val targetKeypadHeight = (screenHeight * 0.60f).coerceIn(320.dp, 620.dp)
+        val availableForUnits = targetKeypadHeight - 44.dp - (spacing * 7) - 12.dp
+        (availableForUnits / 7.38f).coerceIn(34.dp, 72.dp)
+    }
+
+    val bottomRowHeight = if (isLandscape) {
+        44.dp
+    } else if (isSplitScreen) {
+        (unitHeight * 1.55f).coerceIn(40.dp, 52.dp)
+    } else {
+        (unitHeight * 1.38f).coerceIn(48.dp, 84.dp)
+    }
 
     val tabAccent = activeTab.accentColor
 
@@ -256,41 +275,76 @@ fun MathSolverTabBar(
     val isDark = CalculatorTheme.colors.isDark
     val dividerColor = if (isDark) Color(0xFF2E3448) else CalculatorTheme.colors.operatorContainer
     val unselectedColor = if (isDark) MathSolverTheme.tabUnselected else CalculatorTheme.colors.onSurfaceVariant
+    val screenWidthDp = LocalConfiguration.current.screenWidthDp
+    val isNarrow = screenWidthDp < 380
 
-    TabRow(
-        selectedTabIndex = selectedTab.ordinal,
-        containerColor = Color.Transparent,
-        contentColor = if (isDark) Color.White else CalculatorTheme.colors.onSurface,
-        indicator = { tabPositions ->
-            TabRowDefaults.SecondaryIndicator(
-                modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab.ordinal]),
-                height = 3.dp,
-                color = selectedTab.accentColor
-            )
-        },
-        divider = {
-            HorizontalDivider(color = dividerColor, thickness = 1.dp)
-        },
-        modifier = modifier.fillMaxWidth()
-    ) {
-        MathSolverTab.values().forEach { tab ->
-            val isSelected = tab == selectedTab
-            Tab(
-                selected = isSelected,
-                onClick = { onTabSelected(tab) },
-                text = {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            MathSolverTab.values().forEach { tab ->
+                val isSelected = tab == selectedTab
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            onTabSelected(tab)
+                        }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
                         text = when (tab) {
                             MathSolverTab.TRIGONOMETRY -> "Trig"
                             else -> tab.title
                         },
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                        fontSize = 13.sp,
+                        fontSize = if (isNarrow) 12.sp else 13.5.sp,
                         maxLines = 1,
+                        softWrap = false,
                         color = if (isSelected) tab.accentColor else unselectedColor
                     )
                 }
+            }
+        }
+
+        // Indicator line and divider
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(3.dp)
+        ) {
+            HorizontalDivider(
+                color = dividerColor,
+                thickness = 1.dp,
+                modifier = Modifier.align(Alignment.BottomCenter)
             )
+
+            val tabCount = MathSolverTab.values().size
+            val indicatorOffset by androidx.compose.animation.core.animateFloatAsState(
+                targetValue = selectedTab.ordinal.toFloat(),
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioNoBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                ),
+                label = "MathSolverTabIndicator"
+            )
+
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                val tabWidth = maxWidth / tabCount
+                Box(
+                    modifier = Modifier
+                        .offset(x = tabWidth * indicatorOffset)
+                        .width(tabWidth)
+                        .fillMaxHeight()
+                        .padding(horizontal = 8.dp)
+                        .background(selectedTab.accentColor, RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp))
+                )
+            }
         }
     }
 }
@@ -441,11 +495,14 @@ private fun BottomSystemNavRow(
                             contentColor = tabAccent,
                             onClick = onCycleFormat
                         ) {
+                            val isNarrow = LocalConfiguration.current.screenWidthDp < 380
                             Text(
                                 text = "FORMAT",
-                                fontSize = 11.sp,
+                                fontSize = if (isNarrow) 9.5.sp else 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = tabAccent
+                                color = tabAccent,
+                                maxLines = 1,
+                                softWrap = false
                             )
                         }
 

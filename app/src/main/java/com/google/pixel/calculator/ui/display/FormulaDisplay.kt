@@ -90,6 +90,7 @@ fun FormulaDisplay(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val scaleFactor = (LocalConfiguration.current.screenWidthDp / 400f).coerceIn(0.85f, 1.15f)
                 val fontSize = if (isLandscape) {
                     when {
                         expression.length > 20 -> 22.sp
@@ -99,10 +100,10 @@ fun FormulaDisplay(
                     }
                 } else {
                     when {
-                        expression.length > 15 -> 38.sp
-                        expression.length > 10 -> 48.sp
-                        expression.length > 7 -> 58.sp
-                        else -> 68.sp
+                        expression.length > 15 -> (38f * scaleFactor).sp
+                        expression.length > 10 -> (48f * scaleFactor).sp
+                        expression.length > 7 -> (58f * scaleFactor).sp
+                        else -> (68f * scaleFactor).sp
                     }
                 }
 
@@ -120,11 +121,13 @@ fun FormulaDisplay(
 
         Spacer(modifier = Modifier.height(if (isLandscape) 2.dp else 4.dp))
 
+        val scaleFactor = (LocalConfiguration.current.screenWidthDp / 400f).coerceIn(0.85f, 1.15f)
+
         // Error message
         AnimatedVisibility(visible = errorMessage != null) {
             Text(
                 text = errorMessage ?: "",
-                fontSize = if (isLandscape) 15.sp else 20.sp,
+                fontSize = if (isLandscape) 15.sp else (20f * scaleFactor).sp,
                 fontWeight = FontWeight.Normal,
                 fontFamily = SystemFontFamily,
                 color = MaterialTheme.colorScheme.error,
@@ -136,7 +139,7 @@ fun FormulaDisplay(
         AnimatedVisibility(visible = resultPreview.isNotEmpty() && errorMessage == null) {
             Text(
                 text = "= $resultPreview",
-                fontSize = if (isLandscape) 20.sp else 32.sp,
+                fontSize = if (isLandscape) 20.sp else (32f * scaleFactor).sp,
                 fontWeight = FontWeight.SemiBold,
                 fontFamily = QuicksandFontFamily,
                 color = CalculatorTheme.colors.onSurfaceVariant.copy(alpha = 0.85f),

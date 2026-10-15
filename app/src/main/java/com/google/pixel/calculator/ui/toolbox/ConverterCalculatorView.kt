@@ -361,7 +361,7 @@ fun ConverterCalculatorView(
                             pickerTarget = UnitPickerTarget.TO
                             showPicker = true
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
 

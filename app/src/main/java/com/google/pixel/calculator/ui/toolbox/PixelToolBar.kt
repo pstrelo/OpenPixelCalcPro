@@ -133,17 +133,17 @@ fun rememberToolBarDimensions(): ToolBarDimensions {
     val btnWidth = if (isLandscape) {
         48.dp
     } else {
-        ((screenWidth - (hPadding * 2) - (spacing * 3)) / 4).coerceAtLeast(82.dp)
+        (screenWidth - (hPadding * 2) - (spacing * 3)) / 4
     }
 
     // Width of pill bar
     val pillWidth = if (isLandscape) {
         260.dp
     } else {
-        (screenWidth - (hPadding * 2) - btnWidth - spacing).coerceAtLeast(240.dp)
+        screenWidth - (hPadding * 2) - btnWidth - spacing
     }
 
-    return remember(isLandscape, screenWidth) {
+    return remember(isLandscape, screenWidth, btnWidth, pillWidth) {
         ToolBarDimensions(
             height = height,
             btnWidth = btnWidth,
