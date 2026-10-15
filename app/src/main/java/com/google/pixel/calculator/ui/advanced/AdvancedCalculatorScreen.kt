@@ -27,7 +27,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import android.content.pm.ActivityInfo
+import androidx.compose.ui.platform.LocalContext
 import com.google.pixel.calculator.R
+import com.google.pixel.calculator.core.utils.findActivity
 import com.google.pixel.calculator.ui.ActiveScreen
 import com.google.pixel.calculator.ui.theme.CalculatorTheme
 
@@ -38,6 +41,18 @@ fun AdvancedCalculatorScreen(
     onNavigate: (ActiveScreen) -> Unit = {},
     viewModel: AdvancedCalculatorViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+
+    // Bloquea la schermata in portrait mode nella calcolatrice avanzata per prevenire crash su rotazione
+    DisposableEffect(Unit) {
+        val activity = context.findActivity()
+        val originalOrientation = activity?.requestedOrientation ?: ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        onDispose {
+            activity?.requestedOrientation = originalOrientation
+        }
+    }
+
     val state by viewModel.uiState.collectAsState()
     var isToolBarExpanded by remember { mutableStateOf(false) }
 

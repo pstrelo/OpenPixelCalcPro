@@ -13,10 +13,15 @@ import kotlin.math.abs
 /**
  * Unified sensor manager for the Google Pixel-style digital compass.
  * Concurrently supports:
- * 1. Sensor.TYPE_ROTATION_VECTOR (Modern hardware-fused rotation vector, natively supported by Android emulator for "Device Pose" / "Compass" and physical 120Hz devices).
- * 2. Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR (Low-power geomagnetic rotation vector).
- * 3. Sensor.TYPE_ORIENTATION (Legacy compatibility with simulators and older devices).
- * 4. Sensor.TYPE_ACCELEROMETER + Sensor.TYPE_MAGNETIC_FIELD (Raw fallback matrix sensor fusion).
+ * 1. Sensor.TYPE_ROTATION_VECTOR (Modern hardware-fused rotation vector on Google Pixel).
+ * 2. Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR (Dedicated low-power geomagnetic rotation vector on Samsung Galaxy & others).
+ * 3. Sensor.TYPE_ACCELEROMETER + Sensor.TYPE_MAGNETIC_FIELD (Direct hardware matrix fusion responsive to figure-8 calibration).
+ * 4. Sensor.TYPE_ORIENTATION (Legacy compatibility with simulators and older devices).
+ *
+ * Tailored profiles:
+ * - Google Pixel: Preserves the exact original hardware-fused pipeline.
+ * - Non-Pixel devices (Samsung Galaxy A-series, etc.): Bypasses uncalibrated virtual gyroscopes,
+ *   directly connects to the calibrated geomagnetic field, and applies robust coordinate remapping.
  */
 class CompassSensorManager(context: Context) {
 
@@ -50,6 +55,7 @@ class CompassSensorManager(context: Context) {
             return@callbackFlow
         }
 
+        val isPixel = DeviceProfile.isGooglePixel()
         val gravity = FloatArray(3)
         val geomagnetic = FloatArray(3)
         val rMatrix = FloatArray(9)
@@ -76,7 +82,11 @@ class CompassSensorManager(context: Context) {
                             SensorManager.getOrientation(rMatrix, orientation)
                             pitchDeg = Math.toDegrees(orientation[1].toDouble()).toFloat()
                             rollDeg = Math.toDegrees(orientation[2].toDouble()).toFloat()
-                            rawDeg = calculateAzimuth(rMatrix)
+                            rawDeg = if (isPixel) {
+                                calculateAzimuth(rMatrix)
+                            } else {
+                                calculateAzimuthNonPixel(rMatrix, pitchDeg, rollDeg)
+                            }
                             lastFusedTimestamp = System.currentTimeMillis()
                         } catch (_: Exception) {}
                     }
@@ -96,7 +106,11 @@ class CompassSensorManager(context: Context) {
                                 SensorManager.getOrientation(rMatrix, orientation)
                                 pitchDeg = Math.toDegrees(orientation[1].toDouble()).toFloat()
                                 rollDeg = Math.toDegrees(orientation[2].toDouble()).toFloat()
-                                rawDeg = calculateAzimuth(rMatrix)
+                                rawDeg = if (isPixel) {
+                                    calculateAzimuth(rMatrix)
+                                } else {
+                                    calculateAzimuthNonPixel(rMatrix, pitchDeg, rollDeg)
+                                }
                             }
                         }
                     }
@@ -109,7 +123,11 @@ class CompassSensorManager(context: Context) {
                                 SensorManager.getOrientation(rMatrix, orientation)
                                 pitchDeg = Math.toDegrees(orientation[1].toDouble()).toFloat()
                                 rollDeg = Math.toDegrees(orientation[2].toDouble()).toFloat()
-                                rawDeg = calculateAzimuth(rMatrix)
+                                rawDeg = if (isPixel) {
+                                    calculateAzimuth(rMatrix)
+                                } else {
+                                    calculateAzimuthNonPixel(rMatrix, pitchDeg, rollDeg)
+                                }
                             }
                         }
                     }
@@ -143,6 +161,7 @@ class CompassSensorManager(context: Context) {
 
             override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
                 if (sensor?.type == Sensor.TYPE_ROTATION_VECTOR ||
+                    sensor?.type == Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR ||
                     sensor?.type == Sensor.TYPE_MAGNETIC_FIELD ||
                     @Suppress("DEPRECATION")
                     sensor?.type == Sensor.TYPE_ORIENTATION
@@ -152,21 +171,43 @@ class CompassSensorManager(context: Context) {
             }
         }
 
-        // Prioritized registration of the best available sensor to avoid crosstalk and jitter across concurrent pipelines
-        when {
-            rotationVector != null -> {
-                sm.registerListener(listener, rotationVector, SensorManager.SENSOR_DELAY_UI)
+        // Device-optimized sensor registration:
+        // - Google Pixel: Retain exact rotationVector priority.
+        // - Non-Pixel (Samsung A27, etc.): Prefer geomagnetic rotation vector or raw magnetometer + accelerometer
+        //   so that the figure-8 calibration is directly active and uncalibrated virtual gyroscopes are bypassed.
+        if (isPixel) {
+            when {
+                rotationVector != null -> {
+                    sm.registerListener(listener, rotationVector, SensorManager.SENSOR_DELAY_UI)
+                }
+                geomagneticVector != null -> {
+                    sm.registerListener(listener, geomagneticVector, SensorManager.SENSOR_DELAY_UI)
+                }
+                orientationSensor != null -> {
+                    @Suppress("DEPRECATION")
+                    sm.registerListener(listener, orientationSensor, SensorManager.SENSOR_DELAY_UI)
+                }
+                accelerometer != null && magnetometer != null -> {
+                    sm.registerListener(listener, accelerometer, SensorManager.SENSOR_DELAY_UI)
+                    sm.registerListener(listener, magnetometer, SensorManager.SENSOR_DELAY_UI)
+                }
             }
-            geomagneticVector != null -> {
-                sm.registerListener(listener, geomagneticVector, SensorManager.SENSOR_DELAY_UI)
-            }
-            orientationSensor != null -> {
-                @Suppress("DEPRECATION")
-                sm.registerListener(listener, orientationSensor, SensorManager.SENSOR_DELAY_UI)
-            }
-            accelerometer != null && magnetometer != null -> {
-                sm.registerListener(listener, accelerometer, SensorManager.SENSOR_DELAY_UI)
-                sm.registerListener(listener, magnetometer, SensorManager.SENSOR_DELAY_UI)
+        } else {
+            when {
+                geomagneticVector != null -> {
+                    sm.registerListener(listener, geomagneticVector, SensorManager.SENSOR_DELAY_UI)
+                }
+                accelerometer != null && magnetometer != null -> {
+                    sm.registerListener(listener, accelerometer, SensorManager.SENSOR_DELAY_UI)
+                    sm.registerListener(listener, magnetometer, SensorManager.SENSOR_DELAY_UI)
+                }
+                rotationVector != null -> {
+                    sm.registerListener(listener, rotationVector, SensorManager.SENSOR_DELAY_UI)
+                }
+                orientationSensor != null -> {
+                    @Suppress("DEPRECATION")
+                    sm.registerListener(listener, orientationSensor, SensorManager.SENSOR_DELAY_UI)
+                }
             }
         }
 
@@ -177,11 +218,8 @@ class CompassSensorManager(context: Context) {
 
     companion object {
         /**
-         * Calculates azimuth in degrees (0° = North, 90° = East, 180° = South, 270° = West).
-         * Uses a continuous 3D projection:
-         * - Flat / horizontal (cosTilt = 1, sinTilt = 0): aligned along top edge (+Y, components R[1] and R[4]).
-         * - Upright / vertical (cosTilt = 0, sinTilt = 1): aligned along rear camera line-of-sight (-Z, components -R[2] and -R[5]).
-         * Ensures smooth transition without jumping or flipping between flat and vertical usage.
+         * Calculates azimuth in degrees (0° = North, 90° = East, 180° = South, 270° = West)
+         * for Google Pixel devices (preserved original algorithm).
          */
         fun calculateAzimuth(rMatrix: FloatArray): Float {
             val cosTilt = rMatrix[8].coerceIn(0f, 1f)
@@ -189,6 +227,38 @@ class CompassSensorManager(context: Context) {
 
             val east = rMatrix[1] * cosTilt - rMatrix[2] * sinTilt
             val north = rMatrix[4] * cosTilt - rMatrix[5] * sinTilt
+
+            val deg = Math.toDegrees(kotlin.math.atan2(east.toDouble(), north.toDouble())).toFloat()
+            return (deg + 360f) % 360f
+        }
+
+        /**
+         * Robust, tilt-compensated azimuth calculation for non-Pixel devices (Samsung Galaxy A-series, etc.).
+         * - Pure horizontal plane projection: R[1] (East) and R[4] (North) immune to roll cross-talk.
+         * - Smooth projection when device is held upright/vertical (pitch > 55°) along the back camera line-of-sight.
+         * - Pure mathematical implementation with zero runtime allocations.
+         */
+        fun calculateAzimuthNonPixel(rMatrix: FloatArray, pitchDeg: Float, rollDeg: Float): Float {
+            val east: Float
+            val north: Float
+
+            when {
+                pitchDeg > 55f -> {
+                    // Upright / standing vertically: heading is aligned with rear camera line of sight (-Z)
+                    east = -rMatrix[2]
+                    north = -rMatrix[5]
+                }
+                pitchDeg < -55f -> {
+                    // Upside-down vertical: heading is aligned with front camera line of sight (+Z)
+                    east = rMatrix[2]
+                    north = rMatrix[5]
+                }
+                else -> {
+                    // Handheld / flat / tilted: heading is aligned with device top (+Y) in horizontal plane
+                    east = rMatrix[1]
+                    north = rMatrix[4]
+                }
+            }
 
             val deg = Math.toDegrees(kotlin.math.atan2(east.toDouble(), north.toDouble())).toFloat()
             return (deg + 360f) % 360f

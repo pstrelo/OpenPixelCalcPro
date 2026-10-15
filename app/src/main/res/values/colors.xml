@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Colori di fallback statici per Android < 12 (API < 31) -->
+    <!-- System Auto (Default Light) -->
+    <color name="icon_system_auto_background">#FFFFFF</color>
+    <color name="icon_system_auto_flower">#DBE2FB</color>
+    <color name="icon_system_auto_symbols">#4A5166</color>
+    <color name="icon_system_auto_equals_circle">#495F8E</color>
+    <color name="icon_system_auto_equals_sign">#FFFFFF</color>
+
+    <!-- System Light -->
+    <color name="icon_system_light_background">#F8F9FA</color>
+    <color name="icon_system_light_flower">#D3E3FD</color>
+    <color name="icon_system_light_symbols">#44474E</color>
+    <color name="icon_system_light_equals_circle">#00639B</color>
+    <color name="icon_system_light_equals_sign">#FFFFFF</color>
+
+    <!-- System Dark -->
+    <color name="icon_system_dark_background">#131418</color>
+    <color name="icon_system_dark_flower">#26282E</color>
+    <color name="icon_system_dark_symbols">#E2E2E6</color>
+    <color name="icon_system_dark_equals_circle">#A8C7FA</color>
+    <color name="icon_system_dark_equals_sign">#041E49</color>
+</resources>

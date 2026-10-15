@@ -132,28 +132,30 @@ fun AdvancedGraphCanvas(
             }
             val gridStepPx = gridStepMath * scale
 
-            val leftRem = centerX % gridStepPx
-            var curX = if (leftRem < 0) leftRem + gridStepPx else leftRem
-            while (curX <= width) {
-                drawLine(
-                    color = Color(0x1A94A3B8),
-                    start = Offset(curX, 0f),
-                    end = Offset(curX, height),
-                    strokeWidth = 1f
-                )
-                curX += gridStepPx
-            }
+            if (gridStepPx > 0.1f) {
+                val leftRem = centerX % gridStepPx
+                var curX = if (leftRem < 0) leftRem + gridStepPx else leftRem
+                while (curX <= width) {
+                    drawLine(
+                        color = Color(0x1A94A3B8),
+                        start = Offset(curX, 0f),
+                        end = Offset(curX, height),
+                        strokeWidth = 1f
+                    )
+                    curX += gridStepPx
+                }
 
-            val topRem = centerY % gridStepPx
-            var curY = if (topRem < 0) topRem + gridStepPx else topRem
-            while (curY <= height) {
-                drawLine(
-                    color = Color(0x1A94A3B8),
-                    start = Offset(0f, curY),
-                    end = Offset(width, curY),
-                    strokeWidth = 1f
-                )
-                curY += gridStepPx
+                val topRem = centerY % gridStepPx
+                var curY = if (topRem < 0) topRem + gridStepPx else topRem
+                while (curY <= height) {
+                    drawLine(
+                        color = Color(0x1A94A3B8),
+                        start = Offset(0f, curY),
+                        end = Offset(width, curY),
+                        strokeWidth = 1f
+                    )
+                    curY += gridStepPx
+                }
             }
 
             // 2. Shaded inequality regions (Per-Equation Shaded Intervals)
@@ -306,58 +308,60 @@ fun AdvancedGraphCanvas(
                 isAntiAlias = true
             }
 
-            val domain = viewport.getVisibleDomainX(width)
-            val firstTickX = (kotlin.math.floor(domain.first / gridStepMath) * gridStepMath).toFloat()
-            var tX = firstTickX
-            while (tX <= domain.second) {
-                if (abs(tX) > 1e-4) {
-                    val px = viewport.mathToScreen(tX.toDouble(), 0.0, canvasSize).x
-                    val pyClamped = centerY.coerceIn(15f, height - 25f)
-                    drawLine(
-                        color = Color(0xFFE2E8F0),
-                        start = Offset(px, pyClamped - 4f),
-                        end = Offset(px, pyClamped + 4f),
-                        strokeWidth = 1.5f
-                    )
-                    drawContext.canvas.nativeCanvas.drawText(
-                        if (tX == tX.toInt().toFloat()) tX.toInt().toString() else "%.1f".format(tX),
-                        px,
-                        pyClamped + 18f,
-                        paint
-                    )
+            if (gridStepMath > 0.001f) {
+                val domain = viewport.getVisibleDomainX(width)
+                val firstTickX = (kotlin.math.floor(domain.first / gridStepMath) * gridStepMath).toFloat()
+                var tX = firstTickX
+                while (tX <= domain.second) {
+                    if (abs(tX) > 1e-4) {
+                        val px = viewport.mathToScreen(tX.toDouble(), 0.0, canvasSize).x
+                        val pyClamped = centerY.coerceIn(15f, height - 25f)
+                        drawLine(
+                            color = Color(0xFFE2E8F0),
+                            start = Offset(px, pyClamped - 4f),
+                            end = Offset(px, pyClamped + 4f),
+                            strokeWidth = 1.5f
+                        )
+                        drawContext.canvas.nativeCanvas.drawText(
+                            if (tX == tX.toInt().toFloat()) tX.toInt().toString() else "%.1f".format(tX),
+                            px,
+                            pyClamped + 18f,
+                            paint
+                        )
+                    }
+                    tX += gridStepMath
                 }
-                tX += gridStepMath
-            }
 
-            val yPaint = android.graphics.Paint().apply {
-                color = android.graphics.Color.parseColor("#94A3B8")
-                textSize = 11.sp.toPx()
-                textAlign = android.graphics.Paint.Align.RIGHT
-                isAntiAlias = true
-            }
-            val halfSpanY = (height / (2f * scale)).toDouble()
-            val yMin = viewport.centerMathY - halfSpanY
-            val yMax = viewport.centerMathY + halfSpanY
-            val firstTickY = (kotlin.math.floor(yMin / gridStepMath) * gridStepMath).toFloat()
-            var tY = firstTickY
-            while (tY <= yMax) {
-                if (abs(tY) > 1e-4) {
-                    val py = viewport.mathToScreen(0.0, tY.toDouble(), canvasSize).y
-                    val pxClamped = centerX.coerceIn(25f, width - 15f)
-                    drawLine(
-                        color = Color(0xFFE2E8F0),
-                        start = Offset(pxClamped - 4f, py),
-                        end = Offset(pxClamped + 4f, py),
-                        strokeWidth = 1.5f
-                    )
-                    drawContext.canvas.nativeCanvas.drawText(
-                        if (tY == tY.toInt().toFloat()) tY.toInt().toString() else "%.1f".format(tY),
-                        pxClamped - 8f,
-                        py + 4f,
-                        yPaint
-                    )
+                val yPaint = android.graphics.Paint().apply {
+                    color = android.graphics.Color.parseColor("#94A3B8")
+                    textSize = 11.sp.toPx()
+                    textAlign = android.graphics.Paint.Align.RIGHT
+                    isAntiAlias = true
                 }
-                tY += gridStepMath
+                val halfSpanY = (height / (2f * scale)).toDouble()
+                val yMin = viewport.centerMathY - halfSpanY
+                val yMax = viewport.centerMathY + halfSpanY
+                val firstTickY = (kotlin.math.floor(yMin / gridStepMath) * gridStepMath).toFloat()
+                var tY = firstTickY
+                while (tY <= yMax) {
+                    if (abs(tY) > 1e-4) {
+                        val py = viewport.mathToScreen(0.0, tY.toDouble(), canvasSize).y
+                        val pxClamped = centerX.coerceIn(25f, width - 15f)
+                        drawLine(
+                            color = Color(0xFFE2E8F0),
+                            start = Offset(pxClamped - 4f, py),
+                            end = Offset(pxClamped + 4f, py),
+                            strokeWidth = 1.5f
+                        )
+                        drawContext.canvas.nativeCanvas.drawText(
+                            if (tY == tY.toInt().toFloat()) tY.toInt().toString() else "%.1f".format(tY),
+                            pxClamped - 8f,
+                            py + 4f,
+                            yPaint
+                        )
+                    }
+                    tY += gridStepMath
+                }
             }
 
             // 5. Multi-equation mathematical curve rendering

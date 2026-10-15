@@ -42,17 +42,32 @@ data class LevelData(
 )
 
 /**
- * Accelerometer manager for the Digital Level.
+ * Accelerometer and Gravity sensor manager for the Digital Level.
  * Applies stable low-pass filtering and computes axes with trigonometric accuracy,
  * handling automatic hysteresis transitions between surface and wall modes.
+ *
+ * Dedicated handling:
+ * - Google Pixel: Retains the exact original pipeline and algorithms.
+ * - Non-Pixel devices (Samsung Galaxy A-series, etc.): Employs hardware-isolated gravity vectors
+ *   (or dynamically calibrated accelerometer filtering) with instantaneous zero-lag orientation detection
+ *   and wall alignment.
  */
 class LevelSensorManager(context: Context) {
 
     private val sensorManager = context.applicationContext.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
     private val accelerometer = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+    private val gravitySensor = sensorManager?.getDefaultSensor(Sensor.TYPE_GRAVITY)
 
     fun getLevelFlow(): Flow<LevelData> = callbackFlow {
-        if (sensorManager == null || accelerometer == null) {
+        val sm = sensorManager
+        val isPixel = DeviceProfile.isGooglePixel()
+        val activeSensor = if (isPixel) {
+            accelerometer
+        } else {
+            gravitySensor ?: accelerometer
+        }
+
+        if (sm == null || activeSensor == null) {
             trySend(
                 LevelData(
                     roll = 0f,
@@ -77,8 +92,9 @@ class LevelSensorManager(context: Context) {
             // Low-pass filter to damp sensor noise while preserving fluid responsiveness
             private var smoothedX = 0f
             private var smoothedY = 0f
-            private var smoothedZ = 9.8f
+            private var smoothedZ = if (isPixel) 9.8f else 0f
             private val alpha = 0.22f
+            private var isFirstEvent = true
 
             private var currentMode = LevelOrientationMode.HORIZONTAL_SURFACE
 
@@ -89,9 +105,22 @@ class LevelSensorManager(context: Context) {
                 val rawY = event.values[1]
                 val rawZ = event.values[2]
 
-                smoothedX += alpha * (rawX - smoothedX)
-                smoothedY += alpha * (rawY - smoothedY)
-                smoothedZ += alpha * (rawZ - smoothedZ)
+                if (isPixel) {
+                    smoothedX += alpha * (rawX - smoothedX)
+                    smoothedY += alpha * (rawY - smoothedY)
+                    smoothedZ += alpha * (rawZ - smoothedZ)
+                } else {
+                    if (isFirstEvent) {
+                        smoothedX = rawX
+                        smoothedY = rawY
+                        smoothedZ = rawZ
+                        isFirstEvent = false
+                    } else {
+                        smoothedX += alpha * (rawX - smoothedX)
+                        smoothedY += alpha * (rawY - smoothedY)
+                        smoothedZ += alpha * (rawZ - smoothedZ)
+                    }
+                }
 
                 val gTotal = sqrt(smoothedX * smoothedX + smoothedY * smoothedY + smoothedZ * smoothedZ)
                 if (gTotal < 0.1f) return
@@ -103,16 +132,29 @@ class LevelSensorManager(context: Context) {
                 // Display tilt angle relative to horizontal plane (0° = flat on table, 90° = standing upright)
                 val inclinationFromHorizontal = Math.toDegrees(acos(abs(nz).coerceIn(0f, 1f).toDouble())).toFloat()
 
-                // Automatic transition with hysteresis (38° / 46°) to prevent flapping and jitter
-                currentMode = computeOrientationMode(currentMode, inclinationFromHorizontal)
+                // Automatic transition with hysteresis to prevent flapping and jitter
+                currentMode = if (isPixel) {
+                    computeOrientationMode(currentMode, inclinationFromHorizontal)
+                } else {
+                    computeOrientationModeNonPixel(currentMode, inclinationFromHorizontal)
+                }
 
                 // 1. Horizontal Mode (Surface / Table)
                 val (pitchHeadTail, rollLeftRight) = computeSurfaceAngles(nx, ny)
                 val isSurfaceLevel = abs(pitchHeadTail) < 0.6f && abs(rollLeftRight) < 0.6f
 
                 // 2. Vertical Mode (Wall / Standing on edge)
-                val (verticalLateralAngle, verticalFrontalAngle) = computeVerticalAngles(nx, ny, nz)
-                val isVerticalLevel = abs(verticalLateralAngle) < 0.6f
+                val (verticalLateralAngle, verticalFrontalAngle) = if (isPixel) {
+                    computeVerticalAngles(nx, ny, nz)
+                } else {
+                    computeVerticalAnglesNonPixel(nx, ny, nz)
+                }
+
+                val isVerticalLevel = if (isPixel) {
+                    abs(verticalLateralAngle) < 0.6f
+                } else {
+                    abs(verticalLateralAngle) < 0.6f && abs(verticalFrontalAngle) < 8.0f
+                }
 
                 val isLevel = if (currentMode == LevelOrientationMode.HORIZONTAL_SURFACE) {
                     isSurfaceLevel
@@ -149,17 +191,17 @@ class LevelSensorManager(context: Context) {
             override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
         }
 
-        sensorManager.registerListener(listener, accelerometer, SensorManager.SENSOR_DELAY_UI)
+        sm.registerListener(listener, activeSensor, SensorManager.SENSOR_DELAY_UI)
 
         awaitClose {
-            sensorManager.unregisterListener(listener)
+            sm.unregisterListener(listener)
         }
     }
 
     companion object {
         /**
          * Computes orientation mode between surface and wall with hysteresis
-         * to avoid flickering around the transition threshold.
+         * for Google Pixel devices (preserved original algorithm).
          */
         fun computeOrientationMode(
             currentMode: LevelOrientationMode,
@@ -168,6 +210,23 @@ class LevelSensorManager(context: Context) {
             return if (currentMode == LevelOrientationMode.HORIZONTAL_SURFACE && inclinationFromHorizontal > 46f) {
                 LevelOrientationMode.VERTICAL_WALL
             } else if (currentMode == LevelOrientationMode.VERTICAL_WALL && inclinationFromHorizontal < 38f) {
+                LevelOrientationMode.HORIZONTAL_SURFACE
+            } else {
+                currentMode
+            }
+        }
+
+        /**
+         * Computes orientation mode between surface and wall for non-Pixel devices (Samsung Galaxy A-series, etc.)
+         * with broader detection thresholds so holding against a wall reliably activates vertical mode.
+         */
+        fun computeOrientationModeNonPixel(
+            currentMode: LevelOrientationMode,
+            inclinationFromHorizontal: Float
+        ): LevelOrientationMode {
+            return if (currentMode == LevelOrientationMode.HORIZONTAL_SURFACE && inclinationFromHorizontal > 40f) {
+                LevelOrientationMode.VERTICAL_WALL
+            } else if (currentMode == LevelOrientationMode.VERTICAL_WALL && inclinationFromHorizontal < 34f) {
                 LevelOrientationMode.HORIZONTAL_SURFACE
             } else {
                 currentMode
@@ -184,9 +243,33 @@ class LevelSensorManager(context: Context) {
         }
 
         /**
-         * Computes wall angles (lateral left-to-right tilt and frontal planarity).
+         * Computes wall angles (lateral left-to-right tilt and frontal planarity)
+         * for Google Pixel devices (preserved original algorithm).
          */
         fun computeVerticalAngles(nx: Float, ny: Float, nz: Float): Pair<Float, Float> {
+            val isLandscapeEdge = abs(nx) > abs(ny)
+            val verticalLateralAngle = if (!isLandscapeEdge) {
+                if (ny >= 0) {
+                    Math.toDegrees(atan2(nx.toDouble(), ny.toDouble())).toFloat()
+                } else {
+                    Math.toDegrees(atan2(-nx.toDouble(), -ny.toDouble())).toFloat()
+                }
+            } else {
+                if (nx >= 0) {
+                    Math.toDegrees(atan2(-ny.toDouble(), nx.toDouble())).toFloat()
+                } else {
+                    Math.toDegrees(atan2(ny.toDouble(), -nx.toDouble())).toFloat()
+                }
+            }
+            val verticalFrontalAngle = Math.toDegrees(asin(nz.coerceIn(-1f, 1f).toDouble())).toFloat()
+            return Pair(verticalLateralAngle, verticalFrontalAngle)
+        }
+
+        /**
+         * Computes wall angles for non-Pixel devices across all four physical edges
+         * (portrait upright, portrait inverted, landscape right edge, landscape left edge).
+         */
+        fun computeVerticalAnglesNonPixel(nx: Float, ny: Float, nz: Float): Pair<Float, Float> {
             val isLandscapeEdge = abs(nx) > abs(ny)
             val verticalLateralAngle = if (!isLandscapeEdge) {
                 if (ny >= 0) {

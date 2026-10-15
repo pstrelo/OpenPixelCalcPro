@@ -17,8 +17,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import android.content.pm.ActivityInfo
 import androidx.compose.ui.unit.dp
 import com.google.pixel.calculator.R
+import com.google.pixel.calculator.core.utils.findActivity
 import com.google.pixel.calculator.data.HistoryStorage
 import com.google.pixel.calculator.data.ThemePreferences
 import com.google.pixel.calculator.ui.advanced.AdvancedCalculatorScreen
@@ -50,6 +52,21 @@ fun CalculatorApp(
 
     var showHistorySheet by rememberSaveable { mutableStateOf(false) }
     var isToolBarExpanded by rememberSaveable { mutableStateOf(false) }
+
+    // Lock orientation to portrait when Advanced Calculator is active to prevent rotation crashes
+    DisposableEffect(state.activeScreen) {
+        val activity = context.findActivity()
+        if (state.activeScreen == ActiveScreen.ADVANCED_CALCULATOR) {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        } else {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+        onDispose {
+            if (state.activeScreen == ActiveScreen.ADVANCED_CALCULATOR) {
+                activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            }
+        }
+    }
 
     // Animated transitions between utility tools screens and main calculator
     AnimatedContent(
