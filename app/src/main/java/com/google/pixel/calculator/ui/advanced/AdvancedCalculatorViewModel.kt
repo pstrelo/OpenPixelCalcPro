@@ -182,7 +182,7 @@ class AdvancedCalculatorViewModel(
                     val updated = expr.substring(0, pos) + "/" + expr.substring(pos)
                     Pair(updated, pos + 1)
                 } else if (expr.isEmpty()) {
-                    Pair("1/", 2)
+                    Pair("()/( )", 1)
                 } else {
                     val updated = expr.substring(0, pos) + "/" + expr.substring(pos)
                     Pair(updated, pos + 1)
@@ -203,15 +203,24 @@ class AdvancedCalculatorViewModel(
                 val updated = expr.substring(0, pos) + "sqrt()" + expr.substring(pos)
                 Pair(updated, pos + 5)
             }
+            text == "±" -> {
+                val updated = expr.substring(0, pos) + "±" + expr.substring(pos)
+                Pair(updated, pos + 1)
+            }
             text == "log_" || text == "log_□" || text == "log₍□₎" -> {
-                // Inserts log_() template with cursor positioned right after log_ for typing the base
-                val updated = expr.substring(0, pos) + "log_()" + expr.substring(pos)
-                Pair(updated, pos + 4) // cursor at base position right after "log_"
+                // Inserts log_()( ) template with cursor inside the base
+                val updated = expr.substring(0, pos) + "log_()( )" + expr.substring(pos)
+                Pair(updated, pos + 5) // cursor inside the base: log_( | )( )
             }
             text == "ⁿ√□" || text == "ʸ√" || text == "□√□" -> {
-                // Inserts √() template with cursor positioned right before √ for typing the root index
-                val updated = expr.substring(0, pos) + "√()" + expr.substring(pos)
-                Pair(updated, pos) // cursor right before '√' for typing the index
+                // Inserts ^()√( ) template with cursor inside the root index [apice n]
+                val updated = expr.substring(0, pos) + "^()√( )" + expr.substring(pos)
+                Pair(updated, pos + 2) // cursor inside index: ^( | )√( )
+            }
+            text == "x_□" || text == "_" -> {
+                // Inserts _() subscript template with cursor inside
+                val updated = expr.substring(0, pos) + "_()" + expr.substring(pos)
+                Pair(updated, pos + 2) // cursor inside subscript: _( | )
             }
             text == "(x)" -> {
                 // Quick function argument insertion: insert "(x)" and place cursor after ')'
@@ -318,6 +327,65 @@ class AdvancedCalculatorViewModel(
                 updateGraphForActiveEquation()
                 return
             }
+        }
+
+        // Smart template deletion: if inside empty ^()√( ) or log_()( ) or _()
+        if (pos >= 2 && expr.substring(pos - 2, pos) == "^(" && expr.startsWith(")√( )", pos)) {
+            val newExpr = expr.substring(0, pos - 2) + expr.substring(pos + 5)
+            val newPos = pos - 2
+            val hasIneq = listOf("<=", ">=", "≤", "≥", "<", ">").any { newExpr.contains(it) }
+            updateEquationAt(curIndex) {
+                it.copy(
+                    expression = newExpr,
+                    cursorPosition = newPos,
+                    formattedResult = "",
+                    lastSolveResult = null,
+                    roots = emptyList(),
+                    inequality2D = if (hasIneq) it.inequality2D else null,
+                    shadedIntervals = if (hasIneq) it.shadedIntervals else emptyList(),
+                    isError = false
+                )
+            }
+            updateGraphForActiveEquation()
+            return
+        }
+        if (pos >= 5 && expr.substring(pos - 5, pos) == "log_(" && expr.startsWith(")( )", pos)) {
+            val newExpr = expr.substring(0, pos - 5) + expr.substring(pos + 4)
+            val newPos = pos - 5
+            val hasIneq = listOf("<=", ">=", "≤", "≥", "<", ">").any { newExpr.contains(it) }
+            updateEquationAt(curIndex) {
+                it.copy(
+                    expression = newExpr,
+                    cursorPosition = newPos,
+                    formattedResult = "",
+                    lastSolveResult = null,
+                    roots = emptyList(),
+                    inequality2D = if (hasIneq) it.inequality2D else null,
+                    shadedIntervals = if (hasIneq) it.shadedIntervals else emptyList(),
+                    isError = false
+                )
+            }
+            updateGraphForActiveEquation()
+            return
+        }
+        if (pos >= 2 && expr.substring(pos - 2, pos) == "_(" && pos < expr.length && expr[pos] == ')') {
+            val newExpr = expr.substring(0, pos - 2) + expr.substring(pos + 1)
+            val newPos = pos - 2
+            val hasIneq = listOf("<=", ">=", "≤", "≥", "<", ">").any { newExpr.contains(it) }
+            updateEquationAt(curIndex) {
+                it.copy(
+                    expression = newExpr,
+                    cursorPosition = newPos,
+                    formattedResult = "",
+                    lastSolveResult = null,
+                    roots = emptyList(),
+                    inequality2D = if (hasIneq) it.inequality2D else null,
+                    shadedIntervals = if (hasIneq) it.shadedIntervals else emptyList(),
+                    isError = false
+                )
+            }
+            updateGraphForActiveEquation()
+            return
         }
 
         // Smart template deletion: if inside empty ^() or sqrt()

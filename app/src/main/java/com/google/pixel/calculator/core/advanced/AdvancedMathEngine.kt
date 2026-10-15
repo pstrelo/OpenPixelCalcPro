@@ -84,7 +84,7 @@ class AdvancedMathEngine(
         val parts = clean.split("=")
         if (parts.size != 2) return false
         val lhs = parts[0].trim()
-        val isSimpleVar = Regex("^[a-zA-Zα-ωΑ-Ω][a-zA-Z0-9_]*$").matches(lhs)
+        val isSimpleVar = Regex("^[a-zA-Zα-ωΑ-Ω][a-zA-Z0-9_]*$").matches(lhs) || Regex("^[a-zA-Zα-ωΑ-Ω]_\\([a-zA-Z0-9_,]+\\)$").matches(lhs)
         val isFunctionLhs = lhs.equals("x", ignoreCase = true) || 
                             lhs.equals("y", ignoreCase = true) || 
                             Regex("^y[0-9]*$", RegexOption.IGNORE_CASE).matches(lhs) ||
@@ -159,6 +159,33 @@ class AdvancedMathEngine(
     ): SolveResult {
         val clean = autoCloseParentheses(input).trim()
         if (clean.isBlank()) return SolveResult.Error("Espressione vuota")
+
+        // 0. Plus-Minus operator (±) branching: evaluate both branches and combine roots
+        if (clean.contains("±")) {
+            val exprPlus = clean.replace("±", "+")
+            val exprMinus = clean.replace("±", "-")
+            val resPlus = solve(exprPlus, isRadians, customVariables, customFunctions)
+            val resMinus = solve(exprMinus, isRadians, customVariables, customFunctions)
+            if (resPlus is SolveResult.SingleValue && resMinus is SolveResult.SingleValue) {
+                val r1 = resPlus.raw
+                val r2 = resMinus.raw
+                val roots = if (kotlin.math.abs(r1 - r2) < 1e-9) listOf(r1) else listOf(r1, r2).sorted()
+                val formattedText = roots.mapIndexed { idx, r ->
+                    val f = formatNumber(r)
+                    if (roots.size == 1) "x = $f" else "x${idx + 1} = $f"
+                }.joinToString(", ")
+                return SolveResult.EquationRoots(roots, formattedText)
+            } else if (resPlus is SolveResult.EquationRoots || resMinus is SolveResult.EquationRoots) {
+                val roots1 = (resPlus as? SolveResult.EquationRoots)?.roots ?: emptyList()
+                val roots2 = (resMinus as? SolveResult.EquationRoots)?.roots ?: emptyList()
+                val combined = (roots1 + roots2).distinct().sorted()
+                val formattedText = combined.mapIndexed { idx, r ->
+                    val f = formatNumber(r)
+                    if (combined.size == 1) "x = $f" else "x${idx + 1} = $f"
+                }.joinToString(", ")
+                return SolveResult.EquationRoots(combined, formattedText)
+            }
+        }
 
         // 1. Derivative: d/dx or f'(x) or diff
         if (clean.startsWith("d/dx", ignoreCase = true) || clean.startsWith("diff", ignoreCase = true)) {

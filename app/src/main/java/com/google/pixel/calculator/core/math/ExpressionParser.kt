@@ -72,7 +72,10 @@ class ExpressionParser {
             '₀' to '0', '₁' to '1', '₂' to '2', '₃' to '3', '₄' to '4',
             '₅' to '5', '₆' to '6', '₇' to '7', '₈' to '8', '₉' to '9'
         )
-        // Convert log₍base₎(x) or log_base(x) into logn(base,x)
+        // Convert log_(base)(x) or log₍base₎(x) or log_base(x) into logn(base,x)
+        s = Regex("""log_\(([^)]+)\)\(([^)]*)\)""").replace(s) { m ->
+            "logn(${m.groupValues[1]},${m.groupValues[2]})"
+        }
         s = Regex("""log_([0-9a-zA-Z\.\+]+)\(([^\)]*)\)""").replace(s) { m ->
             "logn(${m.groupValues[1]},${m.groupValues[2]})"
         }
@@ -99,7 +102,13 @@ class ExpressionParser {
             val normalDigits = supDigits.map { superscriptMap[it] ?: it }.joinToString("")
             "(${normalDigits})ʸ√"
         }
-        // Support n-th root entered as [number]√(expr) or ([expr])√(expr)
+        // Support n-th root entered as ^(n)√(expr), ^(n)sqrt(expr), [number]√(expr) or ([expr])√(expr)
+        s = Regex("""\^\(([^)]+)\)√\(([^)]*)\)""").replace(s) { m ->
+            "(${m.groupValues[1]})ʸ√(${m.groupValues[2]})"
+        }
+        s = Regex("""\^\(([^)]+)\)sqrt\(([^)]*)\)""").replace(s) { m ->
+            "(${m.groupValues[1]})ʸ√(${m.groupValues[2]})"
+        }
         s = Regex("""([0-9a-zA-Z\.]+)√\(([^\)]*)\)""").replace(s) { m ->
             "(${m.groupValues[1]})ʸ√(${m.groupValues[2]})"
         }

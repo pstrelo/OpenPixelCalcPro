@@ -578,12 +578,15 @@ private fun AlgebraKeypadGrid(
             SquircleKey("8", numBg, numColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 18.sp) { onKey("8") }
             SquircleKey("5", numBg, numColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 18.sp) { onKey("5") }
             SquircleKey("2", numBg, numColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 18.sp) { onKey("2") }
-            SquircleKey(".", numBg, numColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 18.sp) { onKey(".") }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                SquircleKey(".", numBg, numColor, unitHeight, Modifier.weight(1f), isBold = true, fontSize = 18.sp) { onKey(".") }
+                SquircleKey(",", numBg, numColor, unitHeight, Modifier.weight(1f), isBold = true, fontSize = 18.sp) { onKey(",") }
+            }
         }
 
-        // Col 5: [ % ], [ 9 ], [ 6 ], [ 3 ], [ = ]
+        // Col 5: [ ± ], [ 9 ], [ 6 ], [ 3 ], [ = ]
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
-            SquircleKey("%", opBg, opColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 17.sp) { onKey("%") }
+            SquircleKey("±", opBg, opColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 18.sp) { onKey("±") }
             SquircleKey("9", numBg, numColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 18.sp) { onKey("9") }
             SquircleKey("6", numBg, numColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 18.sp) { onKey("6") }
             SquircleKey("3", numBg, numColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 18.sp) { onKey("3") }
@@ -898,8 +901,11 @@ private fun AlphabetKeypadGrid(
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing)) {
                         SquircleKey("z", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 15.sp) { onKey("z") }
                         SquircleKey("(x)", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 13.sp) { onKey("(x)") }
-                        SquircleKey("( )", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 13.sp) { onKey("()") }
-                        SquircleKey("+", opBg, opColor, unitHeight, Modifier.fillMaxWidth(), isBold = true, fontSize = 16.sp) { onKey("+") }
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                            SquircleKey("( )", fnBg, fnColor, unitHeight, Modifier.weight(1f), fontSize = 11.sp) { onKey("()") }
+                            SquircleKey(",", fnBg, fnColor, unitHeight, Modifier.weight(1f), fontSize = 14.sp) { onKey(",") }
+                        }
+                        SquircleKey("x_□", fnBg, fnColor, unitHeight, Modifier.fillMaxWidth(), fontSize = 13.sp) { onKey("x_□") }
                         SquareSystemKey(
                             height = unitHeight,
                             modifier = Modifier.fillMaxWidth(),
