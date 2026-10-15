@@ -98,6 +98,7 @@ fun AdvancedCalculatorScreen(
                             onReset = { viewModel.onResetGraph() },
                             onPointSelected = { viewModel.selectGraphPoint(it) },
                             onToggleFullscreen = { viewModel.setScreenViewMode(ScreenViewMode.SPLIT_SCREEN) },
+                            onToggleEquationVisibility = { viewModel.toggleEquationVisibility(it) },
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(6.dp)
@@ -165,6 +166,7 @@ fun AdvancedCalculatorScreen(
                                     onReset = { viewModel.onResetGraph() },
                                     onPointSelected = { viewModel.selectGraphPoint(it) },
                                     onExpandFullscreen = { viewModel.setScreenViewMode(ScreenViewMode.FULLSCREEN_GRAPH) },
+                                    onToggleEquationVisibility = { viewModel.toggleEquationVisibility(it) },
                                     modifier = Modifier
                                         .weight(1f)
                                         .fillMaxWidth()
@@ -310,6 +312,7 @@ fun MinimizedGraphCard(
     onReset: () -> Unit,
     onPointSelected: (Pair<Float, Float>?) -> Unit,
     onExpandFullscreen: () -> Unit,
+    onToggleEquationVisibility: (Int) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val isDark = CalculatorTheme.colors.isDark
@@ -324,48 +327,16 @@ fun MinimizedGraphCard(
         colors = CardDefaults.cardColors(containerColor = cardBg)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Interactive 2D Cartesian Canvas
+            // Interactive 2D Cartesian Canvas with integrated interactive legend & controls
             AdvancedGraphCanvas(
                 state = state,
                 onTransform = onTransform,
                 onReset = onReset,
                 onPointSelected = onPointSelected,
                 onToggleFullscreen = onExpandFullscreen,
+                onToggleEquationVisibility = onToggleEquationVisibility,
                 modifier = Modifier.fillMaxSize()
             )
-
-            // Header bar overlay: quick curve color legend
-            Row(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(6.dp)
-                    .background(Color(0xCC1A1D27), RoundedCornerShape(12.dp))
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                state.equations.forEachIndexed { idx, eq ->
-                    if (eq.expression.isNotBlank()) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .clip(CircleShape)
-                                    .background(eq.color)
-                            )
-                            Text(
-                                text = AdvancedCalculatorViewModel.getFunctionName(idx),
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = eq.color
-                            )
-                        }
-                    }
-                }
-            }
 
             // Quick expand button in bottom right corner
             Row(

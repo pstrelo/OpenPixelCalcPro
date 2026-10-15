@@ -519,21 +519,93 @@ sealed class MathNode {
 }
 
 /**
+ * Computes the n-th root of a radicand with high precision.
+ * index = n, radicand = x  =>  \sqrt[n]{x}
+ */
+fun computeNthRoot(radicand: BigDecimal, index: BigDecimal, context: EvaluationContext): BigDecimal {
+    val mc = context.mathContext
+    if (index.compareTo(BigDecimal.ZERO) == 0) {
+        throw ArithmeticException("Indice della radice non può essere zero")
+    }
+    if (radicand.compareTo(BigDecimal.ZERO) == 0) {
+        return BigDecimal.ZERO
+    }
+
+    // Check if index is an integer
+    val isIndexInteger = try {
+        index.remainder(BigDecimal.ONE, mc).compareTo(BigDecimal.ZERO) == 0
+    } catch (e: Exception) {
+        false
+    }
+
+    if (radicand.signum() < 0) {
+        if (!isIndexInteger) {
+            throw ArithmeticException("Radice con esponente frazionario e radicando negativo")
+        }
+        val intIndex = try { index.toBigIntegerExact() } catch (e: Exception) { null }
+        if (intIndex == null || intIndex.mod(java.math.BigInteger.valueOf(2)) == java.math.BigInteger.ZERO) {
+            throw ArithmeticException("Radice di indice pari con radicando negativo")
+        }
+        // Odd integer root of negative number: -(nthRoot(|radicand|, index))
+        return computeNthRoot(radicand.abs(), index, context).negate(mc)
+    }
+
+    // radicand > 0
+    if (index.compareTo(BigDecimal("2")) == 0) {
+        return radicand.sqrt(mc)
+    }
+
+    val dIndex = index.toDouble()
+    val dRadicand = radicand.toDouble()
+
+    // If integer root within reasonable size, perform exact integer test and Newton-Raphson
+    if (isIndexInteger && dIndex >= 1.0 && dIndex <= 1000.0) {
+        val n = index.toInt()
+        val dRoot = dRadicand.pow(1.0 / n)
+        val roundCandidate = BigDecimal(kotlin.math.round(dRoot))
+        try {
+            if (roundCandidate.pow(n, mc).compareTo(radicand) == 0) {
+                return roundCandidate
+            }
+        } catch (ignored: Exception) {}
+
+        // Newton-Raphson in BigDecimal: x_{k+1} = ( (n-1)*x_k + radicand / x_k^{n-1} ) / n
+        try {
+            var x = BigDecimal(dRoot, mc)
+            val bigN = BigDecimal(n)
+            val bigNMinus1 = BigDecimal(n - 1)
+            for (iter in 0 until 10) {
+                val xPow = x.pow(n - 1, mc)
+                if (xPow.compareTo(BigDecimal.ZERO) != 0) {
+                    val term = radicand.divide(xPow, mc)
+                    x = bigNMinus1.multiply(x, mc).add(term, mc).divide(bigN, mc)
+                }
+            }
+            return x
+        } catch (ignored: Exception) {}
+    }
+
+    val res = dRadicand.pow(1.0 / dIndex)
+    if (res.isNaN() || res.isInfinite()) throw ArithmeticException("Risultato radice non valido")
+    return BigDecimal(res, mc)
+}
+
+/**
  * Evaluation context with mathematical precision and variables.
  */
 data class EvaluationContext(
     val variables: Map<String, BigDecimal> = DEFAULT_VARIABLES,
     val isRadians: Boolean = true,
-    val mathContext: MathContext = MathContext(34, RoundingMode.HALF_UP), // 34 decimal digits precision (128-bit IEEE 754r standard)
+    val mathContext: MathContext = MathContext(60, RoundingMode.HALF_UP), // 60 decimal digits high precision
     val customFunctions: Map<String, (List<BigDecimal>, EvaluationContext) -> BigDecimal> = emptyMap()
 ) {
     companion object {
         val DEFAULT_VARIABLES: Map<String, BigDecimal> = mapOf(
-            "pi" to BigDecimal("3.14159265358979323846264338327950288"),
-            "π" to BigDecimal("3.14159265358979323846264338327950288"),
-            "e" to BigDecimal("2.71828182845904523536028747135266249"),
-            "phi" to BigDecimal("1.61803398874989484820458683436563811"),
-            "φ" to BigDecimal("1.61803398874989484820458683436563811"),
+            "pi" to BigDecimal("3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117068"),
+            "π" to BigDecimal("3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117068"),
+            "e" to BigDecimal("2.718281828459045235360287471352662497757247093699959574966967627724076630353547594571382178525166427"),
+            "phi" to BigDecimal("1.618033988749894848204586834365638117720309179805762862135448622705260462818902449707207204189391137"),
+            "φ" to BigDecimal("1.618033988749894848204586834365638117720309179805762862135448622705260462818902449707207204189391137"),
             "c" to BigDecimal("299792458"),
             "g" to BigDecimal("9.80665"),
             "g_grav" to BigDecimal("6.67430e-11"),

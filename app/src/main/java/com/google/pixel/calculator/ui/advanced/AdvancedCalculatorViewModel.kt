@@ -139,6 +139,17 @@ class AdvancedCalculatorViewModel(
         updateAllGraphPoints()
     }
 
+    fun toggleEquationVisibility(index: Int) {
+        if (index !in _uiState.value.equations.indices) return
+        updateEquationAt(index) { it.copy(isVisible = !it.isVisible) }
+        val updated = _uiState.value.equations
+        _uiState.update {
+            it.copy(
+                shadedIntervals = updated.filter { eq -> eq.isVisible }.flatMap { eq -> eq.shadedIntervals }
+            )
+        }
+    }
+
     // ==========================================
     // 3. CURSORE ED EDITING IN-PLACE
     // ==========================================
@@ -178,13 +189,12 @@ class AdvancedCalculatorViewModel(
                 if (inFraction != null) {
                     Pair(expr, inFraction.denStart)
                 } else if (pos > 0 && (expr[pos - 1].isLetterOrDigit() || expr[pos - 1] in ")πe")) {
-                    // Preceded by a token: insert '/' and place cursor in denominator
-                    val updated = expr.substring(0, pos) + "/" + expr.substring(pos)
-                    Pair(updated, pos + 1)
-                } else if (expr.isEmpty()) {
-                    Pair("()/( )", 1)
+                    // Preceded by a token or parenthesized group: insert '/()' and place cursor inside denominator
+                    val updated = expr.substring(0, pos) + "/()" + expr.substring(pos)
+                    Pair(updated, pos + 2)
                 } else {
-                    val updated = expr.substring(0, pos) + "/" + expr.substring(pos)
+                    // Empty or preceded by an operator: insert '()/( )' with cursor inside numerator
+                    val updated = expr.substring(0, pos) + "()/( )" + expr.substring(pos)
                     Pair(updated, pos + 1)
                 }
             }
@@ -247,7 +257,9 @@ class AdvancedCalculatorViewModel(
                 Pair(updated, pos + text.length)
             }
             // Smart step-over for binary operators if cursor is right after an argument like "f(x|)"
+            // (Excluding fraction denominators, where Casio fx-991CW UX requires staying in denominator until explicit cursor exit!)
             pos < expr.length && expr[pos] == ')' && text in listOf("+", "-", "*", "/", "×", "÷", "^", "=") &&
+                !Formula2DParser.parse(expr).filterIsInstance<FormulaSegment.FractionSegment>().any { pos in it.denStart..it.denEnd } &&
                 Regex("[a-zA-Z]\\([a-zA-Z0-9]+$").containsMatchIn(expr.substring(0, pos)) -> {
                 // Jump over the closing parenthesis and insert operator outside: "f(x) + "
                 val updated = expr.substring(0, pos + 1) + text + expr.substring(pos + 1)
@@ -369,6 +381,25 @@ class AdvancedCalculatorViewModel(
             return
         }
         if (pos >= 2 && expr.substring(pos - 2, pos) == "_(" && pos < expr.length && expr[pos] == ')') {
+            val newExpr = expr.substring(0, pos - 2) + expr.substring(pos + 1)
+            val newPos = pos - 2
+            val hasIneq = listOf("<=", ">=", "≤", "≥", "<", ">").any { newExpr.contains(it) }
+            updateEquationAt(curIndex) {
+                it.copy(
+                    expression = newExpr,
+                    cursorPosition = newPos,
+                    formattedResult = "",
+                    lastSolveResult = null,
+                    roots = emptyList(),
+                    inequality2D = if (hasIneq) it.inequality2D else null,
+                    shadedIntervals = if (hasIneq) it.shadedIntervals else emptyList(),
+                    isError = false
+                )
+            }
+            updateGraphForActiveEquation()
+            return
+        }
+        if (pos >= 2 && expr.substring(pos - 2, pos) == "/(" && pos < expr.length && expr[pos] == ')') {
             val newExpr = expr.substring(0, pos - 2) + expr.substring(pos + 1)
             val newPos = pos - 2
             val hasIneq = listOf("<=", ">=", "≤", "≥", "<", ">").any { newExpr.contains(it) }

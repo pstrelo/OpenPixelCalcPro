@@ -368,7 +368,7 @@ fun FormulaMath2DRenderer(
         )
 
         // If cursor was at the end of the entire expression or after the last block
-        if (isActive && (!cursorRendered || safeCursor == expression.length)) {
+        if (isActive && !cursorRendered) {
             BlinkingCursor(height = 20.dp, color = cursorColor)
         }
     }
@@ -387,13 +387,19 @@ fun FormulaMath2DList(
     cursorHeight: androidx.compose.ui.unit.Dp = 20.dp,
     onCursorRendered: () -> Unit = {}
 ) {
+    var localCursorRendered = false
+    val childOnCursorRendered: () -> Unit = {
+        localCursorRendered = true
+        onCursorRendered()
+    }
+
     Row(verticalAlignment = Alignment.CenterVertically) {
         segments.forEach { seg ->
             when (seg) {
                 is FormulaSegment.SimpleText -> {
                     val inSeg = isActive && safeCursor >= seg.startOffset && safeCursor < seg.endOffset
                     if (inSeg) {
-                        onCursorRendered()
+                        childOnCursorRendered()
                         val localPos = safeCursor - seg.startOffset
                         val before = seg.text.substring(0, localPos)
                         val after = seg.text.substring(localPos)
@@ -415,10 +421,10 @@ fun FormulaMath2DList(
                     modifier = Modifier.padding(horizontal = 1.dp)
                 ) {
                     // Base on baseline
-                    val inBase = isActive && safeCursor >= seg.baseStart && safeCursor < seg.baseEnd
+                    val inBase = isActive && (safeCursor >= seg.baseStart && safeCursor < seg.baseEnd || (seg.baseText.isEmpty() && safeCursor == seg.fullStart))
                     if (inBase) {
-                        onCursorRendered()
-                        val localPos = safeCursor - seg.baseStart
+                        childOnCursorRendered()
+                        val localPos = (safeCursor - seg.baseStart).coerceIn(0, seg.baseText.length)
                         val before = seg.baseText.substring(0, localPos)
                         val after = seg.baseText.substring(localPos)
                         if (before.isNotEmpty()) Text(text = before, color = textColor, fontSize = 16.sp)
@@ -429,7 +435,7 @@ fun FormulaMath2DList(
                     }
 
                     // Elevated exponent (dimezzato in altezza e dimensione)
-                    val inExp = isActive && safeCursor >= seg.expStart && safeCursor <= seg.expEnd
+                    val inExp = isActive && (safeCursor >= seg.expStart && safeCursor <= seg.expEnd || (safeCursor >= seg.baseEnd && safeCursor < seg.expStart))
                     Box(
                         modifier = Modifier.padding(bottom = 8.dp),
                         contentAlignment = Alignment.BottomCenter
@@ -445,10 +451,10 @@ fun FormulaMath2DList(
                                 cursorColor = cursorColor,
                                 fontSize = 11.sp,
                                 cursorHeight = 10.dp,
-                                onCursorRendered = onCursorRendered
+                                onCursorRendered = childOnCursorRendered
                             )
                         } else if (inExp) {
-                            onCursorRendered()
+                            childOnCursorRendered()
                             val localPos = (safeCursor - seg.expStart).coerceIn(0, seg.expText.length)
                             val before = seg.expText.substring(0, localPos)
                             val after = seg.expText.substring(localPos)
@@ -456,6 +462,9 @@ fun FormulaMath2DList(
                                 if (before.isNotEmpty()) Text(text = before, color = textColor, fontSize = 11.sp, fontWeight = FontWeight.Medium)
                                 BlinkingCursor(height = 10.dp, color = cursorColor)
                                 if (after.isNotEmpty()) Text(text = after, color = textColor, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                                if (seg.expText.isEmpty()) {
+                                    Text(text = "□", color = placeholderColor.copy(alpha = 0.5f), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                                }
                             }
                         } else {
                             Text(
@@ -475,10 +484,10 @@ fun FormulaMath2DList(
                     modifier = Modifier.padding(horizontal = 1.dp)
                 ) {
                     // Base on baseline
-                    val inBase = isActive && safeCursor >= seg.baseStart && safeCursor < seg.baseEnd
+                    val inBase = isActive && (safeCursor >= seg.baseStart && safeCursor < seg.baseEnd || (seg.baseText.isEmpty() && safeCursor == seg.fullStart))
                     if (inBase) {
-                        onCursorRendered()
-                        val localPos = safeCursor - seg.baseStart
+                        childOnCursorRendered()
+                        val localPos = (safeCursor - seg.baseStart).coerceIn(0, seg.baseText.length)
                         val before = seg.baseText.substring(0, localPos)
                         val after = seg.baseText.substring(localPos)
                         if (before.isNotEmpty()) Text(text = before, color = textColor, fontSize = 16.sp)
@@ -489,7 +498,7 @@ fun FormulaMath2DList(
                     }
 
                     // Lowered subscript (pedice)
-                    val inSub = isActive && safeCursor >= seg.subStart && safeCursor <= seg.subEnd
+                    val inSub = isActive && (safeCursor >= seg.subStart && safeCursor <= seg.subEnd || (safeCursor >= seg.baseEnd && safeCursor < seg.subStart))
                     Box(
                         modifier = Modifier.padding(top = 8.dp),
                         contentAlignment = Alignment.TopCenter
@@ -505,10 +514,10 @@ fun FormulaMath2DList(
                                 cursorColor = cursorColor,
                                 fontSize = 11.sp,
                                 cursorHeight = 10.dp,
-                                onCursorRendered = onCursorRendered
+                                onCursorRendered = childOnCursorRendered
                             )
                         } else if (inSub) {
-                            onCursorRendered()
+                            childOnCursorRendered()
                             val localPos = (safeCursor - seg.subStart).coerceIn(0, seg.subText.length)
                             val before = seg.subText.substring(0, localPos)
                             val after = seg.subText.substring(localPos)
@@ -516,6 +525,9 @@ fun FormulaMath2DList(
                                 if (before.isNotEmpty()) Text(text = before, color = textColor, fontSize = 11.sp, fontWeight = FontWeight.Medium)
                                 BlinkingCursor(height = 10.dp, color = cursorColor)
                                 if (after.isNotEmpty()) Text(text = after, color = textColor, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                                if (seg.subText.isEmpty()) {
+                                    Text(text = "□", color = placeholderColor.copy(alpha = 0.5f), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                                }
                             }
                         } else {
                             Text(
@@ -530,8 +542,8 @@ fun FormulaMath2DList(
             }
 
             is FormulaSegment.FractionSegment -> {
-                val inNum = isActive && safeCursor >= seg.numStart && safeCursor <= seg.numEnd
-                val inDen = isActive && (safeCursor >= seg.denStart && safeCursor <= seg.denEnd || (seg.denText.isEmpty() && safeCursor == seg.slashPos))
+                val inNum = isActive && (safeCursor >= seg.fullStart && safeCursor <= seg.numEnd)
+                val inDen = isActive && (safeCursor >= seg.slashPos && safeCursor <= seg.denEnd)
 
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -558,10 +570,10 @@ fun FormulaMath2DList(
                                 cursorColor = cursorColor,
                                 fontSize = 14.sp,
                                 cursorHeight = 13.dp,
-                                onCursorRendered = onCursorRendered
+                                onCursorRendered = childOnCursorRendered
                             )
                         } else if (inNum) {
-                            onCursorRendered()
+                            childOnCursorRendered()
                             val localPos = (safeCursor - seg.numStart).coerceIn(0, seg.numText.length)
                             val before = seg.numText.substring(0, localPos)
                             val after = seg.numText.substring(localPos)
@@ -569,6 +581,9 @@ fun FormulaMath2DList(
                                 if (before.isNotEmpty()) Text(text = before, color = textColor, fontSize = 14.sp)
                                 BlinkingCursor(height = 12.dp, color = cursorColor)
                                 if (after.isNotEmpty()) Text(text = after, color = textColor, fontSize = 14.sp)
+                                if (seg.numText.isEmpty()) {
+                                    Text(text = "□", color = placeholderColor.copy(alpha = 0.5f), fontSize = 14.sp)
+                                }
                             }
                         } else {
                             Text(
@@ -605,10 +620,10 @@ fun FormulaMath2DList(
                                 cursorColor = cursorColor,
                                 fontSize = 14.sp,
                                 cursorHeight = 13.dp,
-                                onCursorRendered = onCursorRendered
+                                onCursorRendered = childOnCursorRendered
                             )
                         } else if (inDen) {
-                            onCursorRendered()
+                            childOnCursorRendered()
                             val localPos = (safeCursor - seg.denStart).coerceIn(0, seg.denText.length)
                             val before = seg.denText.substring(0, localPos)
                             val after = seg.denText.substring(localPos)
@@ -616,6 +631,9 @@ fun FormulaMath2DList(
                                 if (before.isNotEmpty()) Text(text = before, color = textColor, fontSize = 14.sp)
                                 BlinkingCursor(height = 12.dp, color = cursorColor)
                                 if (after.isNotEmpty()) Text(text = after, color = textColor, fontSize = 14.sp)
+                                if (seg.denText.isEmpty()) {
+                                    Text(text = "□", color = placeholderColor.copy(alpha = 0.5f), fontSize = 14.sp)
+                                }
                             }
                         } else {
                             Text(
@@ -629,13 +647,20 @@ fun FormulaMath2DList(
             }
 
             is FormulaSegment.RadicalSegment -> {
-                val inIndex = isActive && seg.hasIndex && safeCursor >= seg.indexStart && safeCursor <= seg.indexEnd
-                val inRad = isActive && safeCursor >= seg.innerStart && safeCursor <= seg.innerEnd
+                val beforeRoot = isActive && safeCursor == seg.fullStart && !seg.hasIndex
+                val inIndex = isActive && seg.hasIndex && (safeCursor >= seg.fullStart && safeCursor <= seg.indexEnd)
+                val inRad = isActive && (safeCursor >= seg.innerStart && safeCursor <= seg.innerEnd ||
+                    (safeCursor > (if (seg.hasIndex) seg.indexEnd else seg.fullStart) && safeCursor < seg.innerStart))
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 2.dp)
                 ) {
+                    if (beforeRoot) {
+                        childOnCursorRendered()
+                        BlinkingCursor(height = 20.dp, color = cursorColor)
+                    }
+
                     // [apice n] index before root
                     if (seg.hasIndex) {
                         Box(
@@ -655,10 +680,10 @@ fun FormulaMath2DList(
                                     cursorColor = cursorColor,
                                     fontSize = 11.sp,
                                     cursorHeight = 10.dp,
-                                    onCursorRendered = onCursorRendered
+                                    onCursorRendered = childOnCursorRendered
                                 )
                             } else if (inIndex) {
-                                onCursorRendered()
+                                childOnCursorRendered()
                                 val localPos = (safeCursor - seg.indexStart).coerceIn(0, seg.indexText.length)
                                 val before = seg.indexText.substring(0, localPos)
                                 val after = seg.indexText.substring(localPos)
@@ -666,6 +691,9 @@ fun FormulaMath2DList(
                                     if (before.isNotEmpty()) Text(text = before, color = textColor, fontSize = 11.sp, fontWeight = FontWeight.Medium)
                                     BlinkingCursor(height = 10.dp, color = cursorColor)
                                     if (after.isNotEmpty()) Text(text = after, color = textColor, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                                    if (seg.indexText.isEmpty()) {
+                                        Text(text = "□", color = placeholderColor.copy(alpha = 0.5f), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                                    }
                                 }
                             } else {
                                 Text(
@@ -703,10 +731,10 @@ fun FormulaMath2DList(
                                     cursorColor = cursorColor,
                                     fontSize = 14.sp,
                                     cursorHeight = 13.dp,
-                                    onCursorRendered = onCursorRendered
+                                    onCursorRendered = childOnCursorRendered
                                 )
                             } else if (inRad) {
-                                onCursorRendered()
+                                childOnCursorRendered()
                                 val localPos = (safeCursor - seg.innerStart).coerceIn(0, seg.innerText.length)
                                 val before = seg.innerText.substring(0, localPos)
                                 val after = seg.innerText.substring(localPos)
@@ -714,6 +742,9 @@ fun FormulaMath2DList(
                                     if (before.isNotEmpty()) Text(text = before, color = textColor, fontSize = 14.sp)
                                     BlinkingCursor(height = 12.dp, color = cursorColor)
                                     if (after.isNotEmpty()) Text(text = after, color = textColor, fontSize = 14.sp)
+                                    if (seg.innerText.isEmpty()) {
+                                        Text(text = "□", color = placeholderColor.copy(alpha = 0.5f), fontSize = 14.sp)
+                                    }
                                 }
                             } else {
                                 Text(
@@ -728,13 +759,20 @@ fun FormulaMath2DList(
             }
 
             is FormulaSegment.LogSegment -> {
-                val inBase = isActive && safeCursor >= seg.baseStart && safeCursor <= seg.baseEnd
-                val inArg = isActive && safeCursor >= seg.argStart && safeCursor <= seg.argEnd
+                val beforeLog = isActive && (safeCursor >= seg.fullStart && safeCursor < seg.baseStart)
+                val inBase = isActive && (safeCursor >= seg.baseStart && safeCursor <= seg.baseEnd)
+                val inArg = isActive && (safeCursor >= seg.argStart && safeCursor <= seg.argEnd ||
+                    (safeCursor > seg.baseEnd && safeCursor < seg.argStart))
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 1.dp)
                 ) {
+                    if (beforeLog) {
+                        childOnCursorRendered()
+                        BlinkingCursor(height = 20.dp, color = cursorColor)
+                    }
+
                     Text(
                         text = "log",
                         fontSize = 16.sp,
@@ -760,10 +798,10 @@ fun FormulaMath2DList(
                                 cursorColor = cursorColor,
                                 fontSize = 11.sp,
                                 cursorHeight = 10.dp,
-                                onCursorRendered = onCursorRendered
+                                onCursorRendered = childOnCursorRendered
                             )
                         } else if (inBase) {
-                            onCursorRendered()
+                            childOnCursorRendered()
                             val localPos = (safeCursor - seg.baseStart).coerceIn(0, seg.baseText.length)
                             val before = seg.baseText.substring(0, localPos)
                             val after = seg.baseText.substring(localPos)
@@ -771,6 +809,9 @@ fun FormulaMath2DList(
                                 if (before.isNotEmpty()) Text(text = before, color = textColor, fontSize = 11.sp, fontWeight = FontWeight.Medium)
                                 BlinkingCursor(height = 10.dp, color = cursorColor)
                                 if (after.isNotEmpty()) Text(text = after, color = textColor, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                                if (seg.baseText.isEmpty()) {
+                                    Text(text = "□", color = placeholderColor.copy(alpha = 0.5f), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                                }
                             }
                         } else {
                             Text(
@@ -799,10 +840,10 @@ fun FormulaMath2DList(
                                 cursorColor = cursorColor,
                                 fontSize = 15.sp,
                                 cursorHeight = 16.dp,
-                                onCursorRendered = onCursorRendered
+                                onCursorRendered = childOnCursorRendered
                             )
                         } else if (inArg) {
-                            onCursorRendered()
+                            childOnCursorRendered()
                             val localPos = (safeCursor - seg.argStart).coerceIn(0, seg.argText.length)
                             val before = seg.argText.substring(0, localPos)
                             val after = seg.argText.substring(localPos)
@@ -810,6 +851,9 @@ fun FormulaMath2DList(
                                 if (before.isNotEmpty()) Text(text = before, color = textColor, fontSize = 14.sp)
                                 BlinkingCursor(height = 12.dp, color = cursorColor)
                                 if (after.isNotEmpty()) Text(text = after, color = textColor, fontSize = 14.sp)
+                                if (seg.argText.isEmpty()) {
+                                    Text(text = "□", color = placeholderColor.copy(alpha = 0.5f), fontSize = 14.sp)
+                                }
                             }
                         } else {
                             Text(
@@ -840,10 +884,10 @@ fun FormulaMath2DList(
                                 placeholderColor = placeholderColor,
                                 divBarColor = divBarColor,
                                 cursorColor = cursorColor,
-                                onCursorRendered = onCursorRendered
+                                onCursorRendered = childOnCursorRendered
                             )
                         } else if (inAbs) {
-                            onCursorRendered()
+                            childOnCursorRendered()
                             val localPos = (safeCursor - seg.innerStart).coerceIn(0, seg.innerText.length)
                             val before = seg.innerText.substring(0, localPos)
                             val after = seg.innerText.substring(localPos)
@@ -860,6 +904,12 @@ fun FormulaMath2DList(
                 }
             }
         }
+    }
+
+    // If cursor is at the end of this list of segments (and hasn't been rendered yet)
+    if (isActive && !localCursorRendered && segments.isNotEmpty() && safeCursor == segments.last().fullEnd) {
+        childOnCursorRendered()
+        BlinkingCursor(height = cursorHeight, color = cursorColor)
     }
 }
 }

@@ -114,6 +114,40 @@ object Formula2DParser {
         while (index < len) {
             val globalIdx = baseOffset + index
 
+            // 0. Check for parentheses grouping: ( ... )
+            // If '(' is not the numerator of a fraction (closeParen+1 == '/')
+            // and not the base of a power (closeParen+1 == '^')
+            // and not the base of a subscript (closeParen+1 == '_'):
+            // treat it as an isolated parenthesis so content inside can be parsed cleanly
+            if (expr[index] == '(') {
+                val closeParen = findMatchingParen(expr, index)
+                val isNumOfFrac = closeParen != -1 && closeParen + 1 < len && expr[closeParen + 1] == '/'
+                val isBaseOfPow = closeParen != -1 && closeParen + 1 < len && expr[closeParen + 1] == '^'
+                val isBaseOfSub = closeParen != -1 && closeParen + 1 < len && expr[closeParen + 1] == '_'
+                if (!isNumOfFrac && !isBaseOfPow && !isBaseOfSub) {
+                    segments.add(
+                        FormulaSegment.SimpleText(
+                            text = "(",
+                            startOffset = globalIdx,
+                            endOffset = globalIdx + 1
+                        )
+                    )
+                    index++
+                    continue
+                }
+            }
+            if (expr[index] == ')') {
+                segments.add(
+                    FormulaSegment.SimpleText(
+                        text = ")",
+                        startOffset = globalIdx,
+                        endOffset = globalIdx + 1
+                    )
+                )
+                index++
+                continue
+            }
+
             // 1. Check for Logarithm with base: log_(base)(arg) or log2(arg) or log[base](arg) or log_()
             val isLogWithBase = expr.startsWith("log_", index) ||
                 expr.startsWith("log[", index) ||
@@ -629,7 +663,7 @@ object Formula2DParser {
         val len = expr.length
         while (i < len) {
             val c = expr[i]
-            if (c == '/' || c == '^' || c == '|' || c == '²' || c == '_') return i
+            if (c == '/' || c == '^' || c == '|' || c == '²' || c == '_' || c == '(' || c == ')') return i
             if (expr.startsWith("sqrt(", i) || expr.startsWith("√(", i) || expr.startsWith("log_", i)) return i
             if (expr.startsWith("log[", i) || expr.startsWith("log{", i)) return i
             if (expr.startsWith("log", i) && i + 3 < len && (expr[i + 3].isDigit() || (expr[i + 3].isLetter() && expr[i + 3] != 'e' && expr[i + 3] != 'n' && expr[i + 3] != '('))) return i
@@ -713,7 +747,10 @@ object Formula2DParser {
         while (end < expr.length) {
             val c = expr[end]
             if (c == '(') depth++
-            else if (c == ')') depth = (depth - 1).coerceAtLeast(0)
+            else if (c == ')') {
+                if (depth == 0) break
+                depth = (depth - 1).coerceAtLeast(0)
+            }
             else if (depth == 0 && c in "+-=<>;, ") break
             end++
         }
@@ -813,11 +850,14 @@ object Formula2DParser {
             for (seg in list) {
                 when (seg) {
                     is FormulaSegment.FractionSegment -> {
+                        if (safePos < seg.numStart && safePos >= seg.fullStart) {
+                            return seg.numStart
+                        }
                         if (safePos in seg.numStart until seg.numEnd) {
                             val innerNext = checkSegments(seg.numSegments)
                             if (innerNext != null) return innerNext
                         }
-                        if (safePos == seg.numEnd) {
+                        if (safePos >= seg.numEnd && safePos < seg.denStart) {
                             return seg.denStart
                         }
                         if (safePos in seg.denStart until seg.denEnd) {
@@ -829,6 +869,9 @@ object Formula2DParser {
                         }
                     }
                     is FormulaSegment.PowerSegment -> {
+                        if (safePos in seg.baseEnd until seg.expStart) {
+                            return seg.expStart
+                        }
                         if (safePos in seg.expStart until seg.expEnd) {
                             val innerNext = checkSegments(seg.expSegments)
                             if (innerNext != null) return innerNext
@@ -841,6 +884,9 @@ object Formula2DParser {
                         }
                     }
                     is FormulaSegment.SubscriptSegment -> {
+                        if (safePos in seg.baseEnd until seg.subStart) {
+                            return seg.subStart
+                        }
                         if (safePos in seg.subStart until seg.subEnd) {
                             val innerNext = checkSegments(seg.subSegments)
                             if (innerNext != null) return innerNext
@@ -854,11 +900,18 @@ object Formula2DParser {
                     }
                     is FormulaSegment.RadicalSegment -> {
                         if (seg.hasIndex) {
+                            if (safePos < seg.indexStart && safePos >= seg.fullStart) {
+                                return seg.indexStart
+                            }
                             if (safePos in seg.indexStart until seg.indexEnd) {
                                 val innerNext = checkSegments(seg.indexSegments)
                                 if (innerNext != null) return innerNext
                             }
-                            if (safePos == seg.indexEnd) {
+                            if (safePos >= seg.indexEnd && safePos < seg.innerStart) {
+                                return seg.innerStart
+                            }
+                        } else {
+                            if (safePos < seg.innerStart && safePos >= seg.fullStart) {
                                 return seg.innerStart
                             }
                         }
@@ -866,19 +919,19 @@ object Formula2DParser {
                             val innerNext = checkSegments(seg.innerSegments)
                             if (innerNext != null) return innerNext
                         }
-                        if (safePos < seg.innerStart && safePos >= seg.fullStart && !seg.hasIndex) {
-                            return seg.innerStart
-                        }
                         if (safePos == seg.innerEnd) {
                             return seg.fullEnd
                         }
                     }
                     is FormulaSegment.LogSegment -> {
+                        if (safePos < seg.baseStart && safePos >= seg.fullStart) {
+                            return seg.baseStart
+                        }
                         if (safePos in seg.baseStart until seg.baseEnd) {
                             val innerNext = checkSegments(seg.baseSegments)
                             if (innerNext != null) return innerNext
                         }
-                        if (safePos == seg.baseEnd) {
+                        if (safePos >= seg.baseEnd && safePos < seg.argStart) {
                             return seg.argStart
                         }
                         if (safePos in seg.argStart until seg.argEnd) {
@@ -930,7 +983,7 @@ object Formula2DParser {
             for (seg in list) {
                 when (seg) {
                     is FormulaSegment.FractionSegment -> {
-                        if (safePos == seg.denStart) {
+                        if (safePos in (seg.numEnd + 1)..seg.denStart || safePos == seg.denStart) {
                             return seg.numEnd
                         }
                         if (safePos > seg.denStart && safePos <= seg.denEnd) {
@@ -944,12 +997,12 @@ object Formula2DParser {
                             val innerPrev = checkSegments(seg.numSegments)
                             if (innerPrev != null) return innerPrev
                         }
-                        if (safePos == seg.numStart) {
+                        if (safePos in seg.fullStart..seg.numStart) {
                             return seg.fullStart
                         }
                     }
                     is FormulaSegment.PowerSegment -> {
-                        if (safePos == seg.expStart) {
+                        if (safePos in (seg.baseEnd + 1)..seg.expStart || safePos == seg.expStart) {
                             return seg.baseEnd
                         }
                         if (safePos > seg.expStart && safePos <= seg.expEnd) {
@@ -961,7 +1014,7 @@ object Formula2DParser {
                         }
                     }
                     is FormulaSegment.SubscriptSegment -> {
-                        if (safePos == seg.subStart) {
+                        if (safePos in (seg.baseEnd + 1)..seg.subStart || safePos == seg.subStart) {
                             return seg.baseEnd
                         }
                         if (safePos > seg.subStart && safePos <= seg.subEnd) {
@@ -973,38 +1026,39 @@ object Formula2DParser {
                         }
                     }
                     is FormulaSegment.RadicalSegment -> {
-                        if (safePos == seg.innerStart && seg.hasIndex) {
-                            return seg.indexEnd
-                        }
-                        if (safePos > seg.innerStart && safePos <= seg.innerEnd) {
-                            val innerPrev = checkSegments(seg.innerSegments)
-                            if (innerPrev != null) return innerPrev
-                        }
-                        if (safePos == seg.innerStart) {
-                            return seg.fullStart
-                        }
                         if (seg.hasIndex) {
+                            if (safePos in (seg.indexEnd + 1)..seg.innerStart || safePos == seg.innerStart) {
+                                return seg.indexEnd
+                            }
                             if (safePos > seg.indexStart && safePos <= seg.indexEnd) {
                                 val innerPrev = checkSegments(seg.indexSegments)
                                 if (innerPrev != null) return innerPrev
                             }
-                            if (safePos == seg.indexStart) {
+                            if (safePos in seg.fullStart..seg.indexStart) {
                                 return seg.fullStart
                             }
+                        } else {
+                            if (safePos in seg.fullStart..seg.innerStart) {
+                                return seg.fullStart
+                            }
+                        }
+                        if (safePos > seg.innerStart && safePos <= seg.innerEnd) {
+                            val innerPrev = checkSegments(seg.innerSegments)
+                            if (innerPrev != null) return innerPrev
                         }
                         if (safePos == seg.fullEnd) {
                             return seg.innerEnd
                         }
                     }
                     is FormulaSegment.LogSegment -> {
-                        if (safePos == seg.argStart) {
+                        if (safePos in (seg.baseEnd + 1)..seg.argStart || safePos == seg.argStart) {
                             return seg.baseEnd
                         }
                         if (safePos > seg.argStart && safePos <= seg.argEnd) {
                             val innerPrev = checkSegments(seg.argSegments)
                             if (innerPrev != null) return innerPrev
                         }
-                        if (safePos == seg.baseStart) {
+                        if (safePos in seg.fullStart..seg.baseStart) {
                             return seg.fullStart
                         }
                         if (safePos > seg.baseStart && safePos <= seg.baseEnd) {

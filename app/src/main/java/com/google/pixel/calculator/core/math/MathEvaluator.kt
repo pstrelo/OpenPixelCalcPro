@@ -78,7 +78,7 @@ class MathEvaluator(
      * - Strips superfluous trailing decimal zeros
      * - Switches to scientific notation if number exceeds 12 integer digits or is infinitesimal
      */
-    fun formatResult(value: BigDecimal, maxDecimals: Int = 10): String {
+    fun formatResult(value: BigDecimal, maxDecimals: Int = 16): String {
         // If the value is an integer or has trailing zeros, stripTrailingZeros
         val stripped = try {
             value.stripTrailingZeros()
@@ -92,7 +92,7 @@ class MathEvaluator(
         // If too large or too close to zero, use scientific notation
         if (absVal > BigDecimal("1e12") || (absVal < BigDecimal("1e-6") && absVal > BigDecimal.ZERO)) {
             val symbols = DecimalFormatSymbols(Locale.ITALY)
-            val df = DecimalFormat("0.######E0", symbols)
+            val df = DecimalFormat("0.################E0", symbols)
             return df.format(stripped)
         }
 

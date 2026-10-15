@@ -10,14 +10,20 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CloseFullscreen
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -45,6 +51,7 @@ fun AdvancedGraphCanvas(
     onReset: () -> Unit,
     onPointSelected: (Pair<Float, Float>?) -> Unit,
     onToggleFullscreen: () -> Unit,
+    onToggleEquationVisibility: (Int) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val viewport = state.graphViewport
@@ -74,6 +81,7 @@ fun AdvancedGraphCanvas(
                         var minDistance = 40f
 
                         for (eq in state.equations) {
+                            if (!eq.isVisible) continue
                             // 1. Priority: analytical roots of the equation
                             for (root in eq.roots) {
                                 val rootScreen = viewport.mathToScreen(root, 0.0, Size(canvasSize.width.toFloat(), canvasSize.height.toFloat()))
@@ -149,9 +157,10 @@ fun AdvancedGraphCanvas(
             }
 
             // 2. Shaded inequality regions (Per-Equation Shaded Intervals)
-            val anyEqHasIntervals = state.equations.any { it.shadedIntervals.isNotEmpty() }
+            val anyEqHasIntervals = state.equations.any { it.isVisible && it.shadedIntervals.isNotEmpty() }
             if (anyEqHasIntervals) {
                 for (eq in state.equations) {
+                    if (!eq.isVisible) continue
                     val isStrict = listOf("<", ">").any { eq.expression.contains(it) } &&
                         listOf("<=", ">=", "≤", "≥").none { eq.expression.contains(it) }
                     val pathEffect = if (isStrict) PathEffect.dashPathEffect(floatArrayOf(16f, 10f), 0f) else null
@@ -227,6 +236,7 @@ fun AdvancedGraphCanvas(
 
             // 2b. 2D Inequality Shaded Semi-planes (e.g. y >= x, y + x > 2)
             for (eq in state.equations) {
+                if (!eq.isVisible) continue
                 val ineq = eq.inequality2D
                 if (ineq != null && eq.sampledPoints.isNotEmpty()) {
                     val segments = mutableListOf<MutableList<AdvancedMathEngine.Point>>()
@@ -352,6 +362,7 @@ fun AdvancedGraphCanvas(
 
             // 5. Multi-equation mathematical curve rendering
             for (eq in state.equations) {
+                if (!eq.isVisible) continue
                 if (eq.sampledPoints.isNotEmpty()) {
                     val path = Path()
                     var isDrawing = false
@@ -393,6 +404,7 @@ fun AdvancedGraphCanvas(
 
             // 6. Analytical roots tracking (Zero Marker)
             for (eq in state.equations) {
+                if (!eq.isVisible) continue
                 for (root in eq.roots) {
                     val rootScreen = viewport.mathToScreen(root, 0.0, canvasSize)
                     if (rootScreen.x in 0f..width && rootScreen.y in 0f..height) {
@@ -463,29 +475,97 @@ fun AdvancedGraphCanvas(
             }
         }
 
-        // Quick controls overlay (Zoom +, Zoom -, Reset, Fullscreen)
+        // Top bar overlay: Interactive Curve Legend (Left) & Controls (Right)
         Row(
             modifier = Modifier
-                .align(Alignment.TopEnd)
+                .fillMaxWidth()
                 .padding(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            CanvasOverlayButton(onClick = { onTransform(1.25f, Offset.Zero) }) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.zoom_in), tint = Color.White, modifier = Modifier.size(16.dp))
+            // Left: Equations Legend Chips
+            val activeEquations = state.equations.mapIndexed { idx, eq -> Pair(idx, eq) }
+                .filter { it.second.expression.isNotBlank() }
+
+            if (activeEquations.isNotEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .background(Color(0xCC1A1D27), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 6.dp, vertical = 4.dp)
+                        .horizontalScroll(rememberScrollState()),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    activeEquations.forEach { (idx, eq) ->
+                        val isVis = eq.isVisible
+                        val chipBg = if (isVis) eq.color.copy(alpha = 0.20f) else Color(0x22374151)
+                        val chipBorder = if (isVis) eq.color.copy(alpha = 0.75f) else Color(0x446B7280)
+                        val contentColor = if (isVis) eq.color else Color(0xFF94A3B8)
+
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(chipBg)
+                                .border(1.dp, chipBorder, RoundedCornerShape(8.dp))
+                                .clickable { onToggleEquationVisibility(idx) }
+                                .padding(horizontal = 6.dp, vertical = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(if (isVis) eq.color else Color.Transparent)
+                                    .then(if (!isVis) Modifier.border(1.dp, Color(0xFF94A3B8), CircleShape) else Modifier)
+                            )
+                            Text(
+                                text = AdvancedCalculatorViewModel.getFunctionName(idx),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = contentColor,
+                                textDecoration = if (!isVis) TextDecoration.LineThrough else null
+                            )
+                            if (!isVis) {
+                                Icon(
+                                    imageVector = Icons.Default.VisibilityOff,
+                                    contentDescription = stringResource(R.string.hide_graph),
+                                    tint = contentColor,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            } else {
+                Spacer(modifier = Modifier.width(1.dp))
             }
-            CanvasOverlayButton(onClick = { onTransform(0.8f, Offset.Zero) }) {
-                Icon(Icons.Default.Remove, contentDescription = stringResource(R.string.zoom_out), tint = Color.White, modifier = Modifier.size(16.dp))
-            }
-            CanvasOverlayButton(onClick = onReset) {
-                Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.reset_view), tint = Color.White, modifier = Modifier.size(16.dp))
-            }
-            CanvasOverlayButton(onClick = onToggleFullscreen) {
-                Icon(
-                    imageVector = if (state.screenViewMode == ScreenViewMode.FULLSCREEN_GRAPH) Icons.Default.CloseFullscreen else Icons.Default.Fullscreen,
-                    contentDescription = stringResource(R.string.fullscreen),
-                    tint = Color.White,
-                    modifier = Modifier.size(16.dp)
-                )
+
+            Spacer(modifier = Modifier.width(6.dp))
+
+            // Right: Quick Controls (Zoom +, Zoom -, Reset, Fullscreen)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CanvasOverlayButton(onClick = { onTransform(1.25f, Offset.Zero) }) {
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.zoom_in), tint = Color.White, modifier = Modifier.size(16.dp))
+                }
+                CanvasOverlayButton(onClick = { onTransform(0.8f, Offset.Zero) }) {
+                    Icon(Icons.Default.Remove, contentDescription = stringResource(R.string.zoom_out), tint = Color.White, modifier = Modifier.size(16.dp))
+                }
+                CanvasOverlayButton(onClick = onReset) {
+                    Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.reset_view), tint = Color.White, modifier = Modifier.size(16.dp))
+                }
+                CanvasOverlayButton(onClick = onToggleFullscreen) {
+                    Icon(
+                        imageVector = if (state.screenViewMode == ScreenViewMode.FULLSCREEN_GRAPH) Icons.Default.CloseFullscreen else Icons.Default.Fullscreen,
+                        contentDescription = stringResource(R.string.fullscreen),
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
         }
     }

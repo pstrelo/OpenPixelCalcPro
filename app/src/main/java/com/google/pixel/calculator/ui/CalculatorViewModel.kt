@@ -131,7 +131,12 @@ class CalculatorViewModel(
             // Postfix operators: attach to previous operand
             if (current.isEmpty() || current.last() in "+-×÷/*^(") current else current + op
         } else if (op == "10^") {
-            "$current 10^("
+            val lastChar = current.lastOrNull()
+            if (lastChar != null && (lastChar.isDigit() || lastChar == ')' || lastChar in "πeφ!%")) {
+                current + "×10^("
+            } else {
+                current + "10^("
+            }
         } else {
             val lastChar = current.lastOrNull()
             // Replace only if last char was a classic binary operator (+, -, ×, ÷, ^, /)
@@ -219,7 +224,7 @@ class CalculatorViewModel(
         }
 
         // If ending with multi-letter function
-        for (fn in listOf("asin(", "acos(", "atan(", "sin(", "cos(", "tan(", "ln(", "log(", "10^(")) {
+        for (fn in listOf("asin(", "acos(", "atan(", "sin(", "cos(", "tan(", "ln(", "log(", "×10^(", "*10^(", "10^(")) {
             if (current.endsWith(fn)) {
                 updateExpression(current.removeSuffix(fn))
                 return
