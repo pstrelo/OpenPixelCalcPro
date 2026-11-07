@@ -2,8 +2,14 @@ package com.google.pixel.calculator.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -15,7 +21,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import android.content.pm.ActivityInfo
 import androidx.compose.ui.unit.dp
@@ -51,7 +59,14 @@ fun CalculatorApp(
     val historyList by vm.historyFlow.collectAsState()
 
     var showHistorySheet by rememberSaveable { mutableStateOf(false) }
+    var isHistoryExpanded by rememberSaveable { mutableStateOf(false) }
     var isToolBarExpanded by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(showHistorySheet) {
+        if (!showHistorySheet) {
+            isHistoryExpanded = false
+        }
+    }
 
     // Lock orientation to portrait when Advanced Calculator is active to prevent rotation crashes
     DisposableEffect(state.activeScreen) {
@@ -120,7 +135,10 @@ fun CalculatorApp(
             }
             else -> {
                 if (showHistorySheet) {
-                    BackHandler { showHistorySheet = false }
+                    BackHandler {
+                        showHistorySheet = false
+                        isHistoryExpanded = false
+                    }
                 }
                 if (isToolBarExpanded) {
                     BackHandler { isToolBarExpanded = false }
@@ -137,7 +155,10 @@ fun CalculatorApp(
                             navigationIcon = {
                                 // History toggle button top-left
                                 IconButton(
-                                    onClick = { showHistorySheet = !showHistorySheet },
+                                    onClick = {
+                                        showHistorySheet = !showHistorySheet
+                                        isHistoryExpanded = false
+                                    },
                                     modifier = Modifier
                                         .padding(start = 4.dp)
                                         .then(
@@ -257,52 +278,68 @@ fun CalculatorApp(
                         )
                     }
                 ) { padding ->
-                    Box(
+                    val density = LocalDensity.current
+                    var fullHeightPx by remember { mutableIntStateOf(0) }
+                    var displayHeightPx by remember { mutableIntStateOf(0) }
+
+                    BoxWithConstraints(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(padding)
+                            .onGloballyPositioned { coordinates ->
+                                fullHeightPx = coordinates.size.height
+                            }
                     ) {
+                        val fallbackCompactDp = maxHeight * 0.42f
+                        val compactHeightDp = if (displayHeightPx > 0) {
+                            with(density) { displayHeightPx.toDp() }
+                        } else {
+                            fallbackCompactDp
+                        }
+                        val fullHeightDp = if (fullHeightPx > 0) {
+                            with(density) { fullHeightPx.toDp() }
+                        } else {
+                            maxHeight
+                        }
+                        val animatedHistoryHeight by animateDpAsState(
+                            targetValue = if (isHistoryExpanded) fullHeightDp else compactHeightDp,
+                            animationSpec = spring(
+                                stiffness = Spring.StiffnessMediumLow,
+                                dampingRatio = Spring.DampingRatioNoBouncy
+                            ),
+                            label = "HistoryPanelHeightAnimation"
+                        )
+
                         Column(
                             modifier = Modifier.fillMaxSize(),
                             verticalArrangement = Arrangement.SpaceBetween
                         ) {
-                            // Display and history slide panel
+                            // Upper display area
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .weight(1f)
-                            ) {
-                                AnimatedContent(
-                                    targetState = showHistorySheet,
-                                    transitionSpec = {
-                                        (slideInVertically { -it } + fadeIn()).togetherWith(slideOutVertically { -it } + fadeOut())
-                                    },
-                                    label = "HistoryDisplayTransition"
-                                ) { isHistoryOpen ->
-                                    if (isHistoryOpen) {
-                                        PixelHistoryPanel(
-                                            historyList = historyList,
-                                            currentExpression = state.expression,
-                                            currentPreview = state.resultPreview,
-                                            onSelectItem = { expr ->
-                                                vm.selectHistoryItem(expr)
-                                                showHistorySheet = false
-                                            },
-                                            onDismiss = { showHistorySheet = false },
-                                            onClearHistory = { vm.toggleClearHistoryDialog(true) },
-                                            modifier = Modifier.fillMaxSize()
-                                        )
-                                    } else {
-                                        FormulaDisplay(
-                                            expression = state.expression,
-                                            resultPreview = state.resultPreview,
-                                            ast = state.ast,
-                                            errorMessage = state.errorMessage,
-                                            sessionHistory = state.sessionHistory,
-                                            modifier = Modifier.fillMaxSize()
-                                        )
+                                    .onGloballyPositioned { coordinates ->
+                                        displayHeightPx = coordinates.size.height
                                     }
-                                }
+                                    .draggable(
+                                        orientation = Orientation.Vertical,
+                                        state = rememberDraggableState { delta ->
+                                            if (!showHistorySheet && delta > 20f) {
+                                                showHistorySheet = true
+                                                isHistoryExpanded = false
+                                            }
+                                        }
+                                    )
+                            ) {
+                                FormulaDisplay(
+                                    expression = state.expression,
+                                    resultPreview = state.resultPreview,
+                                    ast = state.ast,
+                                    errorMessage = state.errorMessage,
+                                    sessionHistory = state.sessionHistory,
+                                    modifier = Modifier.fillMaxSize()
+                                )
                             }
 
                             // Calculator keypad with expand lever and M3 toolbar
@@ -344,6 +381,36 @@ fun CalculatorApp(
                                     ) {
                                         isToolBarExpanded = false
                                     }
+                            )
+                        }
+
+                        // Top-down History Shade ("tendina") that starts above the keypad and expands to full screen on scroll/drag
+                        AnimatedVisibility(
+                            visible = showHistorySheet,
+                            enter = slideInVertically(animationSpec = tween(300)) { -it } + fadeIn(animationSpec = tween(250)),
+                            exit = slideOutVertically(animationSpec = tween(250)) { -it } + fadeOut(animationSpec = tween(200)),
+                            modifier = Modifier.align(Alignment.TopCenter)
+                        ) {
+                            PixelHistoryPanel(
+                                historyList = historyList,
+                                currentExpression = state.expression,
+                                currentPreview = state.resultPreview,
+                                onSelectItem = { expr ->
+                                    vm.selectHistoryItem(expr)
+                                    showHistorySheet = false
+                                    isHistoryExpanded = false
+                                },
+                                onDismiss = {
+                                    showHistorySheet = false
+                                    isHistoryExpanded = false
+                                },
+                                onClearHistory = { vm.toggleClearHistoryDialog(true) },
+                                isExpanded = isHistoryExpanded,
+                                onExpand = { isHistoryExpanded = true },
+                                onCollapse = { isHistoryExpanded = false },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(animatedHistoryHeight)
                             )
                         }
                     }

@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,7 +20,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -35,10 +40,12 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import kotlin.math.abs
 
 /**
  * History panel identical to Google Pixel Calculator experience:
  * - Slides down to occupy the upper display area above the keypad
+ * - Expands to the bottom of the screen (full height) when scrolled or dragged down
  * - Minimalist empty state with clock icon and "History is empty"
  * - Right-aligned items grouped by date ("Today", "Yesterday", etc.)
  * - Drag handle and "Current expression" row at the bottom
@@ -51,6 +58,9 @@ fun PixelHistoryPanel(
     onSelectItem: (String) -> Unit,
     onDismiss: () -> Unit,
     onClearHistory: (() -> Unit)? = null,
+    isExpanded: Boolean = false,
+    onExpand: () -> Unit = {},
+    onCollapse: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
@@ -62,19 +72,47 @@ fun PixelHistoryPanel(
         }
     }
 
+    // Automatically expand to full height when the list starts scrolling
+    LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
+        if (!isExpanded && (listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 6)) {
+            onExpand()
+        }
+    }
+
+    // NestedScrollConnection so even a short list (or initial scroll touch) expands the shade immediately
+    val nestedScrollConnection = remember(isExpanded, onExpand) {
+        object : NestedScrollConnection {
+            private var accumulatedScroll = 0f
+
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (!isExpanded && abs(available.y) > 1f) {
+                    accumulatedScroll += abs(available.y)
+                    if (accumulatedScroll > 12f) {
+                        accumulatedScroll = 0f
+                        onExpand()
+                    }
+                }
+                return Offset.Zero
+            }
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(colors.historyBackground)
-            .draggable(
-                orientation = Orientation.Vertical,
-                state = rememberDraggableState { delta ->
-                    // If user drags upwards (delta < -15), close history
-                    if (delta < -15) {
-                        onDismiss()
-                    }
-                }
+            .clip(
+                RoundedCornerShape(
+                    bottomStart = if (isExpanded) 0.dp else 28.dp,
+                    bottomEnd = if (isExpanded) 0.dp else 28.dp
+                )
             )
+            .background(colors.historyBackground)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {
+                // Consume clicks so taps don't leak through to the keypad when expanded
+            }
     ) {
         // CLEAR HISTORY BUTTON AT TOP
         if (historyList.isNotEmpty() && onClearHistory != null) {
@@ -112,6 +150,17 @@ fun PixelHistoryPanel(
                 .fillMaxWidth()
                 .weight(1f)
                 .padding(horizontal = 24.dp)
+                .nestedScroll(nestedScrollConnection)
+                .draggable(
+                    orientation = Orientation.Vertical,
+                    state = rememberDraggableState { delta ->
+                        if (!isExpanded && abs(delta) > 10f) {
+                            onExpand()
+                        } else if (isExpanded && historyList.isEmpty() && delta < -20f) {
+                            onDismiss()
+                        }
+                    }
+                )
         ) {
             if (historyList.isEmpty()) {
                 // EMPTY STATE
@@ -196,53 +245,69 @@ fun PixelHistoryPanel(
             }
         }
 
-        // DRAG HANDLE SEPARATOR
-        Box(
+        // BOTTOM DRAG HANDLE + CURRENT EXPRESSION FOOTER
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(24.dp)
-                .clickable { onDismiss() },
-            contentAlignment = Alignment.Center
+                .draggable(
+                    orientation = Orientation.Vertical,
+                    state = rememberDraggableState { delta ->
+                        if (delta > 10f && !isExpanded) {
+                            onExpand()
+                        } else if (delta < -15f) {
+                            onDismiss()
+                        }
+                    }
+                )
         ) {
-            Surface(
-                shape = CircleShape,
-                color = colors.onSurfaceVariant.copy(alpha = 0.35f),
+            // DRAG HANDLE SEPARATOR
+            Box(
                 modifier = Modifier
-                    .width(36.dp)
-                    .height(4.dp)
-            ) {}
-        }
-
-        // BOTTOM ROW: "Current expression" ON LEFT AND RESULT/EXPRESSION ON RIGHT
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 24.dp, end = 24.dp, bottom = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(R.string.current_expression),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Normal,
-                fontFamily = SystemFontFamily,
-                color = colors.onSurfaceVariant.copy(alpha = 0.75f)
-            )
-
-            val displayVal = when {
-                currentPreview.isNotEmpty() -> currentPreview
-                currentExpression.isNotEmpty() -> currentExpression
-                else -> "0"
+                    .fillMaxWidth()
+                    .height(24.dp)
+                    .clickable { onDismiss() },
+                contentAlignment = Alignment.Center
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = colors.onSurfaceVariant.copy(alpha = 0.35f),
+                    modifier = Modifier
+                        .width(36.dp)
+                        .height(4.dp)
+                ) {}
             }
 
-            Text(
-                text = displayVal,
-                fontSize = 32.sp,
-                fontWeight = FontWeight.SemiBold,
-                fontFamily = QuicksandFontFamily,
-                color = colors.onSurface,
-                textAlign = TextAlign.End
-            )
+            // BOTTOM ROW: "Current expression" ON LEFT AND RESULT/EXPRESSION ON RIGHT
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 24.dp, end = 24.dp, bottom = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.current_expression),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Normal,
+                    fontFamily = SystemFontFamily,
+                    color = colors.onSurfaceVariant.copy(alpha = 0.75f)
+                )
+
+                val displayVal = when {
+                    currentPreview.isNotEmpty() -> currentPreview
+                    currentExpression.isNotEmpty() -> currentExpression
+                    else -> "0"
+                }
+
+                Text(
+                    text = displayVal,
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = QuicksandFontFamily,
+                    color = colors.onSurface,
+                    textAlign = TextAlign.End
+                )
+            }
         }
     }
 }
