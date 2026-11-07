@@ -32,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.pixel.calculator.R
@@ -64,6 +65,8 @@ fun PixelHistoryPanel(
     isExpanded: Boolean = false,
     onExpand: () -> Unit = {},
     onCollapse: () -> Unit = {},
+    topContentPadding: Dp = 0.dp,
+    bottomContentPadding: Dp = 0.dp,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
@@ -122,6 +125,10 @@ fun PixelHistoryPanel(
             ) {
                 // Consume clicks so taps don't leak through to the keypad when expanded
             }
+            .padding(
+                top = topContentPadding,
+                bottom = if (isExpanded) bottomContentPadding else 0.dp
+            )
     ) {
         // CLEAR HISTORY BUTTON AT TOP
         if (historyList.isNotEmpty() && onClearHistory != null) {
@@ -254,10 +261,11 @@ fun PixelHistoryPanel(
             }
         }
 
-        // BOTTOM DRAG HANDLE + CURRENT EXPRESSION FOOTER
-        Column(
+        // BOTTOM DRAG HANDLE
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(28.dp)
                 .draggable(
                     orientation = Orientation.Vertical,
                     state = rememberDraggableState { delta ->
@@ -268,55 +276,16 @@ fun PixelHistoryPanel(
                         }
                     }
                 )
+                .clickable { onDismiss() },
+            contentAlignment = Alignment.Center
         ) {
-            // DRAG HANDLE SEPARATOR
-            Box(
+            Surface(
+                shape = CircleShape,
+                color = colors.onSurfaceVariant.copy(alpha = 0.35f),
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(24.dp)
-                    .clickable { onDismiss() },
-                contentAlignment = Alignment.Center
-            ) {
-                Surface(
-                    shape = CircleShape,
-                    color = colors.onSurfaceVariant.copy(alpha = 0.35f),
-                    modifier = Modifier
-                        .width(36.dp)
-                        .height(4.dp)
-                ) {}
-            }
-
-            // BOTTOM ROW: "Current expression" ON LEFT AND RESULT/EXPRESSION ON RIGHT
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 24.dp, end = 24.dp, bottom = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.current_expression),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Normal,
-                    fontFamily = SystemFontFamily,
-                    color = colors.onSurfaceVariant.copy(alpha = 0.75f)
-                )
-
-                val displayVal = when {
-                    currentPreview.isNotEmpty() -> currentPreview
-                    currentExpression.isNotEmpty() -> currentExpression
-                    else -> "0"
-                }
-
-                Text(
-                    text = displayVal,
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    fontFamily = QuicksandFontFamily,
-                    color = colors.onSurface,
-                    textAlign = TextAlign.End
-                )
-            }
+                    .width(36.dp)
+                    .height(4.dp)
+            ) {}
         }
     }
 }

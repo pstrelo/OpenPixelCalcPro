@@ -146,19 +146,13 @@ fun CalculatorApp(
                     BackHandler { isToolBarExpanded = false }
                 }
 
-                val topBarColor by animateColorAsState(
-                    targetValue = if (showHistorySheet) CalculatorTheme.colors.historyBackground else Color.Transparent,
-                    animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing),
-                    label = "TopBarBackgroundColor"
-                )
-
                 Scaffold(
                     containerColor = CalculatorTheme.colors.background,
                     topBar = {
                         TopAppBar(
                             colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = topBarColor,
-                                scrolledContainerColor = topBarColor
+                                containerColor = Color.Transparent,
+                                scrolledContainerColor = Color.Transparent
                             ),
                             navigationIcon = {
                                 // History toggle button top-left
@@ -289,21 +283,23 @@ fun CalculatorApp(
                     val density = LocalDensity.current
                     var fullHeightPx by remember { mutableIntStateOf(0) }
                     var displayHeightPx by remember { mutableIntStateOf(0) }
+                    val topBarPadding = padding.calculateTopPadding()
+                    val bottomBarPadding = padding.calculateBottomPadding()
 
                     BoxWithConstraints(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(padding)
                             .onGloballyPositioned { coordinates ->
                                 fullHeightPx = coordinates.size.height
                             }
                     ) {
-                        val fallbackCompactDp = maxHeight * 0.42f
-                        val compactHeightDp = if (displayHeightPx > 0) {
+                        val fallbackDisplayDp = (maxHeight - topBarPadding - bottomBarPadding) * 0.42f
+                        val displayHeightDp = if (displayHeightPx > 0) {
                             with(density) { displayHeightPx.toDp() }
                         } else {
-                            fallbackCompactDp
+                            fallbackDisplayDp
                         }
+                        val compactHeightDp = topBarPadding + displayHeightDp
                         val fullHeightDp = if (fullHeightPx > 0) {
                             with(density) { fullHeightPx.toDp() }
                         } else {
@@ -320,7 +316,9 @@ fun CalculatorApp(
                         )
 
                         Column(
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(padding),
                             verticalArrangement = Arrangement.SpaceBetween
                         ) {
                             // Upper display area
@@ -393,17 +391,17 @@ fun CalculatorApp(
                             )
                         }
 
-                        // Top-down History Shade ("tendina") that starts above the keypad and expands to full screen on scroll/drag
+                        // Top-down History Shade ("tendina") as a single piece starting from the very top edge (y = 0)
                         AnimatedVisibility(
                             visible = showHistorySheet,
-                            enter = expandVertically(
-                                expandFrom = Alignment.Top,
-                                animationSpec = tween(durationMillis = 380, easing = emphasizedEasing)
-                            ) + fadeIn(animationSpec = tween(durationMillis = 260, easing = FastOutSlowInEasing)),
-                            exit = shrinkVertically(
-                                shrinkTowards = Alignment.Top,
-                                animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
-                            ) + fadeOut(animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing)),
+                            enter = slideInVertically(
+                                animationSpec = tween(durationMillis = 360, easing = emphasizedEasing),
+                                initialOffsetY = { -it }
+                            ),
+                            exit = slideOutVertically(
+                                animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+                                targetOffsetY = { -it }
+                            ),
                             modifier = Modifier.align(Alignment.TopCenter)
                         ) {
                             PixelHistoryPanel(
@@ -423,6 +421,8 @@ fun CalculatorApp(
                                 isExpanded = isHistoryExpanded,
                                 onExpand = { isHistoryExpanded = true },
                                 onCollapse = { isHistoryExpanded = false },
+                                topContentPadding = topBarPadding,
+                                bottomContentPadding = bottomBarPadding,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(animatedHistoryHeight)
