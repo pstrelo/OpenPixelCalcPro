@@ -256,7 +256,7 @@ class CalculatorViewModel(
         if (expr.isBlank()) return
 
         val cleanExpr = expr.replace("\\s+".toRegex(), "")
-        if (cleanExpr == "26+04" || cleanExpr == "26+4") {
+        if (cleanExpr == "26+04+2004") {
             navigateTo(ActiveScreen.EASTER_EGG)
             return
         }

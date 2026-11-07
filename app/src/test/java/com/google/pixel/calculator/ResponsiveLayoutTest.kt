@@ -1,5 +1,9 @@
 package com.google.pixel.calculator
 
+import com.google.pixel.calculator.ui.ActiveScreen
+import com.google.pixel.calculator.ui.CalculatorViewModel
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -124,5 +128,44 @@ class ResponsiveLayoutTest {
             "Tab width $singleTabWidth dp on 360dp screen should comfortably exceed 65dp to fit 'Alphabet' and 'Calculus'",
             singleTabWidth >= 65f
         )
+    }
+
+    @Test
+    fun testEasterEggTriggerOnlyOnExactDate() {
+        val vm = CalculatorViewModel(historyStorage = null, themePreferences = null)
+
+        // 26+4 must NOT trigger Easter Egg
+        "26+4".forEach { ch ->
+            if (ch.isDigit()) vm.onDigit(ch.toString()) else vm.onOperator(ch.toString())
+        }
+        vm.onEquals()
+        assertNotEquals(ActiveScreen.EASTER_EGG, vm.uiState.value.activeScreen)
+        assertEquals("30", vm.uiState.value.expression)
+
+        // 26+04 must NOT trigger Easter Egg
+        vm.onClearAll()
+        "26+04".forEach { ch ->
+            if (ch.isDigit()) vm.onDigit(ch.toString()) else vm.onOperator(ch.toString())
+        }
+        vm.onEquals()
+        assertNotEquals(ActiveScreen.EASTER_EGG, vm.uiState.value.activeScreen)
+        assertEquals("30", vm.uiState.value.expression)
+
+        // 26+4+2004 must NOT trigger Easter Egg
+        vm.onClearAll()
+        "26+4+2004".forEach { ch ->
+            if (ch.isDigit()) vm.onDigit(ch.toString()) else vm.onOperator(ch.toString())
+        }
+        vm.onEquals()
+        assertNotEquals(ActiveScreen.EASTER_EGG, vm.uiState.value.activeScreen)
+        assertEquals("2034", vm.uiState.value.expression)
+
+        // 26+04+2004 MUST trigger Easter Egg
+        vm.onClearAll()
+        "26+04+2004".forEach { ch ->
+            if (ch.isDigit()) vm.onDigit(ch.toString()) else vm.onOperator(ch.toString())
+        }
+        vm.onEquals()
+        assertEquals(ActiveScreen.EASTER_EGG, vm.uiState.value.activeScreen)
     }
 }

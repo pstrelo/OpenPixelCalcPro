@@ -2,6 +2,8 @@ package com.google.pixel.calculator.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
@@ -144,13 +146,19 @@ fun CalculatorApp(
                     BackHandler { isToolBarExpanded = false }
                 }
 
+                val topBarColor by animateColorAsState(
+                    targetValue = if (showHistorySheet) CalculatorTheme.colors.historyBackground else Color.Transparent,
+                    animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing),
+                    label = "TopBarBackgroundColor"
+                )
+
                 Scaffold(
                     containerColor = CalculatorTheme.colors.background,
                     topBar = {
                         TopAppBar(
                             colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = Color.Transparent,
-                                scrolledContainerColor = Color.Transparent
+                                containerColor = topBarColor,
+                                scrolledContainerColor = topBarColor
                             ),
                             navigationIcon = {
                                 // History toggle button top-left
@@ -301,11 +309,12 @@ fun CalculatorApp(
                         } else {
                             maxHeight
                         }
+                        val emphasizedEasing = remember { CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f) }
                         val animatedHistoryHeight by animateDpAsState(
                             targetValue = if (isHistoryExpanded) fullHeightDp else compactHeightDp,
-                            animationSpec = spring(
-                                stiffness = Spring.StiffnessMediumLow,
-                                dampingRatio = Spring.DampingRatioNoBouncy
+                            animationSpec = tween(
+                                durationMillis = 420,
+                                easing = emphasizedEasing
                             ),
                             label = "HistoryPanelHeightAnimation"
                         )
@@ -387,8 +396,14 @@ fun CalculatorApp(
                         // Top-down History Shade ("tendina") that starts above the keypad and expands to full screen on scroll/drag
                         AnimatedVisibility(
                             visible = showHistorySheet,
-                            enter = slideInVertically(animationSpec = tween(300)) { -it } + fadeIn(animationSpec = tween(250)),
-                            exit = slideOutVertically(animationSpec = tween(250)) { -it } + fadeOut(animationSpec = tween(200)),
+                            enter = expandVertically(
+                                expandFrom = Alignment.Top,
+                                animationSpec = tween(durationMillis = 380, easing = emphasizedEasing)
+                            ) + fadeIn(animationSpec = tween(durationMillis = 260, easing = FastOutSlowInEasing)),
+                            exit = shrinkVertically(
+                                shrinkTowards = Alignment.Top,
+                                animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
+                            ) + fadeOut(animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing)),
                             modifier = Modifier.align(Alignment.TopCenter)
                         ) {
                             PixelHistoryPanel(

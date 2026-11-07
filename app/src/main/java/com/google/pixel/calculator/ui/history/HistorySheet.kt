@@ -1,5 +1,8 @@
 package com.google.pixel.calculator.ui.history
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
@@ -67,14 +70,14 @@ fun PixelHistoryPanel(
     val colors = CalculatorTheme.colors
 
     LaunchedEffect(historyList.size) {
-        if (historyList.isNotEmpty()) {
-            listState.animateScrollToItem(0)
+        if (historyList.isNotEmpty() && (listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0)) {
+            listState.scrollToItem(0)
         }
     }
 
     // Automatically expand to full height when the list starts scrolling
     LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
-        if (!isExpanded && (listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 6)) {
+        if (!isExpanded && (listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 2)) {
             onExpand()
         }
     }
@@ -85,9 +88,9 @@ fun PixelHistoryPanel(
             private var accumulatedScroll = 0f
 
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                if (!isExpanded && abs(available.y) > 1f) {
+                if (!isExpanded && abs(available.y) > 0.5f) {
                     accumulatedScroll += abs(available.y)
-                    if (accumulatedScroll > 12f) {
+                    if (accumulatedScroll > 3f) {
                         accumulatedScroll = 0f
                         onExpand()
                     }
@@ -97,13 +100,19 @@ fun PixelHistoryPanel(
         }
     }
 
+    val bottomCornerRadius by animateDpAsState(
+        targetValue = if (isExpanded) 0.dp else 28.dp,
+        animationSpec = tween(durationMillis = 420, easing = FastOutSlowInEasing),
+        label = "HistoryBottomCornerRadius"
+    )
+
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clip(
                 RoundedCornerShape(
-                    bottomStart = if (isExpanded) 0.dp else 28.dp,
-                    bottomEnd = if (isExpanded) 0.dp else 28.dp
+                    bottomStart = bottomCornerRadius,
+                    bottomEnd = bottomCornerRadius
                 )
             )
             .background(colors.historyBackground)
